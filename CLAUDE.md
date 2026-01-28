@@ -77,8 +77,9 @@ pytest --cov=src --cov-report=html
 | 문서 | 내용 |
 |------|------|
 | @docs/architecture.md | 헥사고날 아키텍처 설계 |
-| @docs/implementation-guide.md | 구현 패턴 및 코드 예시 (DynamicToolset, Async Factory, SQLite WAL, SSE 등) |
-| @docs/extension-guide.md | Chrome Extension 개발 (Offscreen Document 등) |
+| @docs/implementation-guide.md | 구현 패턴 및 코드 예시 (DynamicToolset, Async Factory, SQLite WAL, SSE, 보안 등) |
+| @docs/extension-guide.md | Chrome Extension 개발 (Offscreen Document, Token Handshake 등) |
+| @docs/risk-assessment.md | 리스크 평가 및 완화 전략 (보안, 동시성, Context Explosion 등) |
 | @README.md | 빠른 시작, 설치, 기술 스택 |
 
 ## Test Resources

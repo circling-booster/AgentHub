@@ -16,6 +16,7 @@
 6. [에러 처리](#6-에러-처리-3-tier)
 7. [설정 관리](#7-설정-관리-pydantic-settings)
 8. [의존성 주입](#8-의존성-주입)
+9. [보안 패턴](#9-보안-패턴)
 
 ---
 
@@ -61,6 +62,16 @@ from domain.entities.tool import Tool
 from domain.exceptions import ToolNotFoundError
 
 
+# 도구 개수 제한 (Context Explosion 방지)
+MAX_ACTIVE_TOOLS = 30
+TOOL_TOKEN_WARNING_THRESHOLD = 10000  # 약 10k 토큰
+
+
+class ToolLimitExceededError(Exception):
+    """활성 도구 수가 제한을 초과함"""
+    pass
+
+
 class DynamicToolset(BaseToolset):
     """
     ADK 공식 패턴을 따르는 동적 툴셋
@@ -71,6 +82,7 @@ class DynamicToolset(BaseToolset):
     - MCP 서버 추가/제거 시 Agent 재생성 불필요
     - TTL 기반 캐싱으로 성능 최적화
     - 레거시 SSE 서버 폴백 지원
+    - 도구 개수 제한으로 Context Explosion 방지
     """
 
     def __init__(self, cache_ttl_seconds: int = 300):
@@ -133,6 +145,10 @@ class DynamicToolset(BaseToolset):
     async def add_mcp_server(self, endpoint: Endpoint) -> list[Tool]:
         """
         MCP 서버 추가 (Streamable HTTP 우선, SSE 폴백)
+
+        Context Explosion 방지:
+        - 활성 도구 수가 MAX_ACTIVE_TOOLS 초과 시 에러
+        - 도구 정의 토큰 수 경고 로깅
         """
         if endpoint.type != EndpointType.MCP:
             raise ValueError("Endpoint type must be MCP")
@@ -141,6 +157,26 @@ class DynamicToolset(BaseToolset):
 
         # 연결 테스트 및 도구 목록 조회
         adk_tools = await toolset.get_tools()
+
+        # Context Explosion 방지: 도구 개수 제한
+        current_tool_count = sum(len(tools) for tools in self._tool_cache.values())
+        total_tools = current_tool_count + len(adk_tools)
+
+        if total_tools > MAX_ACTIVE_TOOLS:
+            await toolset.close()
+            raise ToolLimitExceededError(
+                f"Active tools ({total_tools}) exceed limit ({MAX_ACTIVE_TOOLS}). "
+                f"Consider removing unused MCP servers before adding new ones."
+            )
+
+        # 토큰 추정 경고 (대략적 계산: 도구당 평균 300토큰 가정)
+        estimated_tokens = total_tools * 300
+        if estimated_tokens > TOOL_TOKEN_WARNING_THRESHOLD:
+            import logging
+            logging.warning(
+                f"Tool definitions may use ~{estimated_tokens} tokens. "
+                f"Consider reducing active tools to avoid context overflow."
+            )
 
         self._mcp_toolsets[endpoint.id] = toolset
         self._endpoints[endpoint.id] = endpoint
@@ -207,12 +243,22 @@ class DynamicToolset(BaseToolset):
         return True
 
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
-        """도구 직접 실행"""
+        """
+        도구 직접 실행
+
+        비동기 블로킹 방지:
+        - 동기식 I/O나 CPU 집약적 도구가 메인 이벤트 루프를 차단하지 않도록
+        - asyncio.to_thread로 별도 스레드에서 실행
+        """
         for toolset in self._mcp_toolsets.values():
             adk_tools = await toolset.get_tools()
             for tool in adk_tools:
                 if tool.name == tool_name:
-                    return await tool.run_async(arguments, None)
+                    # 블로킹 방지: 스레드 풀에서 실행
+                    # 도구가 동기식 라이브러리를 사용하더라도 메인 루프 차단 방지
+                    return await asyncio.to_thread(
+                        lambda: asyncio.run(tool.run_async(arguments, None))
+                    )
 
         raise ToolNotFoundError(f"Tool not found: {tool_name}")
 
@@ -548,8 +594,10 @@ class SqliteConversationStorage(ConversationStoragePort):
 
 ```python
 # src/adapters/inbound/http/routes/chat.py
+import asyncio
 import json
-from fastapi import APIRouter, Depends
+import logging
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from dependency_injector.wiring import inject, Provide
 
@@ -557,13 +605,15 @@ from domain.services.orchestrator import OrchestratorService
 from adapters.inbound.http.schemas.chat import ChatRequest
 from config.container import Container
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 
 @router.post("/stream")
 @inject
 async def chat_stream(
-    request: ChatRequest,
+    request: Request,  # FastAPI Request 객체 (연결 상태 확인용)
+    body: ChatRequest,
     orchestrator: OrchestratorService = Depends(Provide[Container.orchestrator_service]),
 ):
     """
@@ -574,21 +624,42 @@ async def chat_stream(
     - data: {"type": "tool_call", "name": "...", "arguments": {...}}\n\n
     - data: {"type": "done"}\n\n
     - data: {"type": "error", "message": "..."}\n\n
+
+    Zombie Task 방지:
+    - 클라이언트 연결 해제 시 즉시 스트림 종료
+    - asyncio.CancelledError 명시적 처리
     """
     async def generate():
         try:
             async for chunk in orchestrator.chat(
-                request.conversation_id,
-                request.message,
+                body.conversation_id,
+                body.message,
             ):
+                # 클라이언트 연결 상태 확인 (Zombie Task 방지)
+                if await request.is_disconnected():
+                    logger.info(f"Client disconnected, stopping stream for conversation {body.conversation_id}")
+                    break
+
                 event_data = json.dumps({"type": "text", "content": chunk})
                 yield f"data: {event_data}\n\n"
 
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
+        except asyncio.CancelledError:
+            # 연결 해제 시 정리 로직
+            logger.info(f"Stream cancelled for conversation {body.conversation_id}")
+            # 필요 시 진행 중인 작업 취소
+            # await orchestrator.cancel_current_operation()
+            raise  # CancelledError는 다시 발생시켜야 함
+
         except Exception as e:
+            logger.error(f"Stream error: {e}")
             error_data = json.dumps({"type": "error", "message": str(e)})
             yield f"data: {error_data}\n\n"
+
+        finally:
+            # 리소스 정리 보장
+            logger.debug(f"Stream cleanup for conversation {body.conversation_id}")
 
     return StreamingResponse(
         generate(),
@@ -868,13 +939,213 @@ class Container(containers.DeclarativeContainer):
 
 ---
 
+## 9. 보안 패턴
+
+### 문제: Localhost API 취약점
+
+`localhost:8000` 포트가 열려 있으면, 악성 웹사이트의 JavaScript가 `fetch('http://localhost:8000/api/tools/call')` 호출로 로컬 MCP 도구를 실행할 수 있습니다 (Drive-by RCE Attack).
+
+### 해결: Token Handshake + Strict CORS
+
+#### 1. 서버 측 보안 미들웨어
+
+```python
+# src/adapters/inbound/http/security.py
+"""Localhost API 보안 (Drive-by RCE 방지)"""
+import secrets
+from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
+# 서버 시작 시 생성되는 일회성 토큰
+EXTENSION_TOKEN: str = secrets.token_urlsafe(32)
+
+
+class ExtensionAuthMiddleware(BaseHTTPMiddleware):
+    """
+    Chrome Extension 인증 미들웨어
+
+    모든 /api/* 요청에 X-Extension-Token 헤더 검증
+    """
+
+    EXCLUDED_PATHS = {"/health", "/auth/token", "/docs", "/openapi.json"}
+
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+
+        # 제외 경로는 검증 생략
+        if path in self.EXCLUDED_PATHS:
+            return await call_next(request)
+
+        # API 경로는 토큰 검증 필수
+        if path.startswith("/api/"):
+            token = request.headers.get("X-Extension-Token")
+            if token != EXTENSION_TOKEN:
+                return JSONResponse(
+                    status_code=403,
+                    content={"error": "Unauthorized", "message": "Invalid extension token"}
+                )
+
+        return await call_next(request)
+
+
+def get_extension_token() -> str:
+    """Extension 초기화 시 토큰 반환 (1회만 호출 가능하도록 제한 권장)"""
+    return EXTENSION_TOKEN
+```
+
+#### 2. 토큰 교환 엔드포인트
+
+```python
+# src/adapters/inbound/http/routes/auth.py
+from fastapi import APIRouter, Request, HTTPException
+from pydantic import BaseModel
+
+from adapters.inbound.http.security import get_extension_token
+
+router = APIRouter(prefix="/auth", tags=["Auth"])
+
+# 토큰 발급 여부 추적
+_token_issued = False
+
+
+class TokenRequest(BaseModel):
+    extension_id: str
+
+
+class TokenResponse(BaseModel):
+    token: str
+
+
+@router.post("/token", response_model=TokenResponse)
+async def exchange_token(request: Request, body: TokenRequest):
+    """
+    Extension 초기화 시 토큰 교환
+
+    보안 고려사항:
+    - Origin 헤더 검증
+    - 토큰 발급 횟수 제한 (서버 재시작 시 리셋)
+    """
+    global _token_issued
+
+    # Origin 검증
+    origin = request.headers.get("Origin", "")
+    if not origin.startswith("chrome-extension://"):
+        raise HTTPException(status_code=403, detail="Invalid origin")
+
+    # 토큰 재발급 방지 (선택적)
+    if _token_issued:
+        raise HTTPException(status_code=403, detail="Token already issued")
+
+    _token_issued = True
+    return TokenResponse(token=get_extension_token())
+```
+
+#### 3. CORS 설정
+
+```python
+# src/main.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from adapters.inbound.http.security import ExtensionAuthMiddleware
+
+app = FastAPI(title="AgentHub API")
+
+# Strict CORS: Chrome Extension만 허용
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "chrome-extension://*",  # 개발용
+        # 배포 시 특정 Extension ID로 제한:
+        # "chrome-extension://abcdefghijklmnop",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["X-Extension-Token", "Content-Type"],
+)
+
+# Extension 인증 미들웨어
+app.add_middleware(ExtensionAuthMiddleware)
+```
+
+#### 4. Extension 클라이언트
+
+```typescript
+// extension/lib/api.ts
+const API_BASE = 'http://localhost:8000';
+
+let extensionToken: string | null = null;
+
+/**
+ * 서버 시작 후 토큰 교환 (background.ts에서 1회 호출)
+ */
+export async function initializeAuth(): Promise<void> {
+  const response = await fetch(`${API_BASE}/auth/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ extension_id: chrome.runtime.id }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to authenticate with server');
+  }
+
+  const { token } = await response.json();
+  extensionToken = token;
+
+  // Session Storage에 저장 (브라우저 종료 시 삭제)
+  await chrome.storage.session.set({ extensionToken: token });
+}
+
+/**
+ * 인증된 API 요청
+ */
+export async function authenticatedFetch(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  if (!extensionToken) {
+    const stored = await chrome.storage.session.get('extensionToken');
+    extensionToken = stored.extensionToken;
+  }
+
+  if (!extensionToken) {
+    throw new Error('Not authenticated');
+  }
+
+  return fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'X-Extension-Token': extensionToken,
+      'Content-Type': 'application/json',
+    },
+  });
+}
+```
+
+### 보안 체크리스트
+
+| 항목 | 설명 | 필수 |
+|------|------|:---:|
+| **Token Handshake** | 서버 시작 시 난수 토큰 생성, Extension만 교환 | ✅ |
+| **CORS Origin 제한** | `chrome-extension://` 도메인만 허용 | ✅ |
+| **X-Extension-Token 헤더** | 모든 API 요청에 토큰 포함 | ✅ |
+| **Token 재발급 방지** | 서버당 1회만 발급 (선택적) | ⚠️ |
+| **Session Storage** | Token을 Local Storage가 아닌 Session Storage에 저장 | ✅ |
+
+---
+
 ## 참고 자료
 
 - [Google ADK Documentation](https://google.github.io/adk-docs/)
 - [ADK MCP Integration](https://google.github.io/adk-docs/tools-custom/mcp-tools/)
+- [MCP Transports Specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)
 - [pydantic-settings Documentation](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)
 - [dependency-injector Documentation](https://python-dependency-injector.ets-labs.org/)
 - [aiosqlite Documentation](https://aiosqlite.omnilib.dev/)
+- [Chrome Extension Security](https://developer.chrome.com/docs/extensions/develop/migrate/improve-security)
 
 ---
 

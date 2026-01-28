@@ -409,10 +409,61 @@ async function checkServerHealth(): Promise<boolean> {
   }
 }
 
-// 초기화
+// ==================== 보안: Token Handshake ====================
+
+let extensionToken: string | null = null;
+
+async function initializeAuth(): Promise<boolean> {
+  /**
+   * 서버와 토큰 교환 (Drive-by RCE 방지)
+   *
+   * 서버 시작 시 생성된 난수 토큰을 교환하여
+   * 악성 웹사이트의 localhost API 접근을 차단
+   */
+  try {
+    const response = await fetch('http://localhost:8000/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ extension_id: chrome.runtime.id }),
+    });
+
+    if (!response.ok) {
+      console.error('[Background] Token exchange failed');
+      return false;
+    }
+
+    const { token } = await response.json();
+    extensionToken = token;
+
+    // Session Storage에 저장 (브라우저 종료 시 삭제)
+    await chrome.storage.session.set({ extensionToken: token });
+    console.log('[Background] Token exchange successful');
+    return true;
+  } catch (error) {
+    console.error('[Background] Token exchange error:', error);
+    return false;
+  }
+}
+
+// 토큰 getter (다른 모듈에서 사용)
+export function getExtensionToken(): string | null {
+  return extensionToken;
+}
+
+// ==================== 초기화 ====================
+
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('[Background] Extension installed');
   await checkServerHealth();
+});
+
+// 서버 Health Check 후 토큰 교환
+chrome.runtime.onStartup.addListener(async () => {
+  console.log('[Background] Extension startup');
+  const isHealthy = await checkServerHealth();
+  if (isHealthy) {
+    await initializeAuth();
+  }
 });
 
 console.log('[Background] Service Worker started');
@@ -511,12 +562,44 @@ export async function streamChat(
 ```typescript
 // lib/api.ts
 /**
- * REST API 클라이언트
+ * REST API 클라이언트 (보안 토큰 포함)
  *
  * CRUD 작업용 (MCP 서버 등록, 설정 변경 등)
+ * Drive-by RCE 방지를 위한 Token Handshake 패턴 적용
  */
 
 const API_BASE = 'http://localhost:8000/api';
+
+// ==================== 인증 ====================
+
+let extensionToken: string | null = null;
+
+/**
+ * 인증된 API 요청 (모든 /api/* 요청에 사용)
+ */
+async function authenticatedFetch(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  // 토큰이 없으면 Session Storage에서 로드
+  if (!extensionToken) {
+    const stored = await chrome.storage.session.get('extensionToken');
+    extensionToken = stored.extensionToken || null;
+  }
+
+  if (!extensionToken) {
+    throw new Error('Not authenticated. Server may not be running.');
+  }
+
+  return fetch(`http://localhost:8000${path}`, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'X-Extension-Token': extensionToken,
+      'Content-Type': 'application/json',
+    },
+  });
+}
 
 // ==================== MCP 서버 관리 ====================
 
@@ -536,9 +619,8 @@ export interface Tool {
 }
 
 export async function registerMcpServer(url: string, name?: string): Promise<McpServer> {
-  const response = await fetch(`${API_BASE}/mcp/servers`, {
+  const response = await authenticatedFetch('/api/mcp/servers', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url, name }),
   });
 
@@ -551,7 +633,7 @@ export async function registerMcpServer(url: string, name?: string): Promise<Mcp
 }
 
 export async function listMcpServers(): Promise<McpServer[]> {
-  const response = await fetch(`${API_BASE}/mcp/servers`);
+  const response = await authenticatedFetch('/api/mcp/servers');
 
   if (!response.ok) {
     throw new Error('Failed to list MCP servers');
@@ -561,7 +643,7 @@ export async function listMcpServers(): Promise<McpServer[]> {
 }
 
 export async function removeMcpServer(serverId: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/mcp/servers/${serverId}`, {
+  const response = await authenticatedFetch(`/api/mcp/servers/${serverId}`, {
     method: 'DELETE',
   });
 

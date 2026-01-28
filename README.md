@@ -108,6 +108,7 @@ cd extension && npm run dev
 | [docs/architecture.md](docs/architecture.md) | 헥사고날 아키텍처 설계 |
 | [docs/implementation-guide.md](docs/implementation-guide.md) | 구현 패턴 및 코드 예시 |
 | [docs/extension-guide.md](docs/extension-guide.md) | Chrome Extension 개발 가이드 |
+| [docs/risk-assessment.md](docs/risk-assessment.md) | 리스크 평가 및 완화 전략 |
 | [docs/feasibility-analysis-2026-01.md](docs/feasibility-analysis-2026-01.md) | 기술 스택 분석 |
 
 ---
