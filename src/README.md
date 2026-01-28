@@ -59,6 +59,62 @@ src/
 | **Port 추상화** | ABC 인터페이스로 외부 시스템과 통신 |
 | **Domain 순수성** | 외부 라이브러리(ADK, FastAPI 등) import 금지 |
 
+## Security (Phase 1.5)
+
+**Zero-Trust localhost API 보안**으로 Drive-by RCE 공격 차단.
+
+### 위협 모델
+
+| 위협 | 설명 | 완화 |
+|------|------|------|
+| **Drive-by RCE** | 악성 웹사이트가 `fetch('http://localhost:8000/api/...')` 호출 | Token Handshake |
+| **CORS Bypass** | 웹 페이지에서 localhost API 접근 | Origin 제한 |
+| **Token Spoofing** | 토큰 없이 API 우회 | Middleware 검증 |
+
+### 보안 컴포넌트
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Chrome Extension                                            │
+│    1. 서버에 /auth/token 요청 (Origin: chrome-extension://) │
+│    2. 토큰 수신 후 chrome.storage.session에 저장             │
+│    3. 모든 /api/* 요청에 X-Extension-Token 헤더 포함         │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│  AgentHub API Server                                         │
+│                                                              │
+│  1. CORSMiddleware                                           │
+│     - allow_origin_regex: ^chrome-extension://[a-zA-Z0-9_-]+$│
+│     - 웹 Origin (https://evil.com) 차단                      │
+│                                                              │
+│  2. ExtensionAuthMiddleware                                  │
+│     - /api/* 요청에 X-Extension-Token 검증                   │
+│     - 토큰 불일치 시 403 Forbidden                           │
+│                                                              │
+│  3. TokenProvider                                            │
+│     - secrets.token_urlsafe(32)로 암호학적 토큰 생성         │
+│     - 서버 세션당 1개 토큰 유지                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 주요 파일
+
+| 파일 | 역할 |
+|------|------|
+| `adapters/inbound/http/security.py` | TokenProvider, ExtensionAuthMiddleware |
+| `adapters/inbound/http/routes/auth.py` | POST /auth/token (Origin 검증) |
+| `adapters/inbound/http/app.py` | CORS 설정, Middleware 순서 |
+
+### 공개 엔드포인트 (토큰 불필요)
+
+- `/health` - 서버 상태 확인
+- `/auth/token` - 토큰 교환 (Origin 검증)
+- `/docs`, `/redoc`, `/openapi.json` - API 문서
+
+참조: [docs/implementation-guide.md#9-보안-패턴](../docs/implementation-guide.md#9-보안-패턴)
+
 ## Key Files
 
 | 파일 | 역할 |
