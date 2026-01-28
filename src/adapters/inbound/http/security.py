@@ -71,9 +71,7 @@ class ExtensionAuthMiddleware(BaseHTTPMiddleware):
         "/redoc",
     }
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """요청 처리 전 토큰 검증"""
         path = request.url.path
         method = request.method

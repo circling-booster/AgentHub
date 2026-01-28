@@ -5,7 +5,6 @@ TDD Phase: RED - Tests written before implementation
 """
 
 import pytest
-from fastapi.testclient import TestClient
 
 
 class TestCorsConfiguration:
@@ -31,10 +30,7 @@ class TestCorsConfiguration:
         assert "access-control-allow-origin" in response.headers
         # allow-origin은 실제 Origin 또는 * 반환
         allowed_origin = response.headers.get("access-control-allow-origin")
-        assert (
-            allowed_origin == "chrome-extension://abcdefghijklmnop"
-            or allowed_origin == "*"
-        )
+        assert allowed_origin == "chrome-extension://abcdefghijklmnop" or allowed_origin == "*"
 
     def test_cors_blocks_web_origin(self, client):
         """일반 웹 Origin에서 CORS 차단"""

@@ -5,7 +5,6 @@ TDD Phase: RED - Tests written before implementation
 """
 
 import pytest
-from fastapi.testclient import TestClient
 
 
 class TestHealthEndpoint:

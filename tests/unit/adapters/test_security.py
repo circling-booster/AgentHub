@@ -4,8 +4,9 @@ Unit tests for security components (TokenProvider, ExtensionAuthMiddleware)
 TDD Phase: RED - Tests written before implementation
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 
