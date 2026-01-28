@@ -472,20 +472,42 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 
 ## 7. Immediate Next Actions (Checklist)
 
-1. **Phase 0 준비:**
-   * [ ] `.claude/agents/` 폴더 생성
-   * [ ] `tdd-agent.md`, `security-reviewer.md`, `code-reviewer.md` 작성
-   * [ ] `.claude/settings.json` 생성 (Hooks 설정)
+> **범례:** ✅ 완료 | 🤖 자동화됨 | 👤 수동 실행 필요
 
-2. **개발 환경:**
-   * [ ] `python -m venv .venv && pip install -e ".[dev]"`
-   * [ ] `cd extension && npm install`
-   * [ ] `pytest --version` 확인
+### Phase 0 준비
 
-3. **디렉토리 구조:**
-   * [ ] `src/domain/entities/`, `src/domain/services/`, `src/domain/ports/` 생성
-   * [ ] `src/adapters/inbound/`, `src/adapters/outbound/` 생성
-   * [ ] `tests/unit/`, `tests/integration/`, `tests/e2e/` 생성
+| 상태 | 항목 | 유형 |
+|:---:|------|:---:|
+| ✅ | `.claude/agents/` 폴더 생성 | - |
+| ✅ | `tdd-agent.md`, `security-reviewer.md`, `code-reviewer.md` 작성 | - |
+| ✅ | `hexagonal-architect.md` 작성 | - |
+| ✅ | `.claude/settings.json` 생성 (Hooks 설정) | - |
+| ✅ | `tests/unit/`, `tests/integration/`, `tests/e2e/` 폴더 생성 | - |
+| ✅ | `docs/decisions/` ADR 폴더 생성 | - |
+| ✅ | `.github/workflows/ci.yml` 생성 | - |
+
+### 개발 환경 (👤 수동 실행 필요)
+
+| 상태 | 항목 | 유형 |
+|:---:|------|:---:|
+| [ ] | `python -m venv .venv && pip install -e ".[dev]"` | 👤 수동 |
+| [ ] | `cd extension && npm install` | 👤 수동 |
+| [ ] | `pytest --version` 확인 | 👤 수동 |
+
+### 디렉토리 구조 (Phase 1 시작 시 생성)
+
+| 상태 | 항목 | 유형 |
+|:---:|------|:---:|
+| [ ] | `src/domain/entities/`, `src/domain/services/`, `src/domain/ports/` 생성 | 🤖 구현 시 |
+| [ ] | `src/adapters/inbound/`, `src/adapters/outbound/` 생성 | 🤖 구현 시 |
+
+### 커스텀 에이전트 생성 계획
+
+| Phase | 에이전트 | 역할 | 상태 |
+|:-----:|---------|------|:---:|
+| Phase 1 | `hexagonal-architect` | 헥사고날 아키텍처 검토 | ✅ 완료 |
+| Phase 2 | `adk-specialist` | Google ADK, LiteLLM, MCP 전문 | 📋 예정 |
+| Phase 2.5 | `extension-specialist` | WXT, Chrome Extension 전문 | 📋 예정 |
 
 ---
 
