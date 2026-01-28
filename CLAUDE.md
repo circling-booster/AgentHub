@@ -76,6 +76,7 @@ pytest --cov=src --cov-report=html
 
 | 문서 | 내용 |
 |------|------|
+| @docs/roadmap.md | **구현 로드맵 v3.2** (Phase별 상세 계획, TDD 전략, DoD) |
 | @docs/architecture.md | 헥사고날 아키텍처 설계 |
 | @docs/implementation-guide.md | 구현 패턴 및 코드 예시 (DynamicToolset, Async Factory, SQLite WAL, SSE, 보안 등) |
 | @docs/extension-guide.md | Chrome Extension 개발 (Offscreen Document, Token Handshake 등) |
@@ -88,3 +89,18 @@ pytest --cov=src --cov-report=html
 |------|----------|
 | MCP Test Server | `https://example-server.modelcontextprotocol.io/mcp` |
 | A2A Samples | github.com/a2aproject/a2a-samples |
+
+## Test Strategy (TDD + Hexagonal)
+
+| Phase | 테스트 유형 | 대상 | 에이전트 | 커버리지 |
+|-------|-----------|------|---------|---------|
+| Phase 1 | Unit | Domain Layer | tdd-orchestrator, security-auditor | 80% |
+| Phase 2 | Integration | Adapter Layer | tdd-orchestrator, code-reviewer | 70% |
+| Phase 3 | E2E | Full Stack | test-automator, code-reviewer | Critical Path |
+
+**TDD 원칙:**
+- Red-Green-Refactor 사이클 엄수
+- Domain Layer는 Fake Adapter로 테스트 (외부 의존성 없이)
+- 헥사고날 아키텍처 장점 활용: Port 인터페이스 기반 테스트 격리
+
+**상세 계획:** @docs/roadmap.md 참조
