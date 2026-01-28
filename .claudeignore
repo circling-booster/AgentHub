@@ -1,0 +1,113 @@
+# Claude Code Ignore File
+# Files and directories that Claude Code should ignore
+
+# Version Control
+.git/
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+*.pyc
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+*.cover
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+.pytype/
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Node.js / Extension
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# WXT / Extension Build
+.wxt/
+.output/
+dist/
+.turbo/
+
+# Database Files
+*.db
+*.sqlite
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+logs/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+nul
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+
+# Archive (historical documents)
+_archive/
+
+# Build Artifacts
+target/
+*.manifest
+*.spec
+
+# Coverage Reports
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+*.cache
+
+# Documentation Build
+docs/_build/
+site/
+
+# Lock Files (readable but not editable)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+uv.lock
+poetry.lock
+Pipfile.lock
