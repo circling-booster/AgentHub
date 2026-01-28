@@ -18,6 +18,7 @@ ADR(Architecture Decision Record)은 소프트웨어 아키텍처에 관한 중�
 | 번호 | 제목 | 상태 | 날짜 |
 |------|------|------|------|
 | 0001 | [ADR 패턴 도입](0001-adopt-adr-pattern.md) | 승인됨 | 2026-01-28 |
+| - | [CLAUDE.md 자동화 워크플로우 반영](2026-01-28-claude-md-automation-workflow.md) | 결정됨 | 2026-01-28 |
 
 ## 상태 정의
 

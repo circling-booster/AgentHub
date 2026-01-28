@@ -110,6 +110,7 @@ cd extension && npm run dev
 | [docs/extension-guide.md](docs/extension-guide.md) | Chrome Extension 개발 가이드 |
 | [docs/risk-assessment.md](docs/risk-assessment.md) | 리스크 평가 및 완화 전략 |
 | [docs/feasibility-analysis-2026-01.md](docs/feasibility-analysis-2026-01.md) | 기술 스택 분석 |
+| [docs/decisions/](docs/decisions/) | Architecture Decision Records (ADR) |
 
 ---
 
@@ -128,20 +129,54 @@ agenthub/
 │
 ├── configs/                # YAML 설정 파일
 ├── docs/                   # 상세 문서
-└── tests/                  # 테스트
+│   └── decisions/          # ADR (Architecture Decision Records)
+├── tests/                  # 테스트
+└── .github/workflows/      # CI/CD (GitHub Actions)
 ```
 
 ---
 
-## 테스트
+## 개발 워크플로우
+
+AgentHub는 자동화된 품질 보장 시스템을 갖추고 있습니다.
+
+### 자동 실행 (개발 중)
+
+```
+[Claude 작업 완료] → Stop Hook 자동 실행:
+  ✓ ruff check src/ --fix      # 린트 자동 수정
+  ✓ ruff format src/            # 코드 포맷팅
+  ✓ pytest tests/ -q            # 테스트 실행
+```
+
+**브랜치 보호:**
+- main 브랜치에서 직접 수정 시도 → PreToolUse Hook이 자동 차단
+- 항상 feature 브랜치에서 작업
+
+### PR 생성 시 자동 검증
+
+```
+[PR 생성] → GitHub Actions CI:
+  1. Python 3.10/3.11/3.12 테스트
+  2. 커버리지 검사 (80% 미만 시 PR 차단)
+  3. ruff 린트/포맷 검사
+  4. 타입 체크 (mypy)
+```
+
+### 로컬 테스트
 
 ```bash
 # 전체 테스트
 pytest
 
-# 커버리지 리포트
+# 커버리지 리포트 (80% 이상 유지)
 pytest --cov=src --cov-report=html
+
+# 커버리지 검증 (CI와 동일)
+pytest --cov=src --cov-fail-under=80
 ```
+
+**자세한 흐름도:** [docs/pre-implementation-review.md](docs/pre-implementation-review.md#자동화-흐름도)
 
 ---
 
