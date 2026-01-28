@@ -2,5 +2,29 @@
   "enabledPlugins": {
     "tdd-workflows@claude-code-workflows": true,
     "full-stack-orchestration@claude-code-workflows": true
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ruff check src/ --fix --quiet 2>/dev/null; ruff format src/ --quiet 2>/dev/null; exit 0"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git rev-parse --abbrev-ref HEAD 2>/dev/null | grep -qx main && echo 'Direct edits to main branch blocked' >&2 && exit 2 || exit 0"
+          }
+        ]
+      }
+    ]
   }
 }

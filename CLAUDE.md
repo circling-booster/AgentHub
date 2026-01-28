@@ -76,7 +76,7 @@ pytest --cov=src --cov-report=html
 
 | 문서 | 내용 |
 |------|------|
-| @docs/roadmap.md | **구현 로드맵 v3.2** (Phase별 상세 계획, TDD 전략, DoD) |
+| @docs/roadmap.md | **구현 로드맵 v3.3** (Phase 0~4 세분화, 워크플로우 검증, Claude Code 연동) |
 | @docs/architecture.md | 헥사고날 아키텍처 설계 |
 | @docs/implementation-guide.md | 구현 패턴 및 코드 예시 (DynamicToolset, Async Factory, SQLite WAL, SSE, 보안 등) |
 | @docs/extension-guide.md | Chrome Extension 개발 (Offscreen Document, Token Handshake 등) |
@@ -92,11 +92,15 @@ pytest --cov=src --cov-report=html
 
 ## Test Strategy (TDD + Hexagonal)
 
-| Phase | 테스트 유형 | 대상 | 에이전트 | 커버리지 |
-|-------|-----------|------|---------|---------|
-| Phase 1 | Unit | Domain Layer | tdd-orchestrator, security-auditor | 80% |
-| Phase 2 | Integration | Adapter Layer | tdd-orchestrator, code-reviewer | 70% |
-| Phase 3 | E2E | Full Stack | test-automator, code-reviewer | Critical Path |
+| Phase | 테스트 유형 | 대상 | 서브에이전트 | 커버리지 |
+|-------|-----------|------|-------------|---------|
+| Phase 1 | Unit | Domain Layer | tdd-agent | 80% |
+| Phase 1.5 | Unit | Security Middleware | security-reviewer | - |
+| Phase 2 | Integration | MCP Adapter, API | tdd-agent | 70% |
+| Phase 2.5 | Integration | Extension ↔ Server | - | - |
+| Phase 3 | E2E | Full Stack | code-reviewer | Critical Path |
+
+**커스텀 서브에이전트:** `.claude/agents/`에 정의 (tdd-agent.md, security-reviewer.md, code-reviewer.md)
 
 **TDD 원칙:**
 - Red-Green-Refactor 사이클 엄수
