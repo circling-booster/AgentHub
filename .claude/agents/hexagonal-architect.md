@@ -1,6 +1,6 @@
 ---
 name: hexagonal-architect
-description: AgentHub 프로젝트의 헥사고날 아키텍처 전문가. Domain/Port/Adapter 분리 원칙 준수를 검토하고, 의존성 방향을 검증합니다. 아키텍처 관련 질문이나 구조 검토 요청 시 호출됩니다.
+description: Expert hexagonal architecture specialist for AgentHub project. Validates Domain/Port/Adapter separation and dependency direction. Use when designing new layers or questioning architectural decisions.
 model: sonnet
 ---
 

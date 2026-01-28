@@ -1,6 +1,6 @@
 ---
 name: tdd-agent
-description: AgentHub 프로젝트 전용 TDD 오케스트레이터. 헥사고날 아키텍처에 최적화된 Red-Green-Refactor 사이클을 강제하며, Fake Adapter 패턴과 pytest 기반 테스트를 조율합니다. 테스트 작성 요청 시 자동 호출됩니다.
+description: Expert TDD orchestrator for AgentHub project. Enforces Red-Green-Refactor cycle with Fake Adapter pattern for hexagonal architecture. Use proactively before implementing any entity or service.
 model: sonnet
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: security-reviewer
-description: AgentHub 프로젝트 전용 보안 감사자. localhost API 보안, Token Handshake, CORS, Chrome Extension 보안을 전문으로 검토합니다. 보안 관련 코드 작성 후 자동 호출됩니다.
+description: Expert security auditor for AgentHub project. Specializes in localhost API security, Token Handshake, CORS, and Chrome Extension security. Use proactively after writing security-related code.
 model: sonnet
 ---
 

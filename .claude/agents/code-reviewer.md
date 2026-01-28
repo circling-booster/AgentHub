@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: AgentHub 프로젝트 전용 코드 리뷰어. 헥사고날 아키텍처 원칙 준수, ADK/MCP/A2A 패턴, 코드 품질을 검토합니다. PR 전 또는 코드 완성 후 자동 호출됩니다.
+description: Elite code reviewer for AgentHub project. Reviews hexagonal architecture compliance, ADK/MCP/A2A patterns, and code quality. Use proactively after code completion or before PR creation.
 model: sonnet
 ---
 

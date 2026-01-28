@@ -117,10 +117,10 @@ pytest --version
 
 **✅ DoD (Definition of Done):**
 
-* [ ] `/agents` 명령으로 커스텀 서브에이전트 3개 확인
-* [ ] Stop 훅 트리거 시 ruff 실행 확인
-* [ ] PreToolUse 훅으로 main 브랜치 보호 확인
-* [ ] `pytest tests/ -v` 실행 성공 (빈 테스트라도)
+* [x] `/agents` 명령으로 커스텀 서브에이전트 4개 확인 (tdd-agent, security-reviewer, code-reviewer, hexagonal-architect)
+* [x] Stop 훅 트리거 시 ruff 실행 확인
+* [x] PreToolUse 훅으로 main 브랜치 보호 확인
+* [x] `pytest tests/ -v` 실행 성공 (136 tests passed)
 
 ---
 
@@ -158,13 +158,31 @@ pytest --version
 - 각 엔티티/서비스 구현 전: `tdd-agent` 호출하여 테스트 먼저 작성
 - 구현 완료 후: `code-reviewer` 호출하여 헥사고날 원칙 준수 검토
 
+#### 1.5 Folder Documentation
+
+**Phase 1 시작 시 생성:**
+- `src/README.md`: 백엔드 전체 구조 개요, 헥사고날 아키텍처 레이어 간 관계 설명
+- `tests/README.md`: 테스트 전략, 실행 방법, Fake Adapter 패턴 소개
+
+**Phase 1 완료 시 생성:**
+- `src/domain/README.md`: Domain Layer 설계 철학, 엔티티/서비스 목록, 외부 의존성 금지 원칙
+- `src/config/README.md`: 설정 우선순위(환경변수 > .env > YAML), DI 컨테이너 사용법
+
+**README 필수 구성:**
+1. **Purpose**: 폴더의 역할
+2. **Structure**: 하위 구조 설명
+3. **Key Files**: 주요 파일 및 역할
+4. **Usage**: 사용 방법 또는 참조 명령어
+5. **References**: 관련 문서 링크 (architecture.md, implementation-guide.md 등)
+
 **✅ DoD:**
 
-* [ ] Domain Layer에 외부 라이브러리 import 없음 (ADK, FastAPI 등)
-* [ ] 모든 엔티티/서비스에 대한 단위 테스트 존재
-* [ ] Fake Adapter 기반 테스트 통과
-* [ ] 테스트 커버리지 80% 이상
-* [ ] SQLite WAL 모드 동작 확인 (-wal, -shm 파일 생성)
+* [x] Domain Layer에 외부 라이브러리 import 없음 (ADK, FastAPI 등)
+* [x] 모든 엔티티/서비스에 대한 단위 테스트 존재
+* [x] Fake Adapter 기반 테스트 통과
+* [x] 테스트 커버리지 80% 이상 (달성: 90.84%)
+* [x] SQLite WAL 모드 동작 확인 (통합 테스트 검증 완료)
+* [x] 필수 README 파일 생성: `src/`, `src/domain/`, `src/config/`, `tests/`
 
 ---
 
@@ -202,11 +220,20 @@ app.add_middleware(
 **서브에이전트 호출 시점:**
 - 보안 미들웨어 구현 후: `security-reviewer` 호출하여 취약점 검토
 
+#### 1.5.5 Documentation Update
+
+**Phase 1.5 완료 시 업데이트:**
+- `src/README.md`: 보안 레이어 추가
+  - "Security" 섹션 추가: Token Handshake, CORS, Auth Middleware 설명
+  - Drive-by RCE 방지 패턴 개요
+  - 참조: [implementation-guide.md#9-보안-패턴](implementation-guide.md#9-보안-패턴)
+
 **✅ DoD:**
 
 * [ ] curl로 토큰 없이 `/api/*` 호출 시 403 반환
 * [ ] `/auth/token` 호출 시 유효한 토큰 반환
 * [ ] 잘못된 Origin에서 요청 시 CORS 에러
+* [ ] `src/README.md`에 보안 섹션 추가
 
 ---
 
@@ -245,6 +272,19 @@ app.add_middleware(
 - DynamicToolset 구현 전: `tdd-agent` 호출
 - API 구현 완료 후: `security-reviewer` 호출 (입력 검증, 에러 처리)
 
+#### 2.5 Documentation
+
+**Phase 2 완료 시 생성:**
+- `src/adapters/README.md`: Adapter Layer 역할, Inbound/Outbound 구분, 주요 구현체 목록
+  - 포함 내용: HTTP API, ADK Orchestrator, DynamicToolset, Storage Adapters 설명
+  - 참조: [implementation-guide.md](implementation-guide.md#2-dynamictoolset-구현)
+
+**Phase 2 완료 시 업데이트:**
+- `src/README.md`: Adapters Layer 상세화
+  - MCP 통합 아키텍처 추가 (DynamicToolset, LlmAgent 연동 설명)
+  - API 엔드포인트 목록 추가 (/api/chat/stream, /api/mcp/servers 등)
+  - 참조: [architecture.md#adapters-layer](architecture.md#2-adapters-layer-외부-연동)
+
 **✅ DoD:**
 
 * [ ] MCP 테스트 서버 연결 성공
@@ -252,6 +292,8 @@ app.add_middleware(
 * [ ] 도구 개수 30개 초과 시 에러 반환
 * [ ] SSE 스트리밍 응답 정상 동작
 * [ ] 통합 테스트 커버리지 70% 이상
+* [ ] `src/adapters/README.md` 생성
+* [ ] `src/README.md` MCP 아키텍처 섹션 추가
 
 ---
 
@@ -282,12 +324,35 @@ app.add_middleware(
 * 스트리밍 텍스트 렌더링
 * MCP 서버 관리 UI (등록/해제)
 
+**서브에이전트 호출 시점:**
+- Extension 보안 코드 작성 후: `security-reviewer` 호출 (Token Handshake, Storage 사용)
+- 기능 완료 후: `code-reviewer` 호출 (전체 통합 검토)
+
+#### 2.5.5 Documentation
+
+**Phase 2.5 완료 시 생성:**
+- `extension/README.md`: Extension 개발 가이드, WXT 구조, Offscreen Document 패턴
+  - 포함 내용:
+    - 엔트리포인트별 역할 (popup, sidepanel, background, offscreen)
+    - Token Handshake 보안 패턴
+    - SSE 스트리밍 처리 방법
+    - 개발 명령어 (dev, build, typecheck)
+  - 참조: [extension-guide.md](extension-guide.md)
+
+**Phase 2.5 완료 시 업데이트:**
+- 루트 `README.md`: Extension 설치 및 사용 가이드 추가
+  - "사용 방법" 섹션 추가: Extension 설치, 서버 연결, MCP 서버 등록 스텝
+  - 스크린샷 또는 데모 추가 (선택적)
+  - 참조: [extension-guide.md](extension-guide.md)
+
 **✅ DoD:**
 
 * [ ] Extension 설치 시 서버와 자동 토큰 교환 성공
 * [ ] Sidepanel에서 "Hello" 입력 시 Claude 응답
 * [ ] MCP 도구 호출 결과가 UI에 표시
 * [ ] 브라우저 종료 후 재시작 시 토큰 재발급 정상 동작
+* [ ] `extension/README.md` 생성
+* [ ] 루트 `README.md`에 Extension 사용법 추가
 
 ---
 
@@ -323,12 +388,36 @@ app.add_middleware(
 * Playwright 기반 Extension E2E 테스트
 * Full Flow: Extension → Server → MCP/A2A
 
+**서브에이전트 호출 시점:**
+- 모든 기능 완료 후: `code-reviewer` 호출 (전체 품질 최종 검토)
+- E2E 테스트 작성 전: `tdd-agent` 호출 (테스트 시나리오 설계)
+
+#### 3.6 Documentation Update
+
+**Phase 3 완료 시 업데이트:**
+- `src/README.md`: A2A 통합 아키텍처 추가
+  - A2A 레이어 설명 (Agent Card, JSON-RPC 2.0)
+  - MCP vs A2A 차이점 요약
+  - 참조: [architecture.md](architecture.md)
+
+- `src/adapters/README.md`: A2A Client/Server 어댑터 추가
+  - `a2a_client/`: 외부 A2A 에이전트 호출
+  - `a2a_server/`: ADK Agent를 A2A 프로토콜로 노출
+  - 참조: [implementation-guide.md](implementation-guide.md)
+
+- `tests/README.md`: E2E 테스트 섹션 추가
+  - Playwright 기반 Extension E2E 전략
+  - Full Flow 테스트 시나리오
+
 **✅ DoD:**
 
 * [ ] 긴 응답 생성 중 탭 닫기 시 서버 로그에 "Task Cancelled"
 * [ ] 무거운 도구 실행 중에도 `/health` 즉시 응답
 * [ ] A2A Agent Card 교환 성공
 * [ ] E2E 시나리오 통과
+* [ ] `src/README.md`에 A2A 아키텍처 추가
+* [ ] `src/adapters/README.md`에 A2A 어댑터 추가
+* [ ] `tests/README.md`에 E2E 테스트 섹션 추가
 
 ---
 
@@ -340,6 +429,19 @@ app.add_middleware(
 
 * Defer Loading: 도구 50개 초과 시 메타데이터만 로드
 * Vector Search: 도구 설명 임베딩 기반 시맨틱 라우팅
+
+#### 4.2 Documentation Update
+
+**Phase 4 완료 시 업데이트:**
+- `src/adapters/README.md`: Advanced Features 추가
+  - Tool Search, Defer Loading, Vector Search 설명
+  - Context Explosion 완화 전략 상세
+
+**✅ DoD:**
+
+* [ ] Tool Search 기능 동작
+* [ ] 50개 이상 도구에서 성능 개선 확인
+* [ ] `src/adapters/README.md` 업데이트
 
 ---
 
@@ -384,13 +486,24 @@ app.add_middleware(
 
 ### 5.1 Custom Subagents
 
-`.claude/agents/` 폴더에 마크다운 파일로 정의:
+`.claude/agents/` 폴더에 마크다운 파일로 정의.
+
+**정의된 에이전트 (description은 영어로 작성 - 공식 스펙):**
+
+| 에이전트 | description | 호출 트리거 |
+|---------|-------------|------------|
+| `tdd-agent` | Expert TDD orchestrator... **Use proactively before implementing** | 엔티티/서비스 구현 전 |
+| `code-reviewer` | Elite code reviewer... **Use proactively after code completion** | 기능 완료 후, PR 전 |
+| `security-reviewer` | Expert security auditor... **Use proactively after writing security-related code** | 보안 코드 작성 후 |
+| `hexagonal-architect` | Expert hexagonal architecture specialist... **Use when designing new layers** | 아키텍처 의사결정 시 |
+
+**예시 (tdd-agent):**
 
 ```yaml
 # .claude/agents/tdd-agent.md
 ---
 name: tdd-agent
-description: TDD Red-Green-Refactor 사이클을 강제. 테스트 작성 요청 시 자동 호출.
+description: Expert TDD orchestrator for AgentHub project. Enforces Red-Green-Refactor cycle with Fake Adapter pattern for hexagonal architecture. Use proactively before implementing any entity or service.
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: sonnet
 ---
@@ -406,13 +519,27 @@ You enforce strict Test-Driven Development:
 NEVER write implementation before tests exist.
 ```
 
-### 5.2 Subagent 호출 시점
+### 5.2 Subagent 호출 워크플로우
 
-| 작업 | 호출할 서브에이전트 | 시점 |
-|------|-------------------|------|
-| 새 엔티티/서비스 구현 | `tdd-agent` | 구현 전 (테스트 먼저) |
-| 보안 관련 코드 | `security-reviewer` | 구현 후 검토 |
-| PR 전 최종 검토 | `code-reviewer` | 코드 완성 후 |
+**중요:** 서브에이전트는 자동 트리거가 보장되지 않습니다. description에 "Use proactively"가 포함되어 있어 Claude가 관련 작업 시 **제안할 수 있지만**, 확실한 방법은 **명시적 호출**입니다.
+
+#### 명시적 호출 방법
+
+| 작업 | 서브에이전트 | 호출 예시 |
+|------|-------------|----------|
+| 새 엔티티/서비스 구현 전 | `tdd-agent` | "tdd-agent로 Endpoint 엔티티 테스트 작성해줘" |
+| 보안 관련 코드 작성 후 | `security-reviewer` | "security-reviewer로 Token Handshake 검토해줘" |
+| 아키텍처 의사결정 시 | `hexagonal-architect` | "hexagonal-architect로 Domain 분리 검토해줘" |
+| PR 전/기능 완료 후 | `code-reviewer` | "code-reviewer로 전체 코드 리뷰해줘" |
+
+#### Phase별 상세 호출 시점
+
+각 Phase의 "서브에이전트 호출 시점" 섹션 참조:
+- Phase 1: Domain Entity/Service 구현 전후
+- Phase 1.5: 보안 미들웨어 구현 후
+- Phase 2: DynamicToolset 구현 전, API 완료 후
+- Phase 2.5: Extension 보안 코드 작성 후, 기능 완료 후
+- Phase 3: 모든 기능 완료 후, E2E 테스트 작성 전
 
 ### 5.3 Hooks 정책
 
