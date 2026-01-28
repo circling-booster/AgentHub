@@ -224,3 +224,32 @@ async def process_message(self, message: str, conversation_id: str):
 - 헥사고날 아키텍처 장점 활용: Port 인터페이스 기반 테스트 격리
 
 **상세 계획:** @docs/roadmap.md 참조
+
+## Subagent Workflow (명시적 호출 권장)
+
+### 호출 시점
+
+| Phase | 작업 | 서브에이전트 | 호출 방법 |
+|-------|------|-------------|----------|
+| **Phase 1** | Entity/Service 구현 전 | `tdd-agent` | "tdd-agent로 테스트 먼저 작성해줘" |
+| **Phase 1** | Domain 코드 완료 후 | `hexagonal-architect` | "hexagonal-architect로 아키텍처 검토해줘" |
+| **Phase 1.5** | 보안 코드 작성 후 | `security-reviewer` | "security-reviewer로 보안 검토해줘" |
+| **Phase 2+** | 기능 완료/PR 전 | `code-reviewer` | "code-reviewer로 코드 리뷰해줘" |
+
+
+### 워크플로우 예시
+
+```
+[Phase 1 시작]
+사용자: "Endpoint 엔티티를 구현해줘"
+Claude: "tdd-agent로 테스트를 먼저 작성하는 게 좋을까요?" (제안 가능)
+사용자: "네" 또는 "tdd-agent로 테스트 작성해줘" (명시적 요청)
+
+[구현 완료]
+사용자: "code-reviewer로 리뷰해줘"
+Claude: [code-reviewer 호출하여 아키텍처/품질 검토]
+```
+
+### Phase별 상세 호출 시점
+
+자세한 시점과 예시는 @docs/roadmap.md의 각 Phase 섹션 참조
