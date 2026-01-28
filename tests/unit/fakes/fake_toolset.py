@@ -9,8 +9,8 @@ from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.tool import Tool
 from src.domain.exceptions import (
     EndpointConnectionError,
-    ToolNotFoundError,
     ToolExecutionError,
+    ToolNotFoundError,
 )
 from src.domain.ports.outbound.toolset_port import ToolsetPort
 

@@ -3,8 +3,8 @@
 import pytest
 
 from src.domain.entities.conversation import Conversation
-from src.domain.entities.message import Message
 from src.domain.entities.enums import MessageRole
+from src.domain.entities.message import Message
 from src.domain.exceptions import ConversationNotFoundError
 from src.domain.services.conversation_service import ConversationService
 
@@ -22,9 +22,7 @@ class FakeConversationStorage:
     async def get_conversation(self, conversation_id: str) -> Conversation | None:
         return self.conversations.get(conversation_id)
 
-    async def list_conversations(
-        self, limit: int = 20, offset: int = 0
-    ) -> list[Conversation]:
+    async def list_conversations(self, limit: int = 20, offset: int = 0) -> list[Conversation]:
         convs = sorted(
             self.conversations.values(),
             key=lambda c: c.updated_at,
@@ -44,9 +42,7 @@ class FakeConversationStorage:
             self.messages[message.conversation_id] = []
         self.messages[message.conversation_id].append(message)
 
-    async def get_messages(
-        self, conversation_id: str, limit: int | None = None
-    ) -> list[Message]:
+    async def get_messages(self, conversation_id: str, limit: int | None = None) -> list[Message]:
         messages = self.messages.get(conversation_id, [])
         if limit:
             return messages[-limit:]
@@ -132,9 +128,7 @@ class TestConversationService:
         """대화 목록 조회"""
         # Given
         for i in range(5):
-            storage.conversations[f"conv-{i}"] = Conversation(
-                id=f"conv-{i}", title=f"Chat {i}"
-            )
+            storage.conversations[f"conv-{i}"] = Conversation(id=f"conv-{i}", title=f"Chat {i}")
 
         # When
         result = await service.list_conversations(limit=3)

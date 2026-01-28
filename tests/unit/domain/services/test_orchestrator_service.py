@@ -4,7 +4,6 @@ import pytest
 
 from src.domain.entities.conversation import Conversation
 from src.domain.entities.message import Message
-from src.domain.entities.enums import MessageRole
 from src.domain.exceptions import ConversationNotFoundError
 from src.domain.services.orchestrator_service import OrchestratorService
 
@@ -24,9 +23,7 @@ class FakeConversationService:
 
     async def get_conversation(self, conversation_id: str) -> Conversation:
         if conversation_id not in self.conversations:
-            raise ConversationNotFoundError(
-                f"Conversation not found: {conversation_id}"
-            )
+            raise ConversationNotFoundError(f"Conversation not found: {conversation_id}")
         return self.conversations[conversation_id]
 
     async def list_conversations(self, limit: int = 20) -> list[Conversation]:
@@ -57,9 +54,7 @@ class FakeConversationService:
             conv = await self.create_conversation()
             conversation_id = conv.id
         elif conversation_id not in self.conversations:
-            raise ConversationNotFoundError(
-                f"Conversation not found: {conversation_id}"
-            )
+            raise ConversationNotFoundError(f"Conversation not found: {conversation_id}")
 
         # 사용자 메시지 저장
         user_msg = Message.user(content, conversation_id)
@@ -83,9 +78,7 @@ class TestOrchestratorService:
 
     @pytest.fixture
     def service(self, conversation_service):
-        return OrchestratorService(
-            conversation_service=conversation_service
-        )
+        return OrchestratorService(conversation_service=conversation_service)
 
     @pytest.mark.asyncio
     async def test_send_message(self, service):
@@ -100,9 +93,7 @@ class TestOrchestratorService:
         assert "".join(chunks) == "Hello! How can I help you?"
 
     @pytest.mark.asyncio
-    async def test_send_message_to_existing_conversation(
-        self, service, conversation_service
-    ):
+    async def test_send_message_to_existing_conversation(self, service, conversation_service):
         """기존 대화에 메시지 전송"""
         # Given
         conv = await conversation_service.create_conversation()

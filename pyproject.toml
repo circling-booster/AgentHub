@@ -105,6 +105,10 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["src", "domain", "adapters", "config"]
 
+[tool.ruff.lint.per-file-ignores]
+# tests/: Fake adapter의 인터페이스 준수를 위한 미사용 인자 허용
+"tests/**/*.py" = ["ARG"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

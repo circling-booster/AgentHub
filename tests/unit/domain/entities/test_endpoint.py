@@ -1,7 +1,5 @@
 """Endpoint 엔티티 테스트"""
 
-from datetime import datetime
-
 import pytest
 
 from src.domain.entities.endpoint import Endpoint

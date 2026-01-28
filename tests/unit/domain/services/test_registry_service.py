@@ -3,9 +3,9 @@
 import pytest
 
 from src.domain.entities.endpoint import Endpoint
-from src.domain.entities.enums import EndpointType, EndpointStatus
+from src.domain.entities.enums import EndpointStatus, EndpointType
 from src.domain.entities.tool import Tool
-from src.domain.exceptions import EndpointNotFoundError, EndpointConnectionError
+from src.domain.exceptions import EndpointConnectionError, EndpointNotFoundError
 from src.domain.services.registry_service import RegistryService
 
 
@@ -114,9 +114,7 @@ class TestRegistryService:
     async def test_register_endpoint_auto_detects_name(self, service):
         """이름 없이 등록 시 URL에서 추출"""
         # When
-        endpoint = await service.register_endpoint(
-            url="https://weather-api.example.com/mcp"
-        )
+        endpoint = await service.register_endpoint(url="https://weather-api.example.com/mcp")
 
         # Then
         assert endpoint.name == "weather-api.example.com"
@@ -131,9 +129,7 @@ class TestRegistryService:
         ]
 
         # When
-        endpoint = await service.register_endpoint(
-            url="https://mcp.example.com/server"
-        )
+        endpoint = await service.register_endpoint(url="https://mcp.example.com/server")
 
         # Then
         assert len(endpoint.tools) == 2
@@ -154,9 +150,7 @@ class TestRegistryService:
     async def test_unregister_endpoint(self, service, storage, toolset):
         """엔드포인트 등록 해제"""
         # Given
-        endpoint = await service.register_endpoint(
-            url="https://mcp.example.com/server"
-        )
+        endpoint = await service.register_endpoint(url="https://mcp.example.com/server")
 
         # When
         result = await service.unregister_endpoint(endpoint.id)

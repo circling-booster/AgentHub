@@ -3,11 +3,8 @@
 import uuid
 from datetime import datetime
 
-import pytest
-
 from src.domain.entities.conversation import Conversation
 from src.domain.entities.message import Message
-from src.domain.entities.enums import MessageRole
 
 
 class TestConversation:
@@ -85,6 +82,7 @@ class TestConversation:
 
         # When
         import time
+
         time.sleep(0.01)  # 시간 차이 보장
         message = Message.user("Hello")
         conversation.add_message(message)

@@ -5,7 +5,7 @@ import asyncio
 import pytest
 
 from src.domain.entities.endpoint import Endpoint
-from src.domain.entities.enums import EndpointType, EndpointStatus
+from src.domain.entities.enums import EndpointStatus, EndpointType
 from src.domain.services.health_monitor_service import HealthMonitorService
 
 
@@ -89,9 +89,7 @@ class TestHealthMonitorService:
         assert results["ep-2"] is False
 
     @pytest.mark.asyncio
-    async def test_check_all_endpoints_updates_status(
-        self, service, storage, toolset
-    ):
+    async def test_check_all_endpoints_updates_status(self, service, storage, toolset):
         """상태 확인 후 엔드포인트 상태 갱신"""
         # Given
         ep = Endpoint(

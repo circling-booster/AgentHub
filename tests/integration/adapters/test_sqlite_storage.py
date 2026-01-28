@@ -9,12 +9,12 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from src.domain.entities.conversation import Conversation
-from src.domain.entities.message import Message
-from src.domain.entities.enums import MessageRole
 from src.adapters.outbound.storage.sqlite_conversation_storage import (
     SqliteConversationStorage,
 )
+from src.domain.entities.conversation import Conversation
+from src.domain.entities.enums import MessageRole
+from src.domain.entities.message import Message
 
 
 class TestSqliteConversationStorage:
@@ -36,14 +36,19 @@ class TestSqliteConversationStorage:
         conv = Conversation(title="Test")
         await storage.save_conversation(conv)
 
-        # WAL 파일 존재 확인
+        # 데이터베이스 파일 존재 확인
+        assert os.path.exists(temp_database), "Database file should exist"
+
+        # WAL 파일 존재 확인 (쓰기 후 체크포인트 전까지 존재)
+        # 주의: 체크포인트 타이밍에 따라 파일이 없을 수 있음
         wal_file = temp_database + "-wal"
         shm_file = temp_database + "-shm"
+        wal_exists = os.path.exists(wal_file) or os.path.exists(shm_file)
 
-        # WAL 모드에서는 트랜잭션 후 -wal, -shm 파일이 생성됨
-        assert os.path.exists(temp_database), "Database file should exist"
-        # WAL 파일은 체크포인트 전까지 존재
-        # (실제로는 autocommit이나 트랜잭션 종료 시점에 따라 다를 수 있음)
+        # WAL 모드 활성화 여부는 PRAGMA로 확인 (더 신뢰할 수 있는 방법)
+        # 파일 존재는 체크포인트 상태에 따라 달라지므로 선택적 검증
+        if wal_exists:
+            assert os.path.exists(wal_file), "WAL file should exist before checkpoint"
 
     @pytest.mark.asyncio
     async def test_save_and_get_conversation(self, storage):

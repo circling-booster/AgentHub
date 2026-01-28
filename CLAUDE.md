@@ -118,9 +118,9 @@ MCP, A2A, ADK는 빠르게 진화하는 표준. **구현 전 웹 검색으로 �
 
 **Stop Hook** (Claude 응답 완료 시 자동):
 ```bash
-ruff check src/ --fix --quiet      # 린트 자동 수정
-ruff format src/ --quiet            # 포맷팅
-pytest tests/ -q --tb=line          # 테스트 실행
+ruff check src/ tests/ --fix --quiet   # 린트 자동 수정 (src + tests)
+ruff format src/ tests/ --quiet        # 포맷팅
+pytest tests/ -q --tb=line             # 테스트 실행
 ```
 
 **동작 방식:**
@@ -152,6 +152,23 @@ PR 생성 시 자동 실행 (`.github/workflows/ci.yml`):
 - Hook 에러 발생 시 `.claude/settings.json` 확인
 - Hook 수정 후 Claude Code 재시작 필요 없음 (자동 반영)
 - 자세한 흐름도: @docs/pre-implementation-review.md (라인 480-521)
+
+### 🧪 테스트 린트 패턴
+
+**`tests/`에서 `ARG` (미사용 인자) 규칙 비활성화** (`pyproject.toml`):
+```toml
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ARG"]
+```
+
+**이유:** Fake Adapter가 Port 인터페이스를 구현할 때 인자를 사용하지 않더라도 시그니처 유지 필요
+```python
+# 예시: Fake Orchestrator
+async def process_message(self, message: str, conversation_id: str):
+    # message, conversation_id는 인터페이스 준수를 위해 필요하나 미사용
+    for chunk in self.responses:
+        yield chunk
+```
 
 ## User Context (ADHD/선택장애 지원)
 

@@ -4,8 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from src.domain.entities.message import Message
 from src.domain.entities.enums import MessageRole
+from src.domain.entities.message import Message
 from src.domain.entities.tool_call import ToolCall
 from src.domain.exceptions import ValidationError
 

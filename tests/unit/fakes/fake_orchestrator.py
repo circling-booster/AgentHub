@@ -3,7 +3,7 @@
 OrchestratorPort의 테스트용 구현입니다.
 """
 
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 

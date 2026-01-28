@@ -3,12 +3,10 @@
 ConversationStoragePort와 EndpointStoragePort의 테스트용 구현입니다.
 """
 
-from datetime import datetime
-
 from src.domain.entities.conversation import Conversation
-from src.domain.entities.message import Message
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointStatus
+from src.domain.entities.message import Message
 from src.domain.ports.outbound.storage_port import (
     ConversationStoragePort,
     EndpointStoragePort,
