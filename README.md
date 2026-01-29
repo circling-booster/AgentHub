@@ -8,13 +8,13 @@
 
 ## Development Status
 
-**Current Phase:** Phase 1.5 (Security Layer) Complete
+**Current Phase:** Phase 2.0 (MCP Integration) Complete
 
 | Feature | Status | Coverage |
 |---------|:------:|:--------:|
 | Domain Core | Complete | 91% |
-| Security Layer | Complete | - |
-| MCP Integration | Planned (Phase 2.0) | - |
+| Security Layer | Complete | 96% |
+| **MCP Integration** | **Complete** | **88%** |
 | Chrome Extension | Planned (Phase 2.5) | - |
 | A2A Integration | Planned (Phase 3) | - |
 

@@ -315,13 +315,13 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] 로컬 MCP 서버 연결 성공 (`http://127.0.0.1:9000/mcp`)
-* [ ] 도구 목록 조회 API 동작
-* [ ] 도구 개수 30개 초과 시 에러 반환
-* [ ] SSE 스트리밍 응답 정상 동작
-* [ ] 통합 테스트 커버리지 70% 이상
-* [ ] `src/adapters/README.md` 생성
-* [ ] `src/README.md` MCP 아키텍처 섹션 추가
+* [x] 로컬 MCP 서버 연결 성공 (`http://127.0.0.1:9000/mcp`)
+* [x] 도구 목록 조회 API 동작
+* [x] 도구 개수 30개 초과 시 에러 반환 (MAX_ACTIVE_TOOLS=30)
+* [x] SSE 스트리밍 응답 정상 동작
+* [x] 통합 테스트 커버리지 88% (목표 70% 초과)
+* [x] `src/adapters/README.md` 생성
+* [x] `src/README.md` MCP 아키텍처 섹션 추가
 
 ---
 

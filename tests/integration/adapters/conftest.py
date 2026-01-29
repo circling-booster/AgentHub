@@ -3,6 +3,10 @@
 공통 fixture:
 - temp_data_dir: 임시 데이터 디렉토리
 - authenticated_client: 인증된 TestClient (lifespan 포함)
+
+공통 상수:
+- TEST_TOKEN: 테스트용 Extension 토큰
+- MCP_TEST_URL: 로컬 MCP 테스트 서버 URL (Synapse)
 """
 
 import tempfile
@@ -15,8 +19,9 @@ from fastapi.testclient import TestClient
 from src.adapters.inbound.http.app import create_app
 from src.adapters.inbound.http.security import token_provider
 
-# 테스트용 토큰
+# 테스트용 상수
 TEST_TOKEN = "test-extension-token"
+MCP_TEST_URL = "http://127.0.0.1:9000/mcp"  # 로컬 MCP 테스트 서버 (SYNAPSE_PORT=9000)
 
 
 @pytest.fixture

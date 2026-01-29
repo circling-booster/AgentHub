@@ -22,25 +22,33 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     Startup:
     - SQLite 스토리지 초기화 (테이블 생성)
-    - Orchestrator 비동기 초기화 (향후 추가 예정)
+    - Orchestrator 비동기 초기화 (DynamicToolset + LlmAgent)
 
     Shutdown:
     - Storage 연결 종료
-    - MCP 연결 정리 (향후 추가 예정)
+    - MCP 연결 정리
     """
     # Startup
     logger.info("AgentHub API starting up")
 
-    # SQLite 스토리지 초기화
     container = app.container
+
+    # SQLite 스토리지 초기화
     conv_storage = container.conversation_storage()
     await conv_storage.initialize()
     logger.info("SQLite conversation storage initialized")
+
+    # Orchestrator 초기화 (Async Factory Pattern)
+    orchestrator = container.orchestrator_adapter()
+    await orchestrator.initialize()
+    logger.info("Orchestrator initialized")
 
     yield
 
     # Shutdown
     logger.info("AgentHub API shutting down")
+    await orchestrator.close()
+    logger.info("Orchestrator closed")
     await conv_storage.close()
     logger.info("Storage connections closed")
 
