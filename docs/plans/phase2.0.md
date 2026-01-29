@@ -25,7 +25,7 @@ Phase 1(Domain Core)과 Phase 1.5(Security Layer) 완료 상태에서, MCP 서�
 
 - [ ] 브랜치 정리: `feature/phase-2-mcp` 신규 생성
 - [ ] Git pre-commit hook 설치 확인 (main 직접 커밋 차단)
-- [ ] 미반영 변경사항 커밋/정리 (`.claude/settings.json`, `pyproject.toml` 등)
+- [x] 미반영 변경사항 커밋/정리 (`.claude/settings.json`, `pyproject.toml` 등)
 - [x] `pyproject.toml` 의존성: `google-adk>=1.23.0` (이미 포함됨, 확인 완료)
 
 ### 필수 웹 검색 (Plan 단계 — 구현 전 1회)

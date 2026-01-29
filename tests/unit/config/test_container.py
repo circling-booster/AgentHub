@@ -14,12 +14,12 @@ class TestSettings:
     def test_default_server_host(self):
         """서버 호스트 기본값은 localhost"""
         settings = Settings()
-        assert settings.server_host == "localhost"
+        assert settings.server.host == "localhost"
 
     def test_default_server_port(self):
         """서버 포트 기본값은 8000"""
         settings = Settings()
-        assert settings.server_port == 8000
+        assert settings.server.port == 8000
 
     def test_settings_is_base_settings(self):
         """Settings는 pydantic BaseSettings 인스턴스"""

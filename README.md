@@ -18,6 +18,7 @@
 | Chrome Extension | Planned (Phase 2.5) | - |
 | A2A Integration | Planned (Phase 3) | - |
 
+
 See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
 
 ---
