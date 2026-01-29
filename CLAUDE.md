@@ -173,12 +173,6 @@ pytest --cov=src --cov-report=html
 | 보안 코드 작성 후 | 보안 취약점 검토 |
 | 기능 완료/PR 전 | 코드 품질 및 아키텍처 리뷰 |
 
-**커스텀 에이전트:** `.claude/agents/`에 정의
-- tdd-agent.md: Red-Green-Refactor 강제
-- security-reviewer.md: 보안 취약점 검토
-- code-reviewer.md: 코드 품질 및 아키텍처 검토
-- hexagonal-architect.md: Domain/Port/Adapter 분리 검증
-
 ---
 
 ## 🌐 Working Guidelines

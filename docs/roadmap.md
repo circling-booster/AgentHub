@@ -21,7 +21,29 @@
 
 ---
 
-## 2. Implementation Phases Overview
+## 2. Phase별 상세 플랜
+
+각 Phase의 구체적인 구현 계획은 별도 플랜 문서로 관리됩니다:
+
+| Phase | 플랜 문서 | 상태 |
+|-------|----------|:---:|
+| Phase 0 | 본 문서 참조 | ✅ 완료 |
+| Phase 1 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
+| Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
+| Phase 2 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
+| Phase 3 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 4 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
+
+**플랜 문서 구성:**
+- 구현 전략 및 기술적 고려사항
+- 단계별 구현 순서 (Step-by-Step)
+- 테스트 전략 및 DoD (Definition of Done)
+- 리스크 및 주의사항
+
+---
+
+## 3. Implementation Phases Overview
 
 ```mermaid
 gantt
@@ -64,7 +86,7 @@ gantt
 
 ---
 
-## 3. Detailed Phase Breakdown
+## 4. Detailed Phase Breakdown
 
 ### Phase 0: Workflow Validation Sprint
 
@@ -125,6 +147,8 @@ pytest --version
 ---
 
 ### Phase 1: Domain Core (Backend Foundation)
+
+**📋 상세 플랜:** [phase1.0.md](plans/phase1.0.md)
 
 **목표:** 헥사고날 아키텍처의 Domain Layer 구축. 순수 Python으로 외부 의존성 없이 테스트 가능한 코어 로직.
 
@@ -188,6 +212,8 @@ pytest --version
 
 ### Phase 1.5: Security Layer
 
+**📋 상세 플랜:** [phase1.5.md](plans/phase1.5.md)
+
 **목표:** Server-Extension 간 Zero-Trust 보안 체계 확립. Drive-by RCE 공격 방지.
 
 #### 1.5.1 Token Generation
@@ -238,6 +264,8 @@ app.add_middleware(
 ---
 
 ### Phase 2: MCP Integration (Backend API)
+
+**📋 상세 플랜:** [phase2.0.md](plans/phase2.0.md) *(예정)*
 
 **목표:** MCP 서버 동적 연결 및 도구 호출 API 구현. **(핵심 기능)**
 
@@ -299,6 +327,8 @@ app.add_middleware(
 
 ### Phase 2.5: Chrome Extension
 
+**📋 상세 플랜:** [phase2.5.md](plans/phase2.5.md) *(예정)*
+
 **목표:** WXT 기반 Extension으로 서버와 연동. Offscreen Document로 장시간 요청 처리.
 
 #### 2.5.1 WXT Scaffold
@@ -357,6 +387,8 @@ app.add_middleware(
 ---
 
 ### Phase 3: Stability & A2A Integration
+
+**📋 상세 플랜:** [phase3.0.md](plans/phase3.0.md) *(예정)*
 
 **목표:** 장시간 작업 안정성 확보, A2A 기본 통합, E2E 테스트 자동화.
 
@@ -423,6 +455,8 @@ app.add_middleware(
 
 ### Phase 4: Advanced Features (Optional)
 
+**📋 상세 플랜:** [phase4.0.md](plans/phase4.0.md) *(예정)*
+
 **목표:** 대규모 도구 지원. 시장 상황에 따라 변동 가능.
 
 #### 4.1 Scalable Tool Management
@@ -445,7 +479,7 @@ app.add_middleware(
 
 ---
 
-## 4. Test Strategy (TDD + Hexagonal)
+## 5. Test Strategy (TDD + Hexagonal)
 
 ### 테스트 피라미드
 
@@ -482,7 +516,7 @@ app.add_middleware(
 
 ---
 
-## 5. Claude Code Integration Guide
+## 6. Claude Code Integration Guide
 
 ### 5.1 커스텀 에이전트
 
@@ -528,7 +562,7 @@ app.add_middleware(
 
 ---
 
-## 6. Development Workflow
+## 7. Development Workflow
 
 ### Hooks 설정 (권장)
 
@@ -560,7 +594,7 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 
 ---
 
-## 7. Immediate Next Actions (Checklist)
+## 8. Immediate Next Actions (Checklist)
 
 > **범례:** ✅ 완료 | 🤖 자동화됨 | 👤 수동 실행 필요
 
@@ -601,7 +635,9 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 
 ---
 
-## 8. Related Documents
+## 9. Related Documents
+
+### 핵심 문서
 
 | 문서 | 내용 |
 |------|------|
@@ -610,9 +646,20 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 | [extension-guide.md](extension-guide.md) | Chrome Extension 개발 가이드 |
 | [risk-assessment.md](risk-assessment.md) | 리스크 평가 및 완화 전략 |
 
+### Phase별 상세 플랜
+
+| Phase | 문서 | 상태 |
+|-------|------|:---:|
+| Phase 1.0 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
+| Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
+| Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
+| Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 4.0 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
+
 ---
 
-## 9. References
+## 10. References
 
 - [Claude Code Custom Agents](https://code.claude.com/docs/en/sub-agents)
 - [Claude Code Hooks Guide](https://docs.claude.com/en/docs/claude-code/hooks)
