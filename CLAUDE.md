@@ -67,8 +67,10 @@ pytest --cov=src --cov-report=html
 ### Development Workflow
 
 **자동화 (Hooks):**
-- **PreToolUse Hook**: main 브랜치 직접 Edit/Write 차단 (항상 feature 브랜치 사용)
-- **Stop Hook**: 응답 완료 시 자동 실행 (ruff 린트/포맷, pytest)
+- **PostToolUse Hook**: 코드 수정 후 자동 ruff 포맷팅
+- **Stop Hook**: 응답 완료 시 Unit 테스트 실행
+- **UserPromptSubmit Hook**: commit/pr/push 시 전체 테스트 + 커버리지 검증
+- **Git pre-commit hook**: main 브랜치 직접 커밋 차단
 - **GitHub Actions**: PR 시 커버리지 80% 미만 차단
 
 자세한 내용: `.claude/settings.json` 및 `.github/workflows/ci.yml` 참조
@@ -94,9 +96,11 @@ pytest --cov=src --cov-report=html
    - YOU MUST NOT import 외부 라이브러리 (ADK, FastAPI, SQLite 등) in `src/domain/`
    - 도메인은 순수 Python만 사용 (헥사고날 아키텍처 핵심)
 
-2. **Standards Verification Protocol**
+2. **Standards Verification Protocol (교차 검증)**
    - MCP/A2A/ADK는 빠르게 진화하는 표준
-   - IMPORTANT: 구현 전 반드시 웹 검색으로 최신 스펙 검증
+   - **Plan 단계**: 아키텍처/API 설계 전 웹 검색으로 최신 스펙 확인
+   - **구현 단계**: 코드 작성 전 API 메서드명/파라미터 재검증
+   - IMPORTANT: Plan → 구현 간 스펙 변경 가능성 있으므로 **양 단계 모두 검색 필수**
    - 상세: @docs/standards-verification.md
 
 3. **Hexagonal Architecture**
@@ -109,7 +113,12 @@ pytest --cov=src --cov-report=html
    - Extension ↔ Server 간 X-Extension-Token 헤더 검증
    - 상세: @docs/implementation-guide.md#9-보안-패턴
 
-5. **MCP Transport**
+5. **TDD 필수 (Test-First Development)**
+   - YOU MUST NOT implement any entity, service, or adapter without writing tests FIRST
+   - Red-Green-Refactor 사이클 엄수: 실패하는 테스트 → 최소 구현 → 리팩토링
+   - 테스트 없는 구현 코드는 커밋/PR 불가
+
+6. **MCP Transport**
    - Streamable HTTP 우선 (2025년 권장)
    - SSE fallback (레거시 서버 호환)
 
@@ -123,6 +132,7 @@ pytest --cov=src --cov-report=html
 | main 브랜치 직접 수정 | PreToolUse Hook 차단 (exit 2) |
 | .env 파일 커밋 | 보안 위험 |
 | EventSource 사용 (SSE) | POST SSE는 fetch ReadableStream 필요 |
+| 테스트 없이 구현 코드 작성 | TDD 필수: 반드시 테스트 먼저 작성 (Red-Green-Refactor) |
 | 테스트 없이 PR | 80% 커버리지 미만 시 CI 차단 |
 
 ---
@@ -162,48 +172,26 @@ pytest --cov=src --cov-report=html
 
 ---
 
-## 🤖 Subagent Workflow
+## 🤖 품질 검증 체크리스트
 
-**명시적 호출 권장:**
-
-| 작업 | 서브에이전트 | 호출 방법 |
-|------|-------------|----------|
-| Entity/Service 구현 전 | `tdd-agent` | "tdd-agent로 테스트 먼저 작성해줘" |
-| 아키텍처 검토 | `hexagonal-architect` | "hexagonal-architect로 검토해줘" |
-| 보안 코드 작성 후 | `security-reviewer` | "security-reviewer로 검토해줘" |
-| 기능 완료/PR 전 | `code-reviewer` | "code-reviewer로 리뷰해줘" |
-
-**커스텀 서브에이전트:** `.claude/agents/`에 정의
-- tdd-agent.md: Red-Green-Refactor 강제
-- security-reviewer.md: 보안 취약점 검토
-- code-reviewer.md: 코드 품질 및 아키텍처 검토
-- hexagonal-architect.md: Domain/Port/Adapter 분리 검증
-
-상세 호출 시점: @docs/roadmap.md Phase별 섹션 참조
+| 시점 | 필요 작업 |
+|------|----------|
+| Entity/Service 구현 전 | TDD 테스트 먼저 작성 |
+| 아키텍처 변경 시 | 헥사고날 아키텍처 원칙 준수 검토 |
+| 보안 코드 작성 후 | 보안 취약점 검토 |
+| 기능 완료/PR 전 | 코드 품질 및 아키텍처 리뷰 |
 
 ---
 
 ## 🌐 Working Guidelines
 
 - **한국어**로 소통 (별도 지시 없으면)
-- **웹 검색 필수**: MCP/A2A/ADK API 불확실 시 최신 스펙 확인
+- **웹 검색 교차 검증** (MCP/A2A/ADK):
+  - **Plan 단계**: 설계 전 최신 스펙/Breaking Changes 확인
+  - **구현 단계**: 코드 작성 전 API 시그니처 재검증
+  - 불확실 시 즉시 웹 검색 (추측 금지)
 - **Fake Adapter 패턴**: 테스트 시 Mocking 대신 Fake 구현체 사용
 - **코드 패턴**: @docs/implementation-guide.md 참조
-
----
-
-## 👤 User Context (ADHD/선택장애 지원)
-
-프로젝트 오너는 ADHD 특성 및 선택장애 보유. 다음 상황에서 `decision-helper` 스킬 사용:
-
-| 트리거 상황 | 예시 표현 |
-|------------|----------|
-| 모호한 상황 | "뭘 해야 할지 모르겠어", "어떻게 해야 하지" |
-| 여러 옵션 중 선택 | "A랑 B 중에 뭐가 나을까" |
-| 산만한 맥락 | 생각이 흩어져 있거나 두서없이 말할 때 |
-| 결정 망설임 | "~해야 하나?", "~할까 말까" |
-
-**원칙:** 선택지 최대 4개, 🔴🟡🟢 긴급도 시각화, 결정 문서는 `docs/decisions/` 기록
 
 ---
 
@@ -228,8 +216,6 @@ pytest --cov=src --cov-report=html
 | `tests/` | 🔴 필수 | Phase 1 완료 |
 | `src/adapters/` | 🟡 중요 | Phase 2 완료 |
 | `extension/` | 🟢 권장 | Phase 2.5 완료 |
-
-상세 정책: @.claude/folder-readme-guide.md
 
 ---
 

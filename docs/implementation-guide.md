@@ -335,13 +335,15 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         """
         명시적 비동기 초기화
 
-        FastAPI startup 이벤트에서 호출:
+        FastAPI lifespan에서 호출:
 
         ```python
-        @app.on_event("startup")
-        async def startup():
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
             orchestrator = container.orchestrator_adapter()
             await orchestrator.initialize()
+            yield
+            await orchestrator.close()
         ```
         """
         if self._initialized:
@@ -1044,29 +1046,30 @@ async def exchange_token(request: Request, body: TokenRequest):
 #### 3. CORS 설정
 
 ```python
-# src/main.py
+# src/adapters/inbound/http/app.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from adapters.inbound.http.security import ExtensionAuthMiddleware
+from .security import ExtensionAuthMiddleware
 
 app = FastAPI(title="AgentHub API")
 
-# Strict CORS: Chrome Extension만 허용
+# Middleware 순서 (중요 - Starlette LIFO):
+# add_middleware()는 내부적으로 insert(0, ...)을 사용하므로
+# 나중에 추가된 미들웨어가 outermost(먼저 실행)됩니다.
+#
+# 원하는 실행 순서: CORS → Auth → Router
+# Auth 먼저 추가 (innermost), CORS 나중 추가 (outermost)
+app.add_middleware(ExtensionAuthMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "chrome-extension://*",  # 개발용
-        # 배포 시 특정 Extension ID로 제한:
-        # "chrome-extension://abcdefghijklmnop",
-    ],
+    # allow_origins=["chrome-extension://*"] 는 작동하지 않음!
+    # allow_origin_regex 사용 필수
+    allow_origin_regex=r"^chrome-extension://[a-zA-Z0-9_-]+$",
     allow_credentials=False,
-    allow_methods=["GET", "POST", "DELETE"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["X-Extension-Token", "Content-Type"],
 )
-
-# Extension 인증 미들웨어
-app.add_middleware(ExtensionAuthMiddleware)
 ```
 
 #### 4. Extension 클라이언트

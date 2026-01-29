@@ -147,10 +147,12 @@ Port 인터페이스를 **구현**하여 실제 외부 시스템과 연동합니
 
 ### 3. Config Layer (설정)
 
-| 컴포넌트 | 역할 |
-|---------|------|
-| **Settings** | pydantic-settings + YAML (환경변수 > YAML > 기본값) |
-| **Container** | dependency-injector DI 컨테이너 |
+| 컴포넌트 | 역할 | 구현 상태 |
+|---------|------|:--------:|
+| **Settings** | pydantic-settings (환경변수 > .env > 기본값) | ✅ `src/config/settings.py` |
+| **Container** | dependency-injector `DeclarativeContainer` (Singleton providers) | ✅ `src/config/container.py` |
+
+**설정 우선순위:** 환경변수 > `.env` > 기본값 (YAML은 Phase 2에서 추가 예정)
 
 ---
 

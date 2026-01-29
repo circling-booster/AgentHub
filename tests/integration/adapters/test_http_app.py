@@ -94,7 +94,14 @@ class TestCorsConfiguration:
 
 
 class TestMiddlewareOrder:
-    """Middleware 순서 통합 테스트 (CORS → Auth)"""
+    """Middleware 순서 통합 테스트 (CORS → Auth)
+
+    FastAPI/Starlette는 add_middleware()를 insert(0, ...)로 처리하므로
+    나중에 추가된 미들웨어가 outermost(먼저 실행)됩니다.
+    CORS가 Auth보다 먼저 실행되어야 403 응답에도 CORS 헤더가 포함됩니다.
+
+    회귀 테스트: CORS 헤더가 에러 응답에도 포함되는지 검증
+    """
 
     @pytest.fixture
     def client(self, http_client):
@@ -114,6 +121,34 @@ class TestMiddlewareOrder:
 
         # Auth 미들웨어가 먼저면 403, CORS가 먼저면 200
         assert response.status_code == 200
+
+    def test_cors_headers_on_403_response(self, client):
+        """토큰 없이 /api/* 호출 시 403 + CORS 헤더 포함 확인
+
+        회귀 테스트: Middleware 순서가 잘못되면 Auth가 CORS보다
+        먼저 실행되어 403 응답에 CORS 헤더가 누락됨.
+        브라우저는 CORS 에러로 표시하여 실제 403을 디버깅하기 어려워짐.
+        """
+        response = client.post(
+            "/api/chat/stream",
+            json={"message": "test"},
+            headers={"Origin": "chrome-extension://testextensionid"},
+        )
+
+        assert response.status_code == 403
+        # CORS 헤더가 403 응답에도 포함되어야 함
+        assert "access-control-allow-origin" in response.headers
+
+    def test_non_extension_origin_rejected_on_post(self, client):
+        """chrome-extension:// 이외 Origin의 POST 요청은 CORS 허용하지 않음"""
+        response = client.post(
+            "/api/chat/stream",
+            json={"message": "test"},
+            headers={"Origin": "http://malicious-site.com"},
+        )
+
+        # 악성 Origin에 CORS 헤더를 포함하지 않아야 함
+        assert "access-control-allow-origin" not in response.headers
 
 
 class TestApiProtection:
@@ -168,3 +203,27 @@ class TestApiProtection:
             headers={"Origin": "chrome-extension://test"},
         )
         assert auth_response.status_code == 200
+
+
+class TestLifespan:
+    """FastAPI Lifespan 동작 검증
+
+    TDD Phase: RED - 커스텀 lifespan 함수가 설정되었는지 검증
+    deprecated @app.on_event("startup") 대신 asynccontextmanager 패턴 사용
+    """
+
+    def test_app_has_custom_lifespan(self):
+        """create_app()이 커스텀 lifespan 함수를 사용"""
+        from src.adapters.inbound.http.app import create_app
+
+        app = create_app()
+        # FastAPI가 lifespan을 _merge_lifespan_context로 래핑하므로
+        # lifespan_context가 기본값(None)이 아닌지 확인
+        assert app.router.lifespan_context is not None
+        # merged_lifespan 래퍼가 설정되어야 함
+        assert "merged_lifespan" in app.router.lifespan_context.__name__
+
+    def test_health_endpoint_after_startup(self, http_client):
+        """startup 후 /health 정상 응답"""
+        response = http_client.get("/health")
+        assert response.status_code == 200

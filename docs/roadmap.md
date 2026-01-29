@@ -12,7 +12,7 @@
 * **Project:** AgentHub (Google ADK + MCP Integrated Local System)
 * **Core Value:** 로컬 환경에서 구동되는 **보안이 내재화된 에이전트 게이트웨이**를 통해, 웹 브라우저(Chrome)와 로컬/원격 도구(MCP)를 매끄럽게 연결합니다.
 * **Strategic Pivot (v3.3):**
-  * **Workflow Validated:** 구현 전 Claude Code 워크플로우(서브에이전트, Hooks, 테스트) 사전 검증
+  * **Workflow Validated:** 구현 전 Claude Code 워크플로우(Hooks, 테스트) 사전 검증
   * **MCP First:** 생태계가 풍부한 MCP를 우선 통합하여 즉각적인 효용을 제공합니다.
   * **Extension Driven:** Chrome Extension(WXT)을 핵심 인터페이스로 격상합니다.
   * **Security Native:** Server-Extension 간 Zero-Trust 핸드셰이크를 구현합니다.
@@ -21,7 +21,29 @@
 
 ---
 
-## 2. Implementation Phases Overview
+## 2. Phase별 상세 플랜
+
+각 Phase의 구체적인 구현 계획은 별도 플랜 문서로 관리됩니다:
+
+| Phase | 플랜 문서 | 상태 |
+|-------|----------|:---:|
+| Phase 0 | 본 문서 참조 | ✅ 완료 |
+| Phase 1 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
+| Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
+| Phase 2 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
+| Phase 3 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 4 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
+
+**플랜 문서 구성:**
+- 구현 전략 및 기술적 고려사항
+- 단계별 구현 순서 (Step-by-Step)
+- 테스트 전략 및 DoD (Definition of Done)
+- 리스크 및 주의사항
+
+---
+
+## 3. Implementation Phases Overview
 
 ```mermaid
 gantt
@@ -30,8 +52,8 @@ gantt
     axisFormat  W%W
 
     section Phase 0: Workflow Validation
-    Custom Subagents Setup       :active, p0a, 2026-02-01, 2d
-    Hooks & pytest Verification  :p0b, after p0a, 1d
+    Agents & Hooks Setup         :active, p0a, 2026-02-01, 2d
+    pytest Verification          :p0b, after p0a, 1d
 
     section Phase 1: Domain Core
     Domain Entities (TDD)        :p1a, after p0b, 3d
@@ -64,21 +86,21 @@ gantt
 
 ---
 
-## 3. Detailed Phase Breakdown
+## 4. Detailed Phase Breakdown
 
 ### Phase 0: Workflow Validation Sprint
 
 **목표:** Claude Code 워크플로우가 프로젝트 요구사항에 맞게 동작하는지 사전 검증. 실패 시 본 개발 진행 불가.
 
-#### 0.1 Custom Subagents Setup
+#### 0.1 Agents & Hooks Setup
 
-`.claude/agents/` 폴더에 프로젝트 전용 서브에이전트 정의:
+`.claude/agents/` 폴더에 프로젝트 전용 에이전트 정의:
 
-| 에이전트 | 파일명 | 역할 | 도구 |
-|---------|--------|------|------|
-| TDD Agent | `tdd-agent.md` | Red-Green-Refactor 사이클 강제 | Read, Write, Edit, Bash, Glob, Grep |
-| Security Reviewer | `security-reviewer.md` | 보안 취약점 검토 | Read, Grep, Glob, WebSearch |
-| Code Reviewer | `code-reviewer.md` | 코드 품질 및 아키텍처 검토 | Read, Grep, Glob |
+| 에이전트 | 파일명 | 역할 |
+|---------|--------|------|
+| TDD Agent | `tdd-agent.md` | Red-Green-Refactor 사이클 강제 |
+| Security Reviewer | `security-reviewer.md` | 보안 취약점 검토 |
+| Code Reviewer | `code-reviewer.md` | 코드 품질 및 아키텍처 검토 |
 
 #### 0.2 Hooks Configuration
 
@@ -117,7 +139,7 @@ pytest --version
 
 **✅ DoD (Definition of Done):**
 
-* [x] `/agents` 명령으로 커스텀 서브에이전트 4개 확인 (tdd-agent, security-reviewer, code-reviewer, hexagonal-architect)
+* [x] 커스텀 에이전트 4개 설정 완료 (tdd-agent, security-reviewer, code-reviewer, hexagonal-architect)
 * [x] Stop 훅 트리거 시 ruff 실행 확인
 * [x] PreToolUse 훅으로 main 브랜치 보호 확인
 * [x] `pytest tests/ -v` 실행 성공 (136 tests passed)
@@ -125,6 +147,8 @@ pytest --version
 ---
 
 ### Phase 1: Domain Core (Backend Foundation)
+
+**📋 상세 플랜:** [phase1.0.md](plans/phase1.0.md)
 
 **목표:** 헥사고날 아키텍처의 Domain Layer 구축. 순수 Python으로 외부 의존성 없이 테스트 가능한 코어 로직.
 
@@ -154,9 +178,9 @@ pytest --version
 * **Inbound Ports:** ChatPort, ManagementPort
 * **Outbound Ports:** OrchestratorPort, StoragePort, A2aPort
 
-**서브에이전트 호출 시점:**
-- 각 엔티티/서비스 구현 전: `tdd-agent` 호출하여 테스트 먼저 작성
-- 구현 완료 후: `code-reviewer` 호출하여 헥사고날 원칙 준수 검토
+**품질 검증:**
+- 각 엔티티/서비스 구현 전: TDD 테스트 먼저 작성 필요
+- 구현 완료 후: 헥사고날 원칙 준수 검토 필요
 
 #### 1.5 Folder Documentation
 
@@ -188,6 +212,8 @@ pytest --version
 
 ### Phase 1.5: Security Layer
 
+**📋 상세 플랜:** [phase1.5.md](plans/phase1.5.md)
+
 **목표:** Server-Extension 간 Zero-Trust 보안 체계 확립. Drive-by RCE 공격 방지.
 
 #### 1.5.1 Token Generation
@@ -217,8 +243,8 @@ app.add_middleware(
 )
 ```
 
-**서브에이전트 호출 시점:**
-- 보안 미들웨어 구현 후: `security-reviewer` 호출하여 취약점 검토
+**품질 검증:**
+- 보안 미들웨어 구현 후: 보안 취약점 검토 필요
 
 #### 1.5.5 Documentation Update
 
@@ -230,14 +256,16 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] curl로 토큰 없이 `/api/*` 호출 시 403 반환
-* [ ] `/auth/token` 호출 시 유효한 토큰 반환
-* [ ] 잘못된 Origin에서 요청 시 CORS 에러
-* [ ] `src/README.md`에 보안 섹션 추가
+* [x] curl로 토큰 없이 `/api/*` 호출 시 403 반환
+* [x] `/auth/token` 호출 시 유효한 토큰 반환
+* [x] 잘못된 Origin에서 요청 시 CORS 에러
+* [x] `src/README.md`에 보안 섹션 추가
 
 ---
 
 ### Phase 2: MCP Integration (Backend API)
+
+**📋 상세 플랜:** [phase2.0.md](plans/phase2.0.md) *(예정)*
 
 **목표:** MCP 서버 동적 연결 및 도구 호출 API 구현. **(핵심 기능)**
 
@@ -268,9 +296,9 @@ app.add_middleware(
 * FastAPI TestClient 기반 API 테스트
 * MCP 테스트 서버: `https://example-server.modelcontextprotocol.io/mcp`
 
-**서브에이전트 호출 시점:**
-- DynamicToolset 구현 전: `tdd-agent` 호출
-- API 구현 완료 후: `security-reviewer` 호출 (입력 검증, 에러 처리)
+**품질 검증:**
+- DynamicToolset 구현 전: TDD 테스트 작성 필요
+- API 구현 완료 후: 보안 검토 필요 (입력 검증, 에러 처리)
 
 #### 2.5 Documentation
 
@@ -299,6 +327,8 @@ app.add_middleware(
 
 ### Phase 2.5: Chrome Extension
 
+**📋 상세 플랜:** [phase2.5.md](plans/phase2.5.md) *(예정)*
+
 **목표:** WXT 기반 Extension으로 서버와 연동. Offscreen Document로 장시간 요청 처리.
 
 #### 2.5.1 WXT Scaffold
@@ -324,9 +354,9 @@ app.add_middleware(
 * 스트리밍 텍스트 렌더링
 * MCP 서버 관리 UI (등록/해제)
 
-**서브에이전트 호출 시점:**
-- Extension 보안 코드 작성 후: `security-reviewer` 호출 (Token Handshake, Storage 사용)
-- 기능 완료 후: `code-reviewer` 호출 (전체 통합 검토)
+**품질 검증:**
+- Extension 보안 코드 작성 후: 보안 검토 필요 (Token Handshake, Storage 사용)
+- 기능 완료 후: 코드 품질 및 통합 검토 필요
 
 #### 2.5.5 Documentation
 
@@ -358,6 +388,8 @@ app.add_middleware(
 
 ### Phase 3: Stability & A2A Integration
 
+**📋 상세 플랜:** [phase3.0.md](plans/phase3.0.md) *(예정)*
+
 **목표:** 장시간 작업 안정성 확보, A2A 기본 통합, E2E 테스트 자동화.
 
 #### 3.1 Zombie Task Killer
@@ -388,9 +420,9 @@ app.add_middleware(
 * Playwright 기반 Extension E2E 테스트
 * Full Flow: Extension → Server → MCP/A2A
 
-**서브에이전트 호출 시점:**
-- 모든 기능 완료 후: `code-reviewer` 호출 (전체 품질 최종 검토)
-- E2E 테스트 작성 전: `tdd-agent` 호출 (테스트 시나리오 설계)
+**품질 검증:**
+- 모든 기능 완료 후: 코드 품질 최종 검토 필요
+- E2E 테스트 작성 전: 테스트 시나리오 설계 필요
 
 #### 3.6 Documentation Update
 
@@ -423,6 +455,8 @@ app.add_middleware(
 
 ### Phase 4: Advanced Features (Optional)
 
+**📋 상세 플랜:** [phase4.0.md](plans/phase4.0.md) *(예정)*
+
 **목표:** 대규모 도구 지원. 시장 상황에 따라 변동 가능.
 
 #### 4.1 Scalable Tool Management
@@ -445,7 +479,7 @@ app.add_middleware(
 
 ---
 
-## 4. Test Strategy (TDD + Hexagonal)
+## 5. Test Strategy (TDD + Hexagonal)
 
 ### 테스트 피라미드
 
@@ -466,13 +500,13 @@ app.add_middleware(
 
 ### Phase별 테스트 전략
 
-| Phase | 테스트 유형 | 대상 | 서브에이전트 | 커버리지 목표 |
-|-------|-----------|------|-------------|--------------|
-| 1 | Unit | Domain Layer | tdd-agent | 80% |
-| 1.5 | Unit | Security Middleware | security-reviewer | - |
-| 2 | Integration | MCP Adapter, API | tdd-agent | 70% |
+| Phase | 테스트 유형 | 대상 | 검증 항목 | 커버리지 목표 |
+|-------|-----------|------|----------|--------------|
+| 1 | Unit | Domain Layer | TDD 테스트 작성 | 80% |
+| 1.5 | Unit | Security Middleware | 보안 취약점 검토 | - |
+| 2 | Integration | MCP Adapter, API | TDD 테스트 작성 | 70% |
 | 2.5 | Integration | Extension ↔ Server | - | - |
-| 3 | E2E | Full Stack | code-reviewer | Critical Path |
+| 3 | E2E | Full Stack | 코드 품질 검토 | Critical Path |
 
 ### 헥사고날 아키텍처 테스트 장점
 
@@ -482,64 +516,27 @@ app.add_middleware(
 
 ---
 
-## 5. Claude Code Integration Guide
+## 6. Claude Code Integration Guide
 
-### 5.1 Custom Subagents
+### 5.1 커스텀 에이전트
 
-`.claude/agents/` 폴더에 마크다운 파일로 정의.
+`.claude/agents/` 폴더에 마크다운 파일로 정의. 필요 시 활용 가능.
 
-**정의된 에이전트 (description은 영어로 작성 - 공식 스펙):**
+| 에이전트 | 역할 | 필요 시점 |
+|---------|------|----------|
+| `tdd-agent` | TDD Red-Green-Refactor 사이클 | 엔티티/서비스 구현 전 |
+| `code-reviewer` | 코드 품질 및 아키텍처 검토 | 기능 완료 후, PR 전 |
+| `security-reviewer` | 보안 취약점 검토 | 보안 코드 작성 후 |
+| `hexagonal-architect` | 헥사고날 아키텍처 검증 | 아키텍처 의사결정 시 |
 
-| 에이전트 | description | 호출 트리거 |
-|---------|-------------|------------|
-| `tdd-agent` | Expert TDD orchestrator... **Use proactively before implementing** | 엔티티/서비스 구현 전 |
-| `code-reviewer` | Elite code reviewer... **Use proactively after code completion** | 기능 완료 후, PR 전 |
-| `security-reviewer` | Expert security auditor... **Use proactively after writing security-related code** | 보안 코드 작성 후 |
-| `hexagonal-architect` | Expert hexagonal architecture specialist... **Use when designing new layers** | 아키텍처 의사결정 시 |
+### 5.2 Phase별 품질 검증 체크리스트
 
-**예시 (tdd-agent):**
-
-```yaml
-# .claude/agents/tdd-agent.md
----
-name: tdd-agent
-description: Expert TDD orchestrator for AgentHub project. Enforces Red-Green-Refactor cycle with Fake Adapter pattern for hexagonal architecture. Use proactively before implementing any entity or service.
-tools: Read, Write, Edit, Bash, Glob, Grep
-model: sonnet
----
-
-# TDD Agent
-
-You enforce strict Test-Driven Development:
-
-1. **Red**: Write failing test FIRST
-2. **Green**: Write minimal code to pass
-3. **Refactor**: Improve while keeping tests green
-
-NEVER write implementation before tests exist.
-```
-
-### 5.2 Subagent 호출 워크플로우
-
-**중요:** 서브에이전트는 자동 트리거가 보장되지 않습니다. description에 "Use proactively"가 포함되어 있어 Claude가 관련 작업 시 **제안할 수 있지만**, 확실한 방법은 **명시적 호출**입니다.
-
-#### 명시적 호출 방법
-
-| 작업 | 서브에이전트 | 호출 예시 |
-|------|-------------|----------|
-| 새 엔티티/서비스 구현 전 | `tdd-agent` | "tdd-agent로 Endpoint 엔티티 테스트 작성해줘" |
-| 보안 관련 코드 작성 후 | `security-reviewer` | "security-reviewer로 Token Handshake 검토해줘" |
-| 아키텍처 의사결정 시 | `hexagonal-architect` | "hexagonal-architect로 Domain 분리 검토해줘" |
-| PR 전/기능 완료 후 | `code-reviewer` | "code-reviewer로 전체 코드 리뷰해줘" |
-
-#### Phase별 상세 호출 시점
-
-각 Phase의 "서브에이전트 호출 시점" 섹션 참조:
-- Phase 1: Domain Entity/Service 구현 전후
-- Phase 1.5: 보안 미들웨어 구현 후
-- Phase 2: DynamicToolset 구현 전, API 완료 후
-- Phase 2.5: Extension 보안 코드 작성 후, 기능 완료 후
-- Phase 3: 모든 기능 완료 후, E2E 테스트 작성 전
+각 Phase의 "품질 검증" 섹션 참조:
+- Phase 1: TDD 테스트 작성 필요, 헥사고날 원칙 검토 필요
+- Phase 1.5: 보안 취약점 검토 필요
+- Phase 2: TDD 테스트 작성 필요, 보안 검토 필요
+- Phase 2.5: 보안 검토 필요, 코드 품질 검토 필요
+- Phase 3: 코드 품질 최종 검토 필요, 테스트 시나리오 설계 필요
 
 ### 5.3 Hooks 정책
 
@@ -556,48 +553,50 @@ NEVER write implementation before tests exist.
 
 ```
 1. Human: 요구사항 정의
-2. tdd-agent: 테스트 코드 생성 (Red)
-3. Claude: 구현 코드 생성 (Green)
+2. 테스트 코드 작성 (Red)
+3. 구현 코드 작성 (Green)
 4. Human: 검토 및 승인
-5. Claude: 리팩토링 (Refactor)
+5. 리팩토링 (Refactor)
 6. Stop Hook: ruff 포맷팅
 ```
 
 ---
 
-## 6. Development Workflow
+## 7. Development Workflow
 
-### Hooks 설정 (권장)
+### Hooks 설정
 
 ```json
 // .claude/settings.json
 {
   "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{ "type": "command", "command": "ruff check src/ tests/ --fix --quiet; ruff format src/ tests/ --quiet" }]
+    }],
     "Stop": [{
       "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "ruff check src/ --fix --quiet && ruff format src/ --quiet"
-      }]
+      "hooks": [{ "type": "command", "command": "pytest tests/unit/ -q --tb=line --maxfail=1" }]
     }],
-    "PreToolUse": [{
-      "matcher": "Edit|Write",
-      "hooks": [{
-        "type": "command",
-        "command": "[ \"$(git branch --show-current)\" != \"main\" ] || exit 2"
-      }]
+    "UserPromptSubmit": [{
+      "matcher": "commit|pr|push",
+      "hooks": [{ "type": "command", "command": "pytest tests/ --cov=src --cov-fail-under=80 -q" }]
+    }],
+    "SessionEnd": [{
+      "hooks": [{ "type": "command", "command": "git branch --show-current | grep -qx main && echo 'Session on main branch'" }]
     }]
   }
 }
 ```
 
-### 브랜치 전략
+### 브랜치 보호
 
-Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
+- **Git pre-commit hook**: main 브랜치 직접 커밋 차단 (`.git/hooks/pre-commit`)
+- **Trunk-Based Development**: feature 브랜치에서 개발, main으로 PR (MVP/소규모 팀)
 
 ---
 
-## 7. Immediate Next Actions (Checklist)
+## 8. Immediate Next Actions (Checklist)
 
 > **범례:** ✅ 완료 | 🤖 자동화됨 | 👤 수동 실행 필요
 
@@ -608,6 +607,7 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 | ✅ | `.claude/agents/` 폴더 생성 | - |
 | ✅ | `tdd-agent.md`, `security-reviewer.md`, `code-reviewer.md` 작성 | - |
 | ✅ | `hexagonal-architect.md` 작성 | - |
+| ✅ | `adr-specialist.md` 작성 | - |
 | ✅ | `.claude/settings.json` 생성 (Hooks 설정) | - |
 | ✅ | `tests/unit/`, `tests/integration/`, `tests/e2e/` 폴더 생성 | - |
 | ✅ | `docs/decisions/` ADR 폴더 생성 | - |
@@ -638,7 +638,9 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 
 ---
 
-## 8. Related Documents
+## 9. Related Documents
+
+### 핵심 문서
 
 | 문서 | 내용 |
 |------|------|
@@ -647,11 +649,22 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 | [extension-guide.md](extension-guide.md) | Chrome Extension 개발 가이드 |
 | [risk-assessment.md](risk-assessment.md) | 리스크 평가 및 완화 전략 |
 
+### Phase별 상세 플랜
+
+| Phase | 문서 | 상태 |
+|-------|------|:---:|
+| Phase 1.0 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
+| Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
+| Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
+| Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 4.0 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
+
 ---
 
-## 9. References
+## 10. References
 
-- [Claude Code Custom Subagents](https://code.claude.com/docs/en/sub-agents)
+- [Claude Code Custom Agents](https://code.claude.com/docs/en/sub-agents)
 - [Claude Code Hooks Guide](https://docs.claude.com/en/docs/claude-code/hooks)
 - [Google ADK Documentation](https://google.github.io/adk-docs/)
 - [MCP Specification (2025-11-25)](https://modelcontextprotocol.io/specification/2025-11-25)

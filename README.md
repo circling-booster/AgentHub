@@ -6,6 +6,22 @@
 
 ---
 
+## Development Status
+
+**Current Phase:** Phase 1.5 (Security Layer) Complete
+
+| Feature | Status | Coverage |
+|---------|:------:|:--------:|
+| Domain Core | Complete | 91% |
+| Security Layer | Complete | - |
+| MCP Integration | Planned (Phase 2.0) | - |
+| Chrome Extension | Planned (Phase 2.5) | - |
+| A2A Integration | Planned (Phase 3) | - |
+
+See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
+
+---
+
 ## 주요 기능
 
 | 기능 | 설명 |
@@ -143,14 +159,19 @@ AgentHub는 자동화된 품질 보장 시스템을 갖추고 있습니다.
 ### 자동 실행 (개발 중)
 
 ```
-[Claude 작업 완료] → Stop Hook 자동 실행:
-  ✓ ruff check src/ --fix      # 린트 자동 수정
-  ✓ ruff format src/            # 코드 포맷팅
-  ✓ pytest tests/ -q            # 테스트 실행
+[코드 수정] → PostToolUse Hook:
+  ✓ ruff check --fix            # 린트 자동 수정
+  ✓ ruff format                 # 코드 포맷팅
+
+[Claude 응답 완료] → Stop Hook:
+  ✓ pytest tests/unit/ -q       # Unit 테스트 실행
+
+[commit/pr/push 명령] → UserPromptSubmit Hook:
+  ✓ pytest tests/ --cov=src     # 전체 테스트 + 커버리지 80% 검증
 ```
 
 **브랜치 보호:**
-- main 브랜치에서 직접 수정 시도 → PreToolUse Hook이 자동 차단
+- main 브랜치 직접 커밋 → Git pre-commit hook이 차단
 - 항상 feature 브랜치에서 작업
 
 ### PR 생성 시 자동 검증
