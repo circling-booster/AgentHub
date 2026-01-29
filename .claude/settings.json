@@ -4,24 +4,59 @@
     "full-stack-orchestration@claude-code-workflows": true
   },
   "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Auto-format code after edits",
+            "command": "ruff check src/ tests/ --fix --quiet 2>/dev/null; ruff format src/ tests/ --quiet 2>/dev/null"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit.*(CLAUDE\\.md|README\\.md|roadmap\\.md)",
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Validate document references",
+            "command": "python scripts/validate_doc_references.py 2>/dev/null || echo 'Document reference check failed (non-blocking)'"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "ruff check src/ tests/ --fix --quiet 2>/dev/null; ruff format src/ tests/ --quiet 2>/dev/null; pytest tests/ -q --tb=line 2>/dev/null || true; exit 0"
+            "description": "Quick unit test validation",
+            "command": "pytest tests/unit/ -q --tb=line --maxfail=1 2>&1 | head -20 || echo 'Unit tests failed - review before commit'"
           }
         ]
       }
     ],
-    "PreToolUse": [
+    "UserPromptSubmit": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "commit|pr|push",
         "hooks": [
           {
             "type": "command",
-            "command": "git rev-parse --abbrev-ref HEAD 2>/dev/null | grep -qx main && echo 'Direct edits to main branch blocked' >&2 && exit 2 || exit 0"
+            "description": "Full test suite with coverage",
+            "command": "pytest tests/ --cov=src --cov-fail-under=80 -q || (echo 'Coverage below 80%' && exit 1)"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Warn if session on main branch",
+            "command": "git rev-parse --abbrev-ref HEAD 2>/dev/null | grep -qx main && echo 'Session ended on main branch - ensure commits are reviewed' || exit 0"
           }
         ]
       }

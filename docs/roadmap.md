@@ -256,10 +256,10 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] curl로 토큰 없이 `/api/*` 호출 시 403 반환
-* [ ] `/auth/token` 호출 시 유효한 토큰 반환
-* [ ] 잘못된 Origin에서 요청 시 CORS 에러
-* [ ] `src/README.md`에 보안 섹션 추가
+* [x] curl로 토큰 없이 `/api/*` 호출 시 403 반환
+* [x] `/auth/token` 호출 시 유효한 토큰 반환
+* [x] 잘못된 Origin에서 요청 시 CORS 에러
+* [x] `src/README.md`에 보안 섹션 추가
 
 ---
 
@@ -564,33 +564,35 @@ app.add_middleware(
 
 ## 7. Development Workflow
 
-### Hooks 설정 (권장)
+### Hooks 설정
 
 ```json
 // .claude/settings.json
 {
   "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{ "type": "command", "command": "ruff check src/ tests/ --fix --quiet; ruff format src/ tests/ --quiet" }]
+    }],
     "Stop": [{
       "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "ruff check src/ --fix --quiet && ruff format src/ --quiet"
-      }]
+      "hooks": [{ "type": "command", "command": "pytest tests/unit/ -q --tb=line --maxfail=1" }]
     }],
-    "PreToolUse": [{
-      "matcher": "Edit|Write",
-      "hooks": [{
-        "type": "command",
-        "command": "[ \"$(git branch --show-current)\" != \"main\" ] || exit 2"
-      }]
+    "UserPromptSubmit": [{
+      "matcher": "commit|pr|push",
+      "hooks": [{ "type": "command", "command": "pytest tests/ --cov=src --cov-fail-under=80 -q" }]
+    }],
+    "SessionEnd": [{
+      "hooks": [{ "type": "command", "command": "git branch --show-current | grep -qx main && echo 'Session on main branch'" }]
     }]
   }
 }
 ```
 
-### 브랜치 전략
+### 브랜치 보호
 
-Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
+- **Git pre-commit hook**: main 브랜치 직접 커밋 차단 (`.git/hooks/pre-commit`)
+- **Trunk-Based Development**: feature 브랜치에서 개발, main으로 PR (MVP/소규모 팀)
 
 ---
 
@@ -605,6 +607,7 @@ Trunk-Based Development 권장 (MVP/소규모 팀에 적합)
 | ✅ | `.claude/agents/` 폴더 생성 | - |
 | ✅ | `tdd-agent.md`, `security-reviewer.md`, `code-reviewer.md` 작성 | - |
 | ✅ | `hexagonal-architect.md` 작성 | - |
+| ✅ | `adr-specialist.md` 작성 | - |
 | ✅ | `.claude/settings.json` 생성 (Hooks 설정) | - |
 | ✅ | `tests/unit/`, `tests/integration/`, `tests/e2e/` 폴더 생성 | - |
 | ✅ | `docs/decisions/` ADR 폴더 생성 | - |

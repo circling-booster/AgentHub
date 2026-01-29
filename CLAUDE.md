@@ -67,8 +67,10 @@ pytest --cov=src --cov-report=html
 ### Development Workflow
 
 **자동화 (Hooks):**
-- **PreToolUse Hook**: main 브랜치 직접 Edit/Write 차단 (항상 feature 브랜치 사용)
-- **Stop Hook**: 응답 완료 시 자동 실행 (ruff 린트/포맷, pytest)
+- **PostToolUse Hook**: 코드 수정 후 자동 ruff 포맷팅
+- **Stop Hook**: 응답 완료 시 Unit 테스트 실행
+- **UserPromptSubmit Hook**: commit/pr/push 시 전체 테스트 + 커버리지 검증
+- **Git pre-commit hook**: main 브랜치 직접 커밋 차단
 - **GitHub Actions**: PR 시 커버리지 80% 미만 차단
 
 자세한 내용: `.claude/settings.json` 및 `.github/workflows/ci.yml` 참조
@@ -214,8 +216,6 @@ pytest --cov=src --cov-report=html
 | `tests/` | 🔴 필수 | Phase 1 완료 |
 | `src/adapters/` | 🟡 중요 | Phase 2 완료 |
 | `extension/` | 🟢 권장 | Phase 2.5 완료 |
-
-상세 정책: @.claude/folder-readme-guide.md
 
 ---
 
