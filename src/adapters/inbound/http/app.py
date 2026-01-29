@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """애플리케이션 수명 주기 관리
 
     Phase 2에서 추가 예정:

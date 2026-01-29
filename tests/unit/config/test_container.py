@@ -4,10 +4,8 @@ DI Container 및 Settings 스캐폴딩 테스트
 TDD Phase: RED - 테스트 먼저 작성, 구현은 Phase A.1.4에서
 """
 
-import pytest
-
-from src.config.settings import Settings
 from src.config.container import Container
+from src.config.settings import Settings
 
 
 class TestSettings:
