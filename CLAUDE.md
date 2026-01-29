@@ -149,6 +149,7 @@ pytest --cov=src --cov-report=html
 | **Extension 개발** | @docs/extension-guide.md (Offscreen Document) |
 | **보안 구현** | @docs/implementation-guide.md#9-보안-패턴 |
 | **Standards 검증** | @docs/standards-verification.md |
+| **Skill & Agent 활용** | @docs/skill-agent-guide.md (Phase별 워크플로우) |
 | **Phase 계획** | @docs/roadmap.md |
 | **리스크 평가** | @docs/risk-assessment.md |
 | **ADR 기록** | @docs/decisions/ |
@@ -197,10 +198,14 @@ pytest --cov=src --cov-report=html
 
 ## 🧩 Test Resources
 
-| Type | Resource |
-|------|----------|
-| MCP Test Server | `https://example-server.modelcontextprotocol.io/mcp` |
-| A2A Samples | github.com/a2aproject/a2a-samples |
+> **정책:** MCP 및 A2A 서버는 외부 서버가 아닌 **로컬 서버만으로 테스트**합니다.
+
+| Type | Resource | 실행 방법 |
+|------|----------|----------|
+| MCP Test Server | `http://127.0.0.1:9000/mcp` (로컬 Synapse) | `SYNAPSE_PORT=9000 python -m synapse` |
+| A2A Agents | 로컬 A2A Agent Server (구현 중) | TBD |
+
+**MCP 서버 프로젝트:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
 
 ---
 

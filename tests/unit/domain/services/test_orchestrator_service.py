@@ -2,71 +2,9 @@
 
 import pytest
 
-from src.domain.entities.conversation import Conversation
-from src.domain.entities.message import Message
 from src.domain.exceptions import ConversationNotFoundError
 from src.domain.services.orchestrator_service import OrchestratorService
-
-
-class FakeConversationService:
-    """테스트용 Fake ConversationService"""
-
-    def __init__(self):
-        self.conversations: dict[str, Conversation] = {}
-        self.messages: dict[str, list[Message]] = {}
-
-    async def create_conversation(self, title: str = "") -> Conversation:
-        conv = Conversation(title=title)
-        self.conversations[conv.id] = conv
-        self.messages[conv.id] = []
-        return conv
-
-    async def get_conversation(self, conversation_id: str) -> Conversation:
-        if conversation_id not in self.conversations:
-            raise ConversationNotFoundError(f"Conversation not found: {conversation_id}")
-        return self.conversations[conversation_id]
-
-    async def list_conversations(self, limit: int = 20) -> list[Conversation]:
-        convs = sorted(
-            self.conversations.values(),
-            key=lambda c: c.updated_at,
-            reverse=True,
-        )
-        return convs[:limit]
-
-    async def delete_conversation(self, conversation_id: str) -> bool:
-        if conversation_id in self.conversations:
-            del self.conversations[conversation_id]
-            self.messages.pop(conversation_id, None)
-            return True
-        return False
-
-    async def get_or_create_conversation(
-        self,
-        conversation_id: str | None,
-    ) -> Conversation:
-        if conversation_id is None:
-            return await self.create_conversation()
-        return await self.get_conversation(conversation_id)
-
-    async def send_message(self, conversation_id: str | None, content: str):
-        if conversation_id is None:
-            conv = await self.create_conversation()
-            conversation_id = conv.id
-        elif conversation_id not in self.conversations:
-            raise ConversationNotFoundError(f"Conversation not found: {conversation_id}")
-
-        # 사용자 메시지 저장
-        user_msg = Message.user(content, conversation_id)
-        self.messages[conversation_id].append(user_msg)
-
-        # 응답 생성
-        for chunk in ["Hello! ", "How can I help you?"]:
-            yield chunk
-
-        # 어시스턴트 메시지 저장
-        assistant_msg = Message.assistant("Hello! How can I help you?", conversation_id)
-        self.messages[conversation_id].append(assistant_msg)
+from tests.unit.fakes import FakeConversationService
 
 
 class TestOrchestratorService:

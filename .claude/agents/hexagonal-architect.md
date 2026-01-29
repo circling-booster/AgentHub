@@ -206,6 +206,79 @@ def test_my_service():
     assert result == "success"
 ```
 
+## Vertical Testing 전략
+
+### 수직 슬라이스 테스트 (Vertical Slice Testing)
+
+헥사고날 아키텍처에서 기능 하나를 **Adapter → Port → Domain** 수직으로 관통하는 테스트 전략입니다.
+
+```
+┌─────────────────────────────────────────┐
+│           E2E (Critical Path)           │  Phase 3
+├─────────────────────────────────────────┤
+│      Integration (Adapter + Port)       │  Phase 2
+├─────────────────────────────────────────┤
+│     Unit (Domain + Fake Adapters)       │  Phase 1
+└─────────────────────────────────────────┘
+```
+
+### 테스트 피라미드와 헥사고날 레이어 매핑
+
+| 테스트 레벨 | 헥사고날 범위 | 도구 | 목표 |
+|------------|-------------|------|------|
+| **Unit** | Domain Layer만 | Fake Adapter | 비즈니스 로직 검증 |
+| **Integration** | Adapter + Port | 실제 DB/HTTP | 외부 연동 검증 |
+| **E2E** | 전체 스택 | Playwright + Server | 사용자 시나리오 |
+
+### In-Memory First 개발 흐름
+
+새로운 기능 구현 시 다음 순서를 따릅니다:
+
+```
+1. Domain Entity/Service 정의 (순수 Python)
+     ↓
+2. Port 인터페이스 정의
+     ↓
+3. Fake Adapter로 Unit 테스트 (In-Memory)
+     ↓
+4. 실제 Adapter 구현 (SQLite, ADK 등)
+     ↓
+5. Integration 테스트로 Adapter 검증
+```
+
+**핵심:** Fake Adapter(In-Memory)로 먼저 전체 로직을 검증한 뒤, 실제 Adapter를 구현합니다. 이렇게 하면:
+- 외부 시스템 없이 빠른 피드백 루프 확보
+- Domain 로직과 인프라 관심사 분리 보장
+- Adapter 교체 시 Domain 테스트 영향 없음
+
+### 수직 슬라이스 예시
+
+"MCP 서버 등록" 기능의 수직 테스트:
+
+```python
+# 1. Unit: Domain 로직 (Fake Adapter)
+class TestRegistryService:
+    async def test_register_mcp_endpoint(self, fake_storage):
+        service = RegistryService(storage=fake_storage)
+        endpoint = await service.register(name="Test", url="https://...", type=EndpointType.MCP)
+        assert endpoint.enabled is True
+
+# 2. Integration: Storage Adapter (실제 SQLite)
+class TestSqliteStorage:
+    async def test_save_and_retrieve_endpoint(self, sqlite_storage):
+        await sqlite_storage.save(endpoint)
+        result = await sqlite_storage.get(endpoint.id)
+        assert result == endpoint
+
+# 3. E2E: HTTP API → Domain → Storage
+class TestMcpRegistrationFlow:
+    async def test_register_via_api(self, client):
+        response = await client.post("/api/mcp/servers", json={"url": "https://..."})
+        assert response.status_code == 201
+```
+
+> **참고:** [Hexagonal Architecture Testing (2026)](https://medium.com/codex/a-testing-strategy-for-a-domain-centric-architecture-e-g-hexagonal-9e8d7c6d4448)
+
 ## 피드백 언어
 
 **모든 피드백은 한국어로 제공합니다.**

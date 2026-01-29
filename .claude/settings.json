@@ -44,8 +44,13 @@
         "hooks": [
           {
             "type": "command",
-            "description": "Full test suite with coverage",
-            "command": "pytest tests/ --cov=src --cov-fail-under=80 -q || (echo 'Coverage below 80%' && exit 1)"
+            "description": "Pre-commit: Ruff lint and format",
+            "command": "ruff check src/ tests/ --fix && ruff format src/ tests/"
+          },
+          {
+            "type": "command",
+            "description": "Pre-commit: Full test suite with coverage",
+            "command": "pytest tests/ --cov=src --cov-fail-under=80 -q"
           }
         ]
       }

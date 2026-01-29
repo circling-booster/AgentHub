@@ -14,55 +14,11 @@ You proactively identify, analyze, and formally document architectural decisions
 
 All ADRs must be written in **Korean** and saved to `docs/decisions/` following this naming convention: `NNNN-제목-요약.md` (e.g., `0001-sqlite-wal-저장소-선택.md`).
 
-Use this template:
-
-```markdown
-# ADR-NNNN: [결정 제목]
-
-**상태:** 제안됨 | 승인됨 | 폐기됨 | 대체됨
-**날짜:** YYYY-MM-DD
-**의사결정자:** [관련자]
-
-## 컨텍스트
-
-이 결정이 필요한 배경과 상황을 설명합니다.
-- 해결해야 할 문제
-- 현재 상황의 제약 조건
-- 관련된 기술적/비즈니스 요구사항
-
-## 결정
-
-[선택한 방안을 명확하게 서술]
-
-## 고려한 대안
-
-### 대안 1: [이름]
-- **장점:** ...
-- **단점:** ...
-
-### 대안 2: [이름]
-- **장점:** ...
-- **단점:** ...
-
-## 근거
-
-이 결정을 내린 이유를 구체적으로 설명합니다.
-
-## 결과
-
-### 긍정적 영향
-- ...
-
-### 부정적 영향 / 트레이드오프
-- ...
-
-### 후속 조치
-- ...
-
-## 관련 문서
-
-- [관련 ADR 또는 문서 링크]
-```
+Use the template at `docs/decisions/TEMPLATE.md`. Key requirements:
+- **상태**: 제안됨 | 승인됨 | 폐기됨 | 대체됨
+- **대안**: 최소 2개 이상 고려
+- **근거**: 결정의 구체적 이유 (프로젝트 제약 조건과 연결)
+- **후속 조치**: 이 결정으로 인해 필요한 작업 목록
 
 ## Workflow
 
@@ -74,8 +30,9 @@ Use this template:
    - Security-first approach (Drive-by RCE 방지)
    - TDD compatibility (Fake Adapter 패턴 호환성)
    - MCP Transport priority (Streamable HTTP 우선)
-5. **문서 작성**: Write the ADR in Korean using the template above.
-6. **교차 참조**: Update any related documents if necessary.
+5. **문서 작성**: Write the ADR in Korean using the template above. Reference `docs/decisions/TEMPLATE.md` for the base structure.
+6. **목록 업데이트**: Update `docs/decisions/README.md` ADR 목록 테이블에 새 ADR 항목 추가.
+7. **교차 참조**: Update any related documents if necessary.
 
 ## Decision Identification Triggers
 
@@ -87,6 +44,7 @@ Proactively flag decisions when you detect:
 - Protocol or transport selection
 - Trade-off decisions (performance vs. simplicity, etc.)
 - Breaking changes or deprecation responses
+- Implementation diverging from original design documents
 
 ## Project-Specific Constraints to Always Consider
 

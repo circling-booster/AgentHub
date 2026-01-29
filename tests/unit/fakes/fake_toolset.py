@@ -45,6 +45,29 @@ class FakeToolset(ToolsetPort):
         self.health_status: dict[str, bool] = {}
         self.tool_results: dict[str, Any] = {}  # tool_name -> result
 
+    @property
+    def tools(self) -> list[Tool]:
+        """default_tools 호환 프로퍼티 (테스트 편의용)"""
+        return self.default_tools
+
+    @tools.setter
+    def tools(self, value: list[Tool]) -> None:
+        self.default_tools = value
+
+    @property
+    def added_servers(self) -> list[str]:
+        """registered_endpoints 키 목록 호환 프로퍼티 (테스트 편의용)"""
+        return list(self.registered_endpoints.keys())
+
+    @property
+    def should_fail(self) -> bool:
+        """should_fail_connection 호환 프로퍼티 (테스트 편의용)"""
+        return self.should_fail_connection
+
+    @should_fail.setter
+    def should_fail(self, value: bool) -> None:
+        self.should_fail_connection = value
+
     async def add_mcp_server(self, endpoint: Endpoint) -> list[Tool]:
         """MCP 서버 추가"""
         if self.should_fail_connection:

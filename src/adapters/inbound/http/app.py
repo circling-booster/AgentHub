@@ -7,25 +7,50 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routes import auth, health
+from src.config.container import Container
+
+from .exceptions import register_exception_handlers
+from .routes import auth, chat, health, mcp
 from .security import ExtensionAuthMiddleware
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """애플리케이션 수명 주기 관리
 
-    Phase 2에서 추가 예정:
-    - Startup: DI Container 초기화, Orchestrator 비동기 초기화
-    - Shutdown: MCP 연결 정리, Storage 종료
+    Startup:
+    - SQLite 스토리지 초기화 (테이블 생성)
+    - Orchestrator 비동기 초기화 (DynamicToolset + LlmAgent)
+
+    Shutdown:
+    - Storage 연결 종료
+    - MCP 연결 정리
     """
     # Startup
     logger.info("AgentHub API starting up")
+
+    container = app.container
+
+    # SQLite 스토리지 초기화
+    conv_storage = container.conversation_storage()
+    await conv_storage.initialize()
+    logger.info("SQLite conversation storage initialized")
+
+    # Orchestrator 초기화 (Async Factory Pattern)
+    orchestrator = container.orchestrator_adapter()
+    await orchestrator.initialize()
+    logger.info("Orchestrator initialized")
+
     yield
+
     # Shutdown
     logger.info("AgentHub API shutting down")
+    await orchestrator.close()
+    logger.info("Orchestrator closed")
+    await conv_storage.close()
+    logger.info("Storage connections closed")
 
 
 def create_app() -> FastAPI:
@@ -42,12 +67,20 @@ def create_app() -> FastAPI:
 
     이유: CORS preflight (OPTIONS)과 403 에러 응답에 CORS 헤더가 포함되어야 함.
     """
+    # DI Container 초기화 및 와이어링
+    container = Container()
+    container.wire(packages=["src.adapters.inbound.http"])
+
     app = FastAPI(
         title="AgentHub API",
         version="0.1.0",
         description="MCP + A2A 통합 Agent System",
         lifespan=lifespan,
     )
+    app.container = container
+
+    # Domain Exception → HTTP 응답 변환
+    register_exception_handlers(app)
 
     # Middleware 순서 (중요 - Starlette LIFO):
     # add_middleware()는 insert(0, ...)를 사용하므로, 나중에 추가한 것이 outermost.
@@ -68,5 +101,7 @@ def create_app() -> FastAPI:
     # 라우터 등록
     app.include_router(auth.router)
     app.include_router(health.router)
+    app.include_router(mcp.router)
+    app.include_router(chat.router)
 
     return app

@@ -4,68 +4,9 @@ import pytest
 
 from src.domain.entities.conversation import Conversation
 from src.domain.entities.enums import MessageRole
-from src.domain.entities.message import Message
 from src.domain.exceptions import ConversationNotFoundError
 from src.domain.services.conversation_service import ConversationService
-
-
-class FakeConversationStorage:
-    """테스트용 Fake ConversationStorage"""
-
-    def __init__(self):
-        self.conversations: dict[str, Conversation] = {}
-        self.messages: dict[str, list[Message]] = {}
-
-    async def save_conversation(self, conversation: Conversation) -> None:
-        self.conversations[conversation.id] = conversation
-
-    async def get_conversation(self, conversation_id: str) -> Conversation | None:
-        return self.conversations.get(conversation_id)
-
-    async def list_conversations(self, limit: int = 20, offset: int = 0) -> list[Conversation]:
-        convs = sorted(
-            self.conversations.values(),
-            key=lambda c: c.updated_at,
-            reverse=True,
-        )
-        return convs[offset : offset + limit]
-
-    async def delete_conversation(self, conversation_id: str) -> bool:
-        if conversation_id in self.conversations:
-            del self.conversations[conversation_id]
-            self.messages.pop(conversation_id, None)
-            return True
-        return False
-
-    async def save_message(self, message: Message) -> None:
-        if message.conversation_id not in self.messages:
-            self.messages[message.conversation_id] = []
-        self.messages[message.conversation_id].append(message)
-
-    async def get_messages(self, conversation_id: str, limit: int | None = None) -> list[Message]:
-        messages = self.messages.get(conversation_id, [])
-        if limit:
-            return messages[-limit:]
-        return messages
-
-
-class FakeOrchestrator:
-    """테스트용 Fake Orchestrator"""
-
-    def __init__(self, responses: list[str] | None = None):
-        self.responses = responses or ["Hello! ", "How can I help you?"]
-        self.initialized = False
-        self.closed = False
-
-    async def initialize(self) -> None:
-        self.initialized = True
-
-    async def process_message(self, message: str, conversation_id: str):
-        for chunk in self.responses:
-            yield chunk
-
-    async def close(self) -> None:
-        self.closed = True
+from tests.unit.fakes import FakeConversationStorage, FakeOrchestrator
 
 
 class TestConversationService:

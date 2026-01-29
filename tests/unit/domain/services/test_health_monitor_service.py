@@ -7,49 +7,7 @@ import pytest
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointStatus, EndpointType
 from src.domain.services.health_monitor_service import HealthMonitorService
-
-
-class FakeEndpointStorage:
-    """테스트용 Fake EndpointStorage"""
-
-    def __init__(self):
-        self.endpoints: dict[str, Endpoint] = {}
-
-    async def save_endpoint(self, endpoint: Endpoint) -> None:
-        self.endpoints[endpoint.id] = endpoint
-
-    async def get_endpoint(self, endpoint_id: str) -> Endpoint | None:
-        return self.endpoints.get(endpoint_id)
-
-    async def list_endpoints(self, type_filter: str | None = None) -> list[Endpoint]:
-        endpoints = list(self.endpoints.values())
-        if type_filter:
-            endpoints = [e for e in endpoints if e.type.value == type_filter]
-        return endpoints
-
-    async def delete_endpoint(self, endpoint_id: str) -> bool:
-        if endpoint_id in self.endpoints:
-            del self.endpoints[endpoint_id]
-            return True
-        return False
-
-    async def update_endpoint_status(self, endpoint_id: str, status: str) -> bool:
-        if endpoint_id in self.endpoints:
-            self.endpoints[endpoint_id].status = EndpointStatus(status)
-            return True
-        return False
-
-
-class FakeToolset:
-    """테스트용 Fake Toolset"""
-
-    def __init__(self):
-        self.health_results: dict[str, bool] = {}
-
-    async def health_check(self, endpoint_id: str) -> bool:
-        return self.health_results.get(endpoint_id, False)
-
-    # 다른 메서드들은 필요하지 않음
+from tests.unit.fakes import FakeEndpointStorage, FakeToolset
 
 
 class TestHealthMonitorService:
@@ -79,7 +37,7 @@ class TestHealthMonitorService:
         ep2 = Endpoint(id="ep-2", url="https://server2.com/mcp", type=EndpointType.MCP)
         storage.endpoints["ep-1"] = ep1
         storage.endpoints["ep-2"] = ep2
-        toolset.health_results = {"ep-1": True, "ep-2": False}
+        toolset.health_status = {"ep-1": True, "ep-2": False}
 
         # When
         results = await service.check_all_endpoints()
@@ -99,7 +57,7 @@ class TestHealthMonitorService:
             status=EndpointStatus.UNKNOWN,
         )
         storage.endpoints["ep-1"] = ep
-        toolset.health_results = {"ep-1": True}
+        toolset.health_status = {"ep-1": True}
 
         # When
         await service.check_all_endpoints()
@@ -118,7 +76,7 @@ class TestHealthMonitorService:
             status=EndpointStatus.CONNECTED,
         )
         storage.endpoints["ep-1"] = ep
-        toolset.health_results = {"ep-1": False}
+        toolset.health_status = {"ep-1": False}
 
         # When
         await service.check_all_endpoints()
@@ -132,7 +90,7 @@ class TestHealthMonitorService:
         # Given
         ep = Endpoint(id="ep-1", url="https://server.com/mcp", type=EndpointType.MCP)
         storage.endpoints["ep-1"] = ep
-        toolset.health_results = {"ep-1": True}
+        toolset.health_status = {"ep-1": True}
 
         # When
         result = await service.check_endpoint("ep-1")
@@ -175,7 +133,7 @@ class TestHealthMonitorService:
             status=EndpointStatus.UNKNOWN,
         )
         storage.endpoints["ep-1"] = ep
-        toolset.health_results = {"ep-1": True}
+        toolset.health_status = {"ep-1": True}
 
         # When
         await service.start()
@@ -203,7 +161,7 @@ class TestHealthMonitorService:
         )
         storage.endpoints["ep-1"] = ep1
         storage.endpoints["ep-2"] = ep2
-        toolset.health_results = {"ep-1": True, "ep-2": True}
+        toolset.health_status = {"ep-1": True, "ep-2": True}
 
         # When
         results = await service.check_all_endpoints()

@@ -7,6 +7,17 @@ pytest가 자동으로 이 파일을 로드합니다.
 
 import pytest
 
+
+def pytest_addoption(parser):
+    """pytest 커스텀 옵션 추가"""
+    parser.addoption(
+        "--run-llm",
+        action="store_true",
+        default=False,
+        help="Run LLM integration tests (requires API key)",
+    )
+
+
 # ============================================================
 # Session Fixtures (테스트 세션당 1회)
 # ============================================================

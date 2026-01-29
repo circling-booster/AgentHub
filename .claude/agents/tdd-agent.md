@@ -139,6 +139,75 @@ class TestConversationService:
         assert len(conversation.messages) == 0
 ```
 
+## AI 협업 TDD 워크플로우
+
+### Human-AI TDD 사이클
+
+```
+1. Human seed   → 핵심 테스트 시나리오 정의 (요구사항, 경계 조건)
+2. AI 생성      → 테스트 코드 작성 + 엣지 케이스 제안
+3. Human 리뷰   → 테스트 검토 및 승인
+4. AI 구현      → 테스트 통과하는 최소 코드 작성
+5. Human 검증   → 구현 검토 및 리팩토링 지시
+```
+
+### 행동 기반 테스트 원칙
+
+테스트는 **구현 세부사항이 아닌 행동(Behavior)**을 검증해야 합니다:
+
+```python
+# ❌ 구현 세부사항 테스트 (깨지기 쉬움)
+def test_internal_dict_has_key():
+    service = RegistryService(storage=FakeStorage())
+    await service.register(endpoint)
+    assert "endpoint-id" in service._endpoints  # 내부 구조 의존
+
+# ✅ 행동 기반 테스트 (안정적)
+def test_registered_endpoint_is_retrievable():
+    service = RegistryService(storage=FakeStorage())
+    await service.register(endpoint)
+    result = await service.get(endpoint.id)
+    assert result == endpoint  # 외부 행동 검증
+```
+
+**원칙:**
+- 공개 API를 통해서만 검증
+- 내부 상태(`_private` 속성)에 직접 접근 금지
+- 반환값, 부수효과, 예외를 검증 대상으로
+
+### 엣지 케이스 제안 패턴
+
+테스트 작성 시 다음 범주의 엣지 케이스를 적극 제안합니다:
+
+| 범주 | 예시 |
+|------|------|
+| **동시성** | 동시 쓰기, 락 경합, 비동기 타이밍 |
+| **경계값** | 빈 문자열, 0, MAX_INT, 빈 리스트 |
+| **에러 조건** | 네트워크 실패, 타임아웃, 잘못된 입력 |
+| **상태 전이** | 중복 등록, 이미 삭제된 항목 재삭제 |
+
+```python
+# 엣지 케이스 테스트 예시
+class TestRegistryServiceEdgeCases:
+    async def test_register_duplicate_endpoint_raises(self, service):
+        """동일 엔드포인트 중복 등록 시 예외"""
+        await service.register(endpoint)
+        with pytest.raises(EndpointAlreadyExistsError):
+            await service.register(endpoint)
+
+    async def test_get_nonexistent_endpoint_raises(self, service):
+        """존재하지 않는 엔드포인트 조회 시 예외"""
+        with pytest.raises(EndpointNotFoundError):
+            await service.get("nonexistent-id")
+
+    async def test_register_with_empty_name(self, service):
+        """빈 이름으로 등록 시 검증 실패"""
+        with pytest.raises(ValueError):
+            Endpoint.create(name="", url="https://example.com", type=EndpointType.MCP)
+```
+
+> **참고:** [Test-Driven Development with AI (2026)](https://www.readysetcloud.io/blog/allen.helton/tdd-with-ai/)
+
 ## 금지 사항
 
 1. **테스트 없이 구현 코드 작성 금지**

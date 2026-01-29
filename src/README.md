@@ -115,6 +115,67 @@ src/
 
 참조: [docs/implementation-guide.md#9-보안-패턴](../docs/implementation-guide.md#9-보안-패턴)
 
+## MCP Integration (Phase 2)
+
+**Model Context Protocol (MCP)** 서버를 동적으로 연결하여 100+ 외부 도구를 LLM에 통합합니다.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│         LlmAgent (Google ADK)                    │
+│   - model: LiteLlm                              │
+│   - tools: [DynamicToolset]                     │
+└──────────────────┬──────────────────────────────┘
+                   │ get_tools() (매 turn)
+      ┌────────────▼────────────┐
+      │    DynamicToolset       │
+      │  (BaseToolset 상속)      │
+      │  - TTL 캐싱 (5분)        │
+      │  - MAX_ACTIVE_TOOLS=30  │
+      └────────────┬────────────┘
+                   │
+    ┌──────────────┴──────────────┐
+    │         MCPToolset           │
+    │  - Streamable HTTP (우선)    │
+    │  - SSE (fallback)           │
+    └──────────────┬──────────────┘
+                   │
+    ┌──────────────▼──────────────┐
+    │      MCP Servers             │
+    │  (외부 도구 제공)             │
+    └──────────────────────────────┘
+```
+
+### API Endpoints
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/api/mcp/servers` | GET | 등록된 MCP 서버 목록 |
+| `/api/mcp/servers` | POST | MCP 서버 등록 |
+| `/api/mcp/servers/{id}` | DELETE | MCP 서버 해제 |
+| `/api/mcp/servers/{id}/tools` | GET | 서버 도구 조회 |
+| `/api/chat/stream` | POST | SSE 스트리밍 채팅 |
+
+### Context Explosion 방지
+
+| 제약 | 값 | 이유 |
+|------|-----|------|
+| `MAX_ACTIVE_TOOLS` | 30 | 컨텍스트 윈도우 초과 방지 |
+| `TOOL_TOKEN_WARNING_THRESHOLD` | 10000 | 토큰 비용 폭탄 방지 |
+| `cache_ttl_seconds` | 300 | MCP 서버 조회 최소화 |
+
+### 주요 파일
+
+| 파일 | 역할 |
+|------|------|
+| `adapters/outbound/adk/dynamic_toolset.py` | BaseToolset + MCP 동적 관리 |
+| `adapters/outbound/adk/orchestrator_adapter.py` | LlmAgent + Streaming |
+| `adapters/inbound/http/routes/mcp.py` | MCP 서버 CRUD API |
+| `adapters/inbound/http/routes/chat.py` | SSE 채팅 스트리밍 |
+
+참조: [src/adapters/README.md](adapters/README.md#adk-adapters), [docs/implementation-guide.md#2-dynamictoolset-구현](../docs/implementation-guide.md#2-dynamictoolset-구현)
+
 ## Key Files
 
 | 파일 | 역할 |
