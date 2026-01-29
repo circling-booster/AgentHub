@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config.container import Container
 
 from .exceptions import register_exception_handlers
-from .routes import auth, chat, health, mcp
+from .routes import auth, chat, conversations, health, mcp
 from .security import ExtensionAuthMiddleware
 
 logger = logging.getLogger(__name__)
@@ -103,5 +103,6 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(mcp.router)
     app.include_router(chat.router)
+    app.include_router(conversations.router)
 
     return app

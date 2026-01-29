@@ -48,14 +48,25 @@ async def chat_stream(
     async def generate() -> AsyncIterator[str]:
         """SSE 이벤트 생성기"""
         try:
+            conversation_id = body.conversation_id
+
+            # conversation_id가 None이면 자동 생성 후 conversation_created 이벤트 전송
+            if conversation_id is None:
+                conversation = await orchestrator.create_conversation()
+                conversation_id = conversation.id
+                created_event = json.dumps(
+                    {"type": "conversation_created", "conversation_id": conversation_id}
+                )
+                yield f"data: {created_event}\n\n"
+
             async for chunk in orchestrator.send_message(
-                conversation_id=body.conversation_id,
+                conversation_id=conversation_id,
                 message=body.message,
             ):
                 # 클라이언트 연결 해제 확인 (Zombie Task 방지)
                 if await request.is_disconnected():
                     logger.info(
-                        f"Client disconnected, stopping stream for conversation {body.conversation_id}"
+                        f"Client disconnected, stopping stream for conversation {conversation_id}"
                     )
                     break
 
