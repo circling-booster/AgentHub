@@ -75,9 +75,13 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "-v --tb=short"
+addopts = "-v --tb=short -m 'not llm'"
 filterwarnings = [
     "ignore::DeprecationWarning",
+]
+markers = [
+    "llm: tests requiring LLM API key (excluded by default)",
+    "local_mcp: tests requiring local MCP server (127.0.0.1:9000)",
 ]
 
 [tool.ruff]
