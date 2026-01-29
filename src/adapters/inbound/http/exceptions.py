@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from src.domain.exceptions import (
     ConversationNotFoundError,
     DomainException,
+    DuplicateEndpointError,
     EndpointConnectionError,
     EndpointNotFoundError,
     EndpointTimeoutError,
@@ -29,6 +30,8 @@ class ErrorResponse(BaseModel):
 
 # Domain Exception → HTTP 상태 코드 매핑
 EXCEPTION_STATUS_MAP: dict[type[DomainException], int] = {
+    # 400 Bad Request
+    DuplicateEndpointError: status.HTTP_400_BAD_REQUEST,
     # 404 Not Found
     EndpointNotFoundError: status.HTTP_404_NOT_FOUND,
     ToolNotFoundError: status.HTTP_404_NOT_FOUND,

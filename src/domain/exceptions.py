@@ -24,6 +24,12 @@ class EndpointNotFoundError(DomainException):
     pass
 
 
+class DuplicateEndpointError(DomainException):
+    """이미 등록된 엔드포인트"""
+
+    pass
+
+
 class EndpointConnectionError(DomainException):
     """엔드포인트 연결 실패"""
 

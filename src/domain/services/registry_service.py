@@ -6,7 +6,7 @@
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointType
 from src.domain.entities.tool import Tool
-from src.domain.exceptions import EndpointNotFoundError
+from src.domain.exceptions import DuplicateEndpointError, EndpointNotFoundError
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
 
@@ -56,9 +56,16 @@ class RegistryService:
 
         Raises:
             InvalidUrlError: 유효하지 않은 URL
+            DuplicateEndpointError: 이미 등록된 URL
             EndpointConnectionError: 연결 실패
             ToolLimitExceededError: 도구 수 제한 초과
         """
+        # 중복 URL 검사
+        existing = await self._storage.list_endpoints()
+        for ep in existing:
+            if ep.url == url:
+                raise DuplicateEndpointError(f"Endpoint already registered: {url}")
+
         # 엔드포인트 생성 (URL 검증은 Endpoint에서 수행)
         endpoint = Endpoint(
             url=url,
