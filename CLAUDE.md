@@ -111,7 +111,12 @@ pytest --cov=src --cov-report=html
    - Extension ↔ Server 간 X-Extension-Token 헤더 검증
    - 상세: @docs/implementation-guide.md#9-보안-패턴
 
-5. **MCP Transport**
+5. **TDD 필수 (Test-First Development)**
+   - YOU MUST NOT implement any entity, service, or adapter without writing tests FIRST
+   - Red-Green-Refactor 사이클 엄수: 실패하는 테스트 → 최소 구현 → 리팩토링
+   - 테스트 없는 구현 코드는 커밋/PR 불가
+
+6. **MCP Transport**
    - Streamable HTTP 우선 (2025년 권장)
    - SSE fallback (레거시 서버 호환)
 
@@ -125,6 +130,7 @@ pytest --cov=src --cov-report=html
 | main 브랜치 직접 수정 | PreToolUse Hook 차단 (exit 2) |
 | .env 파일 커밋 | 보안 위험 |
 | EventSource 사용 (SSE) | POST SSE는 fetch ReadableStream 필요 |
+| 테스트 없이 구현 코드 작성 | TDD 필수: 반드시 테스트 먼저 작성 (Red-Green-Refactor) |
 | 테스트 없이 PR | 80% 커버리지 미만 시 CI 차단 |
 
 ---
