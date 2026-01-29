@@ -4,7 +4,7 @@
 """
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from src.adapters.inbound.http.schemas.conversations import (
     ConversationResponse,
@@ -29,3 +29,21 @@ async def create_conversation(
         title=conversation.title,
         created_at=conversation.created_at.isoformat(),
     )
+
+
+@router.get("", response_model=list[ConversationResponse])
+@inject
+async def list_conversations(
+    limit: int = Query(default=20, ge=1, le=100),
+    conversation_service: ConversationService = Depends(Provide[Container.conversation_service]),
+):
+    """대화 목록 조회 (최신순)"""
+    conversations = await conversation_service.list_conversations(limit=limit)
+    return [
+        ConversationResponse(
+            id=conv.id,
+            title=conv.title,
+            created_at=conv.created_at.isoformat(),
+        )
+        for conv in conversations
+    ]

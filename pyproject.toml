@@ -82,6 +82,7 @@ filterwarnings = [
 markers = [
     "llm: tests requiring LLM API key (excluded by default)",
     "local_mcp: tests requiring local MCP server (127.0.0.1:9000)",
+    "mcp: tests requiring running MCP server (--run-mcp option)",
 ]
 
 [tool.ruff]

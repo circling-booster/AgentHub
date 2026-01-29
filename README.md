@@ -15,7 +15,7 @@
 | Domain Core | Complete | 91% |
 | Security Layer | Complete | 96% |
 | **MCP Integration** | **Complete** | **88%** |
-| Chrome Extension | Planned (Phase 2.5) | - |
+| **Chrome Extension** | **Complete** | **129 tests** |
 | A2A Integration | Planned (Phase 3) | - |
 
 

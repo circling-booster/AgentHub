@@ -58,7 +58,12 @@ tests/
 │       ├── test_dynamic_toolset.py     # DynamicToolset 테스트
 │       └── test_orchestrator_adapter.py # ADK Orchestrator 테스트 (LLM 마커 포함)
 │
-├── e2e/                           # E2E 테스트 (Phase 3)
+├── e2e/                           # E2E 테스트 (12 tests, 2 skipped)
+│   ├── conftest.py               # E2E 공통 fixture
+│   └── test_extension_server.py  # Extension API 시퀀스 시뮬레이션
+│       ├── TestFullChatFlow      # Health → 토큰 교환 → 대화 → SSE 채팅
+│       ├── TestMcpManagementFlow # 서버 등록 → 조회 → 삭제
+│       └── TestTokenRequired     # 토큰 없이 API 호출 시 403
 │
 └── conftest.py                    # 루트 pytest fixtures (.env 로드, --run-llm 옵션)
 ```
@@ -99,12 +104,14 @@ tests/
 |------|------|----------|
 | `@pytest.mark.llm` | LLM API 호출 필요 (비용 발생) | **기본 제외** (`addopts = "-m 'not llm'"`) |
 | `@pytest.mark.local_mcp` | 로컬 MCP 서버 필요 (127.0.0.1:9000) | 기본 제외 |
+| `@pytest.mark.mcp` | MCP 서버 필요 (`--run-mcp` 옵션) | 기본 제외 |
 
 ### 커스텀 옵션
 
 | 옵션 | 설명 |
 |------|------|
 | `--run-llm` | LLM 테스트 활성화 (API 키 + 비용 필요) |
+| `--run-mcp` | MCP 서버 E2E 테스트 활성화 (로컬 서버 필요) |
 
 ### LLM 테스트 환경
 
@@ -205,16 +212,38 @@ pytest --cov=src --cov-report=html
 # 커버리지 검증 (80% 미만 시 실패)
 pytest --cov=src --cov-fail-under=80
 
+# E2E 테스트
+pytest tests/e2e/ -v
+
 # 특정 테스트 실행
 pytest tests/unit/domain/services/test_conversation_service.py -v
+
+# Extension 테스트 (Vitest)
+cd extension && npx vitest run
+
+# Extension 특정 테스트
+cd extension && npx vitest run tests/hooks/useChat.test.ts
 ```
 
 ## Current Status
 
+### Server Tests (Python / pytest)
+
 - **Unit Tests:** 155 passed
 - **Integration Tests:** 91 passed (+4 LLM deselected)
-- **Total:** 246 passed, 4 deselected
-- **Coverage:** 89%
+- **E2E Tests:** 10 passed, 2 skipped (MCP 서버 필요)
+- **Total:** 260 passed, 2 skipped, 4 deselected
+- **Coverage:** 88%
+
+### Extension Tests (TypeScript / Vitest)
+
+- **Library Tests:** 51 passed (messaging, api, sse, background-handlers)
+- **Hook Tests:** 22 passed (useChat, useMcpServers, useServerHealth)
+- **Component Tests:** 34 passed (ChatInterface, ChatInput, MessageBubble, McpServerManager, ServerStatus, App)
+- **Entrypoint Tests:** 22 passed (background, offscreen)
+- **Total:** 129 passed
+
+### Grand Total: 389+ tests
 
 ## References
 

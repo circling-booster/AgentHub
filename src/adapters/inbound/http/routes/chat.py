@@ -47,9 +47,8 @@ async def chat_stream(
 
     async def generate() -> AsyncIterator[str]:
         """SSE 이벤트 생성기"""
+        conversation_id = body.conversation_id
         try:
-            conversation_id = body.conversation_id
-
             # conversation_id가 None이면 자동 생성 후 conversation_created 이벤트 전송
             if conversation_id is None:
                 conversation = await orchestrator.create_conversation()
@@ -79,7 +78,7 @@ async def chat_stream(
 
         except asyncio.CancelledError:
             # 연결 해제 시 정리 로직
-            logger.info(f"Stream cancelled for conversation {body.conversation_id}")
+            logger.info(f"Stream cancelled for conversation {conversation_id}")
             raise  # CancelledError는 다시 발생시켜야 함
 
         except Exception as e:
@@ -90,7 +89,7 @@ async def chat_stream(
 
         finally:
             # 리소스 정리 보장
-            logger.debug(f"Stream cleanup for conversation {body.conversation_id}")
+            logger.debug(f"Stream cleanup for conversation {conversation_id}")
 
     return StreamingResponse(
         generate(),

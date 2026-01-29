@@ -17,7 +17,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -184,3 +184,9 @@ cython_debug/
 .cursorindexingignore
 
 nul
+
+# Node.js
+node_modules/
+
+# WXT Extension build output
+.output/

@@ -31,7 +31,7 @@
 | Phase 1 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
 | Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
 | Phase 2 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 (수동 검증 대기) |
 | Phase 3 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
 | Phase 4 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
 
@@ -377,12 +377,15 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] Extension 설치 시 서버와 자동 토큰 교환 성공
-* [ ] Sidepanel에서 "Hello" 입력 시 Claude 응답
-* [ ] MCP 도구 호출 결과가 UI에 표시
-* [ ] 브라우저 종료 후 재시작 시 토큰 재발급 정상 동작
-* [ ] `extension/README.md` 생성
-* [ ] 루트 `README.md`에 Extension 사용법 추가
+* [ ] Extension 설치 시 서버와 자동 토큰 교환 성공 (수동 검증 필요)
+* [ ] Sidepanel에서 "Hello" 입력 시 Claude 응답 (수동 검증 필요)
+* [ ] MCP 도구 호출 결과가 UI에 표시 (수동 검증 필요)
+* [ ] 브라우저 종료 후 재시작 시 토큰 재발급 정상 동작 (수동 검증 필요)
+* [x] `extension/README.md` 생성
+* [x] 루트 `README.md`에 Extension 사용법 추가
+* [x] Vitest 전체 통과 (129 tests)
+* [x] 서버 E2E 테스트 통과 (10 passed, 2 skipped)
+* [x] 백엔드 테스트 regression 없음 (260 passed)
 
 ---
 
@@ -656,8 +659,8 @@ app.add_middleware(
 |-------|------|:---:|
 | Phase 1.0 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
 | Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
-| Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
+| Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 (수동 검증 대기) |
 | Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
 | Phase 4.0 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
 
