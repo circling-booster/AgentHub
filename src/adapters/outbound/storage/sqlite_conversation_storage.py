@@ -311,6 +311,17 @@ class SqliteConversationStorage(ConversationStoragePort):
 
         return messages
 
+    async def get_conversation_with_messages(
+        self,
+        conversation_id: str,
+    ) -> Conversation | None:
+        """대화와 메시지를 함께 조회 (Aggregate Root 완전 로딩)"""
+        conversation = await self.get_conversation(conversation_id)
+        if conversation is None:
+            return None
+        conversation.messages = await self.get_messages(conversation_id)
+        return conversation
+
     async def close(self) -> None:
         """연결 종료"""
         if self._connection:

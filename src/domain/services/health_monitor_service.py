@@ -5,10 +5,13 @@
 
 import asyncio
 import contextlib
+import logging
 
 from src.domain.entities.enums import EndpointStatus
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
+
+logger = logging.getLogger(__name__)
 
 
 class HealthMonitorService:
@@ -60,6 +63,7 @@ class HealthMonitorService:
 
         self._running = True
         self._task = asyncio.create_task(self._monitor_loop())
+        logger.info("Health monitor started (interval=%ds)", self._check_interval)
 
     async def stop(self) -> None:
         """
@@ -76,6 +80,7 @@ class HealthMonitorService:
             with contextlib.suppress(asyncio.CancelledError):
                 await self._task
             self._task = None
+        logger.info("Health monitor stopped")
 
     async def _monitor_loop(self) -> None:
         """모니터링 루프"""
@@ -88,6 +93,7 @@ class HealthMonitorService:
                 if self._running:  # sleep 후 다시 확인
                     await self.check_all_endpoints()
             except asyncio.CancelledError:
+                logger.info("Health monitor loop cancelled")
                 break
 
     async def check_all_endpoints(self) -> dict[str, bool]:

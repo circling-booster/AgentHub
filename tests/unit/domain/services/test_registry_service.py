@@ -3,81 +3,11 @@
 import pytest
 
 from src.domain.entities.endpoint import Endpoint
-from src.domain.entities.enums import EndpointStatus, EndpointType
+from src.domain.entities.enums import EndpointType
 from src.domain.entities.tool import Tool
 from src.domain.exceptions import EndpointConnectionError, EndpointNotFoundError
 from src.domain.services.registry_service import RegistryService
-
-
-class FakeEndpointStorage:
-    """테스트용 Fake EndpointStorage"""
-
-    def __init__(self):
-        self.endpoints: dict[str, Endpoint] = {}
-
-    async def save_endpoint(self, endpoint: Endpoint) -> None:
-        self.endpoints[endpoint.id] = endpoint
-
-    async def get_endpoint(self, endpoint_id: str) -> Endpoint | None:
-        return self.endpoints.get(endpoint_id)
-
-    async def list_endpoints(self, type_filter: str | None = None) -> list[Endpoint]:
-        endpoints = list(self.endpoints.values())
-        if type_filter:
-            endpoints = [e for e in endpoints if e.type.value == type_filter]
-        return endpoints
-
-    async def delete_endpoint(self, endpoint_id: str) -> bool:
-        if endpoint_id in self.endpoints:
-            del self.endpoints[endpoint_id]
-            return True
-        return False
-
-    async def update_endpoint_status(self, endpoint_id: str, status: str) -> bool:
-        if endpoint_id in self.endpoints:
-            self.endpoints[endpoint_id].status = EndpointStatus(status)
-            return True
-        return False
-
-
-class FakeToolset:
-    """테스트용 Fake Toolset"""
-
-    def __init__(self, tools: list[Tool] | None = None, should_fail: bool = False):
-        self.tools = tools or [
-            Tool(name="test_tool", description="A test tool"),
-        ]
-        self.should_fail = should_fail
-        self.added_servers: list[str] = []
-        self.removed_servers: list[str] = []
-        self.health_status: dict[str, bool] = {}
-
-    async def add_mcp_server(self, endpoint: Endpoint) -> list[Tool]:
-        if self.should_fail:
-            raise EndpointConnectionError(f"Failed to connect to {endpoint.url}")
-        self.added_servers.append(endpoint.id)
-        self.health_status[endpoint.id] = True
-        return self.tools
-
-    async def remove_mcp_server(self, endpoint_id: str) -> bool:
-        if endpoint_id in self.added_servers:
-            self.added_servers.remove(endpoint_id)
-            self.health_status.pop(endpoint_id, None)
-            return True
-        return False
-
-    async def call_tool(self, tool_name: str, arguments: dict) -> str:
-        return f"Result from {tool_name}"
-
-    async def get_tools(self) -> list[Tool]:
-        return self.tools
-
-    async def health_check(self, endpoint_id: str) -> bool:
-        return self.health_status.get(endpoint_id, False)
-
-    async def close(self) -> None:
-        self.added_servers.clear()
-        self.health_status.clear()
+from tests.unit.fakes import FakeEndpointStorage, FakeToolset
 
 
 class TestRegistryService:
@@ -139,7 +69,7 @@ class TestRegistryService:
     async def test_register_endpoint_connection_failure(self, storage):
         """연결 실패 시 에러"""
         # Given
-        failing_toolset = FakeToolset(should_fail=True)
+        failing_toolset = FakeToolset(should_fail_connection=True)
         service = RegistryService(storage=storage, toolset=failing_toolset)
 
         # When / Then

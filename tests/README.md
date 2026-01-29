@@ -27,19 +27,25 @@ tests/
 │   │   │   └── test_registry_service.py
 │   │   └── test_exceptions.py
 │   │
-│   └── fakes/                     # Fake Adapter (테스트용)
-│       ├── __init__.py
-│       ├── fake_storage.py        # FakeConversationStorage, FakeEndpointStorage
-│       ├── fake_orchestrator.py   # FakeOrchestrator
-│       └── fake_toolset.py        # FakeToolset
+│   ├── fakes/                     # Fake Adapter (테스트용, 중앙 관리)
+│   │   ├── __init__.py            # 전체 export (from tests.unit.fakes import ...)
+│   │   ├── fake_storage.py        # FakeConversationStorage, FakeEndpointStorage
+│   │   ├── fake_orchestrator.py   # FakeOrchestrator
+│   │   ├── fake_toolset.py        # FakeToolset
+│   │   └── fake_conversation_service.py  # FakeConversationService
+│   │
+│   └── conftest.py                # Fake Adapter fixture 중앙 제공
 │
 ├── integration/                   # 통합 테스트
 │   └── adapters/
-│       └── test_sqlite_storage.py # SQLite WAL 테스트
+│       ├── test_sqlite_storage.py # SQLite WAL 테스트
+│       ├── test_http_app.py       # FastAPI + CORS/Auth 미들웨어 테스트
+│       ├── test_auth_routes.py    # Token Handshake 테스트
+│       └── test_health_routes.py  # Health 엔드포인트 테스트
 │
 ├── e2e/                           # E2E 테스트 (Phase 3)
 │
-└── conftest.py                    # pytest fixtures
+└── conftest.py                    # 루트 pytest fixtures
 ```
 
 ## Test Strategy
@@ -91,8 +97,8 @@ def test_with_fake():
 ### Fake Adapter 사용 예시
 
 ```python
-from tests.unit.fakes.fake_storage import FakeConversationStorage
-from tests.unit.fakes.fake_orchestrator import FakeOrchestrator
+# 중앙 관리 패키지에서 import (권장)
+from tests.unit.fakes import FakeConversationStorage, FakeOrchestrator
 
 class TestConversationService:
     @pytest.fixture
@@ -118,6 +124,10 @@ class TestConversationService:
         assert "".join(chunks) == "Hello! How can I help?"
 ```
 
+> **중요:** 모든 Fake Adapter는 `tests/unit/fakes/` 패키지에서 중앙 관리됩니다.
+> 테스트 파일 내에 인라인으로 Fake 클래스를 정의하지 마세요.
+> conftest.py가 공통 fixture를 제공하므로 직접 인스턴스화 없이도 사용 가능합니다.
+
 ## Key Files
 
 | 파일 | 역할 |
@@ -125,7 +135,9 @@ class TestConversationService:
 | `unit/fakes/fake_storage.py` | 인메모리 저장소 (ConversationStoragePort, EndpointStoragePort 구현) |
 | `unit/fakes/fake_orchestrator.py` | 설정 가능한 응답 반환 (OrchestratorPort 구현) |
 | `unit/fakes/fake_toolset.py` | MCP 도구 시뮬레이션 (ToolsetPort 구현) |
-| `conftest.py` | 공통 fixtures |
+| `unit/fakes/fake_conversation_service.py` | 대화 서비스 시뮬레이션 (OrchestratorService 테스트용) |
+| `unit/conftest.py` | Fake Adapter fixture 중앙 제공 |
+| `conftest.py` | 루트 공통 fixtures |
 
 ## Usage
 
@@ -151,9 +163,10 @@ pytest tests/unit/domain/services/test_conversation_service.py -v
 
 ## Current Status
 
-- **Unit Tests:** 125 passed
-- **Integration Tests:** 11 passed
-- **Coverage:** 90.84%
+- **Unit Tests:** 136 passed
+- **Integration Tests:** 46 passed
+- **Total:** 182 tests
+- **Coverage:** 91%
 
 ## References
 

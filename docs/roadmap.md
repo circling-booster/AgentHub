@@ -294,7 +294,7 @@ app.add_middleware(
 #### 2.4 Integration Tests
 
 * FastAPI TestClient 기반 API 테스트
-* MCP 테스트 서버: `https://example-server.modelcontextprotocol.io/mcp`
+* 로컬 MCP 서버: `http://127.0.0.1:9000/mcp` (Synapse, `SYNAPSE_PORT=9000 python -m synapse`)
 
 **품질 검증:**
 - DynamicToolset 구현 전: TDD 테스트 작성 필요
@@ -315,7 +315,7 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] MCP 테스트 서버 연결 성공
+* [ ] 로컬 MCP 서버 연결 성공 (`http://127.0.0.1:9000/mcp`)
 * [ ] 도구 목록 조회 API 동작
 * [ ] 도구 개수 30개 초과 시 에러 반환
 * [ ] SSE 스트리밍 응답 정상 동작
@@ -407,7 +407,7 @@ app.add_middleware(
 
 * Agent Card 생성 및 교환 (A2A 스펙 준수)
 * `to_a2a()` 어댑터로 A2A 서버 노출
-* a2a-samples 활용 연결 테스트
+* 로컬 A2A Agent Server 활용 연결 테스트 (구현 중)
 
 #### 3.4 UI Polish
 
@@ -647,6 +647,7 @@ app.add_middleware(
 | [architecture.md](architecture.md) | 헥사고날 아키텍처 설계 |
 | [implementation-guide.md](implementation-guide.md) | 구현 패턴 및 코드 예시 |
 | [extension-guide.md](extension-guide.md) | Chrome Extension 개발 가이드 |
+| [skill-agent-guide.md](skill-agent-guide.md) | Phase별 Skill & Agent 활용 전략 |
 | [risk-assessment.md](risk-assessment.md) | 리스크 평가 및 완화 전략 |
 
 ### Phase별 상세 플랜

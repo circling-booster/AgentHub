@@ -105,6 +105,28 @@ class ConversationStoragePort(ABC):
         """
         pass
 
+    async def get_conversation_with_messages(
+        self,
+        conversation_id: str,
+    ) -> "Conversation | None":
+        """
+        대화와 메시지를 함께 조회 (Aggregate Root 완전 로딩)
+
+        기본 구현은 get_conversation + get_messages를 순차 호출합니다.
+        서브클래스에서 최적화된 단일 쿼리로 오버라이드할 수 있습니다.
+
+        Args:
+            conversation_id: 대화 ID
+
+        Returns:
+            메시지가 포함된 대화 객체 또는 None
+        """
+        conversation = await self.get_conversation(conversation_id)
+        if conversation is None:
+            return None
+        conversation.messages = await self.get_messages(conversation_id)
+        return conversation
+
 
 class EndpointStoragePort(ABC):
     """
