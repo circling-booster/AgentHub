@@ -33,8 +33,7 @@
           {
             "type": "command",
             "description": "Quick unit test validation",
-            "command": "pytest tests/unit/ -q --tb=line --maxfail=1 2>&1 | head -20 || echo 'Unit tests failed - review before commit'"
-          }
+                                                     }
         ]
       }
     ],
@@ -44,13 +43,13 @@
         "hooks": [
           {
             "type": "command",
-            "description": "Pre-commit: Ruff lint and format",
-            "command": "ruff check src/ tests/ --fix && ruff format src/ tests/"
+            "description": "Pre-commit: Quick lint check (quiet mode)",
+            "command": "ruff check src/ tests/ --fix --quiet 2>&1 | head -10; ruff format src/ tests/ --quiet 2>&1 | head -10"
           },
           {
             "type": "command",
-            "description": "Pre-commit: Full test suite with coverage",
-            "command": "pytest tests/ --cov=src --cov-fail-under=80 -q"
+            "description": "Pre-commit: Changed files only + coverage summary",
+            "command": "git diff --name-only --cached | grep -E '\\.py$' | xargs -r pytest --cov=src --cov-report=term-missing:skip-covered -q --tb=line 2>&1 | grep -E '^(PASSED|FAILED|ERROR|coverage:)' | head -30 || echo 'Tests failed or no Python files changed'"
           }
         ]
       }

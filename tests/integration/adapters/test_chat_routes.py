@@ -28,8 +28,14 @@ class TestChatStreaming:
         if not request.config.getoption("--run-llm"):
             pytest.skip("LLM 테스트는 --run-llm 옵션 필요 (비용 발생)")
 
-        # Given: 채팅 요청
-        payload = {"conversation_id": "test-conv-1", "message": "Say hello"}
+        # Given: 대화 생성 후 채팅 요청
+        conv_response = authenticated_client.post(
+            "/api/conversations", json={"title": "LLM Basic Test"}
+        )
+        assert conv_response.status_code == 201
+        conv_id = conv_response.json()["id"]
+
+        payload = {"conversation_id": conv_id, "message": "Say hello"}
 
         # When: 스트리밍 채팅 호출
         with authenticated_client.stream("POST", "/api/chat/stream", json=payload) as response:
@@ -55,20 +61,35 @@ class TestChatStreaming:
             text_events = [e for e in events if e["type"] == "text"]
             assert len(text_events) > 0
 
-    def test_chat_stream_invalid_request(self, authenticated_client):
+    def test_chat_stream_invalid_request_empty_message(self, authenticated_client):
         """
         Given: 잘못된 요청 (빈 메시지)
         When: POST /api/chat/stream 호출
         Then: 422 Unprocessable Entity
         """
-        # Given: 빈 메시지
-        payload = {"conversation_id": "test-conv-1", "message": ""}
+        # Given: 빈 메시지 (conversation_id는 Optional이므로 생략 가능)
+        payload = {"message": ""}
 
         # When: 스트리밍 채팅 호출
         response = authenticated_client.post("/api/chat/stream", json=payload)
 
         # Then: 422 Validation Error
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_chat_stream_conversation_id_optional(self, authenticated_client):
+        """
+        Given: conversation_id 없는 요청
+        When: POST /api/chat/stream 호출 (non-LLM이므로 에러 이벤트 예상)
+        Then: 200 OK (SSE 스트리밍은 시작됨, conversation_id 누락으로 422 아님)
+        """
+        # Given: conversation_id 없는 요청
+        payload = {"message": "Hello"}
+
+        # When: 스트리밍 요청 (LLM 없이 - 스트리밍 시작 여부만 확인)
+        response = authenticated_client.post("/api/chat/stream", json=payload)
+
+        # Then: 200 OK (conversation_id는 Optional이므로 422가 아님)
+        assert response.status_code == status.HTTP_200_OK
 
     def test_chat_stream_without_auth(self, temp_data_dir):
         """
@@ -108,8 +129,12 @@ class TestChatStreaming:
         if not request.config.getoption("--run-llm"):
             pytest.skip("LLM 테스트는 --run-llm 옵션 필요 (비용 발생)")
 
-        # Given: 동일 conversation_id
-        conv_id = "test-conv-multi"
+        # Given: 대화 생성
+        conv_response = authenticated_client.post(
+            "/api/conversations", json={"title": "LLM Multi Test"}
+        )
+        assert conv_response.status_code == 201
+        conv_id = conv_response.json()["id"]
 
         # When: 첫 번째 메시지
         payload1 = {"conversation_id": conv_id, "message": "First message"}

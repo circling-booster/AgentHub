@@ -18,12 +18,12 @@ Adapters Layer는 도메인 로직(Domain Layer)과 외부 시스템(MCP, ADK, F
 ```
 adapters/
 ├── inbound/         # Primary Adapters (외부 → 도메인)
-│   ├── http/        # FastAPI HTTP API
-│   └── a2a_server/  # A2A 서버 (향후)
+│   ├── http/        # FastAPI HTTP API + SSE
+│   └── a2a/         # A2A Server (AgentHub를 A2A 프로토콜로 노출)
 │
 └── outbound/        # Secondary Adapters (도메인 → 외부)
     ├── adk/         # Google ADK (LlmAgent, DynamicToolset)
-    ├── a2a_client/  # A2A 클라이언트 (향후)
+    ├── a2a/         # A2A Client (원격 A2A 에이전트 호출)
     └── storage/     # 저장소 (JSON, SQLite)
 ```
 
@@ -51,6 +51,37 @@ adapters/
 | `/api/chat/stream` | POST | SSE 스트리밍 채팅 |
 | `/api/mcp/servers` | GET/POST/DELETE | MCP 서버 관리 |
 | `/api/mcp/servers/{id}/tools` | GET | MCP 서버 도구 조회 |
+| `/api/a2a/agents` | GET/POST/DELETE | A2A 에이전트 관리 |
+| `/api/a2a/agents/{id}/card` | GET | Agent Card 조회 |
+| `/.well-known/agent.json` | GET | AgentHub Agent Card |
+
+### A2A Server ([src/adapters/inbound/a2a](inbound/a2a/))
+
+**역할:** AgentHub의 LlmAgent를 A2A 프로토콜로 노출 (다른 에이전트가 호출 가능)
+
+**구현:** ADK `to_a2a()` 유틸리티 사용
+
+**주요 파일:**
+- `a2a_server.py`: to_a2a() 래퍼, Agent Card 생성
+
+**Agent Card 예시:**
+```json
+{
+  "agentId": "agenthub-agent",
+  "name": "AgentHub",
+  "description": "Local agent gateway with MCP tools",
+  "version": "0.1.0",
+  "skills": [],
+  "api": {
+    "protocol": "a2a",
+    "endpoint": "http://localhost:8000"
+  }
+}
+```
+
+**참조:**
+- [Google ADK A2A Utils](https://google.github.io/adk-docs/a2a/utils/)
+- [A2A Protocol Specification](https://a2a-protocol.org/)
 
 ---
 
@@ -89,7 +120,35 @@ adapters/
 **주요 메서드:**
 - `initialize() -> None` — Async Factory 초기화
 - `process_message(message, conversation_id) -> AsyncIterator[str]` — 메시지 처리
+- `add_a2a_agent(endpoint_id, agent_card_url) -> None` — A2A sub-agent 추가 (Phase 3)
+- `remove_a2a_agent(endpoint_id) -> None` — A2A sub-agent 제거
 - `close() -> None` — 리소스 정리
+
+### A2A Client Adapter ([src/adapters/outbound/a2a](outbound/a2a/))
+
+**역할:** 원격 A2A 에이전트와 통신 (ADK `RemoteA2aAgent` 기반)
+
+**구현:** `A2aPort` (Domain)
+
+**주요 파일:**
+- `a2a_client_adapter.py`: A2aPort 구현
+
+**특징:**
+- ADK `RemoteA2aAgent` 사용
+- Agent Card 교환 및 검증
+- LlmAgent의 `sub_agents`로만 추가 가능 (직접 호출 불가)
+
+**주요 메서드:**
+- `register_agent(endpoint) -> dict` — Agent Card 교환
+- `unregister_agent(endpoint_id) -> None` — 에이전트 등록 해제
+- `health_check(endpoint_id) -> bool` — 상태 확인
+
+**제약:**
+- `RemoteA2aAgent`는 `LlmAgent.sub_agents`로만 동작
+- 직접 `call_agent()` 불가, Orchestrator에 추가 후 LLM이 자동 호출
+
+**참조:**
+- [Google ADK RemoteA2aAgent](https://google.github.io/adk-docs/a2a/remote-a2a-agent/)
 
 ### Storage Adapters ([src/adapters/outbound/storage](outbound/storage/))
 
@@ -100,9 +159,10 @@ adapters/
 **구현:** `EndpointStoragePort` (Domain)
 
 **특징:**
-- JSON 파일 기반 엔드포인트 저장
+- JSON 파일 기반 엔드포인트 저장 (MCP + A2A)
 - 비동기 파일 I/O (aiofiles)
 - 읽기/쓰기 Lock (asyncio.Lock)
+- `agent_card` 필드 지원 (Phase 3)
 
 #### SqliteConversationStorage ([sqlite_conversation_storage.py](outbound/storage/sqlite_conversation_storage.py))
 
@@ -126,7 +186,7 @@ adapters/
 Adapters는 `dependency-injector` 컨테이너를 통해 주입됩니다.
 
 **Container 구성:** ([src/config/container.py](../config/container.py))
-- **Singleton**: Settings, Storage Adapters, DynamicToolset, AdkOrchestratorAdapter
+- **Singleton**: Settings, Storage Adapters, DynamicToolset, AdkOrchestratorAdapter, A2aClientAdapter
 - **Factory**: Domain Services (ConversationService, OrchestratorService, RegistryService)
 
 **FastAPI 통합:**
@@ -168,8 +228,11 @@ async def chat_stream(
 **Integration Test Fixtures:**
 - `authenticated_client`: 인증된 TestClient (공통 fixture)
 - `temp_data_dir`: 임시 데이터 디렉토리
+- `a2a_echo_agent`: A2A 테스트 에이전트 (`http://127.0.0.1:9001`, session scope)
 
-**참조:** [tests/integration/adapters/conftest.py](../../tests/integration/adapters/conftest.py)
+**참조:**
+- [tests/integration/adapters/conftest.py](../../tests/integration/adapters/conftest.py)
+- [tests/conftest.py](../../tests/conftest.py) (A2A fixture)
 
 ---
 
@@ -182,3 +245,4 @@ async def chat_stream(
 ---
 
 *문서 생성일: 2026-01-29*
+*A2A 섹션 추가: 2026-01-30*

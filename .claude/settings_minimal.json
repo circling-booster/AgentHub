@@ -1,0 +1,55 @@
+{
+  "enabledPlugins": {
+    "tdd-workflows@claude-code-workflows": true,
+    "full-stack-orchestration@claude-code-workflows": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Auto-format code after edits",
+            "command": "ruff check src/ tests/ --fix --quiet 2>/dev/null; ruff format src/ tests/ --quiet 2>/dev/null"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Quick unit test validation",
+            "command": "pytest tests/unit/ -q --tb=line --maxfail=1 2>&1 | head -20 || echo 'Unit tests failed - review before commit'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "commit|pr|push",
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Pre-commit: Lint only (tests in CI)",
+            "command": "ruff check src/ tests/ --fix --quiet 2>&1 | head -10; ruff format src/ tests/ --check --quiet 2>&1 | head -10 || echo 'Lint passed. Tests will run in CI.'"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Warn if session on main branch",
+            "command": "git rev-parse --abbrev-ref HEAD 2>/dev/null | grep -qx main && echo 'Session ended on main branch - ensure commits are reviewed' || exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

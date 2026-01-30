@@ -1,0 +1,80 @@
+/**
+ * Server API types (1:1 mapping with server schemas)
+ *
+ * Source: src/adapters/inbound/http/schemas/
+ */
+
+/** SSE stream event types matching server chat.py output */
+export interface StreamEventConversationCreated {
+  type: 'conversation_created';
+  conversation_id: string;
+}
+
+export interface StreamEventText {
+  type: 'text';
+  content: string;
+}
+
+export interface StreamEventDone {
+  type: 'done';
+}
+
+export interface StreamEventError {
+  type: 'error';
+  message: string;
+}
+
+export type StreamEvent =
+  | StreamEventConversationCreated
+  | StreamEventText
+  | StreamEventDone
+  | StreamEventError;
+
+/** Conversation (matches server ConversationResponse schema) */
+export interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
+}
+
+/** MCP Server (matches server MCP routes response) */
+export interface McpServer {
+  id: string;
+  name: string;
+  url: string;
+  enabled: boolean;
+  registered_at: string;
+  tools?: Tool[];
+}
+
+/** Tool (matches server Tool schema) */
+export interface Tool {
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+}
+
+/** Server health status */
+export interface HealthStatus {
+  status: 'healthy' | 'unhealthy';
+  timestamp?: string;
+}
+
+/** Chat message for UI state */
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: Date;
+}
+
+/** A2A Agent (matches server A2aAgentResponse schema) */
+export interface A2aAgent {
+  id: string;
+  name: string;
+  url: string;
+  type: string; // "a2a"
+  enabled: boolean;
+  agent_card: Record<string, unknown> | null;
+  registered_at: string;
+}

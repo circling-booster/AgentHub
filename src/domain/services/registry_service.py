@@ -7,6 +7,7 @@ from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointType
 from src.domain.entities.tool import Tool
 from src.domain.exceptions import DuplicateEndpointError, EndpointNotFoundError
+from src.domain.ports.outbound.a2a_port import A2aPort
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
 
@@ -21,35 +22,41 @@ class RegistryService:
 
     Attributes:
         _storage: 엔드포인트 저장소 포트
-        _toolset: 도구셋 포트
+        _toolset: 도구셋 포트 (MCP용)
+        _a2a_client: A2A 클라이언트 포트 (A2A용, 선택)
     """
 
     def __init__(
         self,
         storage: EndpointStoragePort,
         toolset: ToolsetPort,
+        a2a_client: A2aPort | None = None,
     ) -> None:
         """
         Args:
             storage: 엔드포인트 저장소 포트
-            toolset: 도구셋 포트
+            toolset: 도구셋 포트 (MCP용)
+            a2a_client: A2A 클라이언트 포트 (선택, None이면 A2A 미지원)
         """
         self._storage = storage
         self._toolset = toolset
+        self._a2a_client = a2a_client
 
     async def register_endpoint(
         self,
         url: str,
         name: str | None = None,
+        endpoint_type: EndpointType = EndpointType.MCP,
     ) -> Endpoint:
         """
         엔드포인트 등록
 
-        MCP 서버를 등록하고 도구를 조회합니다.
+        MCP 또는 A2A 서버를 등록합니다.
 
         Args:
             url: 엔드포인트 URL
             name: 이름 (선택, 없으면 URL에서 추출)
+            endpoint_type: 엔드포인트 타입 (MCP 또는 A2A, 기본값 MCP)
 
         Returns:
             등록된 엔드포인트 객체
@@ -58,7 +65,8 @@ class RegistryService:
             InvalidUrlError: 유효하지 않은 URL
             DuplicateEndpointError: 이미 등록된 URL
             EndpointConnectionError: 연결 실패
-            ToolLimitExceededError: 도구 수 제한 초과
+            ToolLimitExceededError: 도구 수 제한 초과 (MCP만)
+            ValueError: A2A 클라이언트 미설정 상태에서 A2A 등록 시도
         """
         # 중복 URL 검사
         existing = await self._storage.list_endpoints()
@@ -69,23 +77,34 @@ class RegistryService:
         # 엔드포인트 생성 (URL 검증은 Endpoint에서 수행)
         endpoint = Endpoint(
             url=url,
-            type=EndpointType.MCP,
+            type=endpoint_type,
             name=name or "",
         )
 
-        # MCP 서버 연결 및 도구 조회
-        tools = await self._toolset.add_mcp_server(endpoint)
+        # 타입별 처리
+        if endpoint_type == EndpointType.MCP:
+            # MCP 서버 연결 및 도구 조회
+            tools = await self._toolset.add_mcp_server(endpoint)
 
-        # 도구를 엔드포인트에 연결
-        for tool in tools:
-            endpoint.tools.append(
-                Tool(
-                    name=tool.name,
-                    description=tool.description,
-                    input_schema=tool.input_schema,
-                    endpoint_id=endpoint.id,
+            # 도구를 엔드포인트에 연결
+            for tool in tools:
+                endpoint.tools.append(
+                    Tool(
+                        name=tool.name,
+                        description=tool.description,
+                        input_schema=tool.input_schema,
+                        endpoint_id=endpoint.id,
+                    )
                 )
-            )
+
+        elif endpoint_type == EndpointType.A2A:
+            # A2A 클라이언트 확인
+            if self._a2a_client is None:
+                raise ValueError("A2A client not configured")
+
+            # A2A Agent 등록 및 Agent Card 조회
+            agent_card = await self._a2a_client.register_agent(endpoint)
+            endpoint.agent_card = agent_card
 
         # 저장
         await self._storage.save_endpoint(endpoint)
@@ -102,15 +121,19 @@ class RegistryService:
         Returns:
             해제 성공 여부
         """
-        # 저장소에서 삭제
-        deleted = await self._storage.delete_endpoint(endpoint_id)
-        if not deleted:
+        # 엔드포인트 조회 (타입 확인용)
+        endpoint = await self._storage.get_endpoint(endpoint_id)
+        if not endpoint:
             return False
 
-        # 도구셋에서 제거
-        await self._toolset.remove_mcp_server(endpoint_id)
+        # 타입별 해제 처리
+        if endpoint.type == EndpointType.A2A and self._a2a_client:
+            await self._a2a_client.unregister_agent(endpoint_id)
+        elif endpoint.type == EndpointType.MCP:
+            await self._toolset.remove_mcp_server(endpoint_id)
 
-        return True
+        # 저장소에서 삭제
+        return await self._storage.delete_endpoint(endpoint_id)
 
     async def list_endpoints(
         self,

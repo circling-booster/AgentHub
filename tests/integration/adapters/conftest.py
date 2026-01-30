@@ -94,9 +94,10 @@ def authenticated_client(temp_data_dir: Path) -> Iterator[TestClient]:
     app = create_app()
     container = app.container
 
-    # Container 재설정 (임시 데이터 디렉토리)
+    # Container 재설정 (임시 데이터 디렉토리 + LLM 테스트용 모델)
     container.reset_singletons()
     container.settings().storage.data_dir = str(temp_data_dir)
+    container.settings().llm.default_model = "openai/gpt-4o-mini"
 
     # Context manager로 lifespan 트리거
     with TestClient(app) as test_client:

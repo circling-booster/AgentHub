@@ -58,6 +58,9 @@ dist/
 *.db-wal
 *.db-shm
 
+# Runtime Data (SQLite, JSON storage, etc.)
+data/
+
 # Logs
 *.log
 logs/

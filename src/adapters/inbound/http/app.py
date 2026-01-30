@@ -1,6 +1,7 @@
 """FastAPI 앱 팩토리"""
 
 import logging
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -10,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config.container import Container
 
 from .exceptions import register_exception_handlers
-from .routes import auth, chat, health, mcp
+from .routes import a2a, a2a_card, auth, chat, conversations, health, mcp
 from .security import ExtensionAuthMiddleware
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("AgentHub API starting up")
 
     container = app.container
+
+    # LiteLLM이 os.environ에서 API 키를 읽으므로, Settings에서 로드한 키를 환경변수에 반영
+    settings = container.settings()
+    _export_api_keys(settings)
 
     # SQLite 스토리지 초기화
     conv_storage = container.conversation_storage()
@@ -102,6 +107,26 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(health.router)
     app.include_router(mcp.router)
+    app.include_router(a2a.router)
+    app.include_router(a2a_card.router)  # A2A Agent Card
     app.include_router(chat.router)
+    app.include_router(conversations.router)
 
     return app
+
+
+def _export_api_keys(settings) -> None:
+    """Settings에서 로드한 API 키를 os.environ에 반영
+
+    pydantic-settings는 .env 파일을 모델 필드로 읽지만 os.environ에 설정하지 않는다.
+    LiteLLM은 os.environ에서 직접 API 키를 읽으므로 명시적 반영이 필요하다.
+    """
+    key_mapping = {
+        "ANTHROPIC_API_KEY": settings.anthropic_api_key,
+        "OPENAI_API_KEY": settings.openai_api_key,
+        "GOOGLE_API_KEY": settings.google_api_key,
+    }
+    for env_name, value in key_mapping.items():
+        if value and value != f"your-{env_name.lower().replace('_', '-')}":
+            os.environ[env_name] = value
+            logger.info(f"{env_name} exported to environment")

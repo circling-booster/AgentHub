@@ -47,39 +47,110 @@ async def chat_stream(
 
     async def generate() -> AsyncIterator[str]:
         """SSE 이벤트 생성기"""
+        conversation_id = body.conversation_id
+        chunk_count = 0
+
         try:
+            # conversation_id가 None이면 자동 생성 후 conversation_created 이벤트 전송
+            if conversation_id is None:
+                conversation = await orchestrator.create_conversation()
+                conversation_id = conversation.id
+                created_event = json.dumps(
+                    {"type": "conversation_created", "conversation_id": conversation_id}
+                )
+                yield f"data: {created_event}\n\n"
+                logger.info(
+                    "Stream created",
+                    extra={
+                        "conversation_id": conversation_id,
+                        "lifecycle": "created",
+                        "message_preview": body.message[:50] if body.message else "",
+                    },
+                )
+            else:
+                logger.info(
+                    "Stream created",
+                    extra={
+                        "conversation_id": conversation_id,
+                        "lifecycle": "created",
+                        "message_preview": body.message[:50] if body.message else "",
+                    },
+                )
+
+            logger.debug(
+                "Stream streaming",
+                extra={"conversation_id": conversation_id, "lifecycle": "streaming"},
+            )
+
             async for chunk in orchestrator.send_message(
-                conversation_id=body.conversation_id,
+                conversation_id=conversation_id,
                 message=body.message,
             ):
                 # 클라이언트 연결 해제 확인 (Zombie Task 방지)
                 if await request.is_disconnected():
-                    logger.info(
-                        f"Client disconnected, stopping stream for conversation {body.conversation_id}"
+                    logger.warning(
+                        "Client disconnected, stopping stream",
+                        extra={
+                            "conversation_id": conversation_id,
+                            "lifecycle": "cancelled",
+                            "chunks_sent": chunk_count,
+                        },
                     )
                     break
 
                 # "text" 이벤트 전송
                 event_data = json.dumps({"type": "text", "content": chunk})
                 yield f"data: {event_data}\n\n"
+                chunk_count += 1
 
             # "done" 이벤트 전송
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            logger.info(
+                "Stream completed",
+                extra={
+                    "conversation_id": conversation_id,
+                    "lifecycle": "completed",
+                    "chunks_sent": chunk_count,
+                },
+            )
 
         except asyncio.CancelledError:
             # 연결 해제 시 정리 로직
-            logger.info(f"Stream cancelled for conversation {body.conversation_id}")
+            logger.info(
+                "Stream cancelled",
+                extra={
+                    "conversation_id": conversation_id,
+                    "lifecycle": "cancelled",
+                    "chunks_sent": chunk_count,
+                },
+            )
             raise  # CancelledError는 다시 발생시켜야 함
 
         except Exception as e:
             # 에러 이벤트 전송
-            logger.error(f"Stream error: {e}")
+            logger.error(
+                "Stream error",
+                extra={
+                    "conversation_id": conversation_id,
+                    "lifecycle": "error",
+                    "chunks_sent": chunk_count,
+                    "error": str(e),
+                },
+                exc_info=True,
+            )
             error_data = json.dumps({"type": "error", "message": str(e)})
             yield f"data: {error_data}\n\n"
 
         finally:
             # 리소스 정리 보장
-            logger.debug(f"Stream cleanup for conversation {body.conversation_id}")
+            logger.debug(
+                "Stream cleanup",
+                extra={
+                    "conversation_id": conversation_id,
+                    "lifecycle": "cleanup",
+                    "chunks_sent": chunk_count,
+                },
+            )
 
     return StreamingResponse(
         generate(),

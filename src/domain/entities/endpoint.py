@@ -6,7 +6,7 @@
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from src.domain.entities.enums import EndpointStatus, EndpointType
@@ -33,6 +33,7 @@ class Endpoint:
         registered_at: 등록 시각
         last_health_check: 마지막 상태 확인 시각
         tools: 제공하는 도구 목록 (MCP only)
+        agent_card: A2A Agent Card 정보 (A2A only)
 
     Example:
         >>> endpoint = Endpoint(
@@ -52,6 +53,7 @@ class Endpoint:
     registered_at: datetime = field(default_factory=datetime.utcnow)
     last_health_check: datetime | None = None
     tools: list["Tool"] = field(default_factory=list)
+    agent_card: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         """생성 후 URL 유효성 검증 및 이름 자동 설정"""

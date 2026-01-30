@@ -71,6 +71,5 @@ app.add_middleware(CORSMiddleware, ...)       # 나중 추가 = outermost
 
 ## 참조
 
-- `docs/implementation-guide.md#9-보안-패턴`: 전체 보안 구현 패턴
-- `docs/risk-assessment.md#22-localhost-보안`: Drive-by RCE 위험 분석
-- `references/violation-examples.md`: 위반 사례 및 올바른 패턴
+- `docs/guides/implementation-guide.md#9-보안-패턴`: 전체 보안 구현 패턴
+- `docs/archive/risk-assessment.md#22-localhost-보안`: Drive-by RCE 위험 분석

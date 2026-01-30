@@ -29,5 +29,6 @@ async def exchange_token(request: Request, body: TokenRequest) -> TokenResponse:
             detail="Invalid origin. Only Chrome Extensions are allowed.",
         )
 
-    # 토큰 반환
+    # 토큰 반환 (서버 세션당 동일 토큰 유지)
+    # 토큰은 서버 재시작 시에만 리셋됨 (TokenProvider 싱글톤 패턴)
     return TokenResponse(token=get_extension_token())
