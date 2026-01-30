@@ -67,3 +67,14 @@ export interface ChatMessage {
   content: string;
   createdAt: Date;
 }
+
+/** A2A Agent (matches server A2aAgentResponse schema) */
+export interface A2aAgent {
+  id: string;
+  name: string;
+  url: string;
+  type: string; // "a2a"
+  enabled: boolean;
+  agent_card: Record<string, unknown> | null;
+  registered_at: string;
+}

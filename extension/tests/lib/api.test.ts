@@ -10,6 +10,10 @@ import {
   listMcpServers,
   removeMcpServer,
   getServerTools,
+  registerA2aAgent,
+  listA2aAgents,
+  getA2aAgent,
+  removeA2aAgent,
 } from '../../lib/api';
 import { STORAGE_KEYS } from '../../lib/constants';
 
@@ -343,6 +347,119 @@ describe('API Client', () => {
 
       // When/Then: Should throw
       await expect(getServerTools('invalid-id')).rejects.toThrow('Failed to get server tools');
+    });
+  });
+
+  describe('A2A Agent API', () => {
+    beforeEach(async () => {
+      await fakeBrowser.storage.session.set({ [STORAGE_KEYS.EXTENSION_TOKEN]: 'token' });
+    });
+
+    it('registerA2aAgent should POST to /api/a2a/agents', async () => {
+      // Given: Server accepts registration
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'a2a-1',
+          url: 'http://localhost:9001',
+          name: 'Test A2A Agent',
+          type: 'a2a',
+          enabled: true,
+          agent_card: null,
+          registered_at: '2026-01-30T00:00:00Z',
+        }),
+      });
+
+      // When: Register A2A agent
+      const result = await registerA2aAgent('http://localhost:9001', 'Test A2A Agent');
+
+      // Then: Correct endpoint called
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/a2a/agents',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ url: 'http://localhost:9001', name: 'Test A2A Agent' }),
+        })
+      );
+      expect(result.id).toBe('a2a-1');
+    });
+
+    it('listA2aAgents should GET /api/a2a/agents', async () => {
+      // Given: Server returns A2A agents
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ([
+          { id: 'a2a-1', url: 'http://localhost:9001', type: 'a2a' },
+        ]),
+      });
+
+      // When: List agents
+      const result = await listA2aAgents();
+
+      // Then: Returns agents
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('a2a');
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/a2a/agents',
+        expect.any(Object)
+      );
+    });
+
+    it('getA2aAgent should GET /api/a2a/agents/:id', async () => {
+      // Given: Server returns agent
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'a2a-1',
+          url: 'http://localhost:9001',
+          name: 'Test Agent',
+          type: 'a2a',
+          enabled: true,
+          agent_card: { name: 'TestAgent' },
+          registered_at: '2026-01-30T00:00:00Z',
+        }),
+      });
+
+      // When: Get agent
+      const result = await getA2aAgent('a2a-1');
+
+      // Then: Returns agent details
+      expect(result.id).toBe('a2a-1');
+      expect(result.agent_card).toEqual({ name: 'TestAgent' });
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/a2a/agents/a2a-1',
+        expect.any(Object)
+      );
+    });
+
+    it('removeA2aAgent should DELETE /api/a2a/agents/:id', async () => {
+      // Given: Server accepts deletion
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+      });
+
+      // When: Remove agent
+      await removeA2aAgent('a2a-1');
+
+      // Then: DELETE called
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/a2a/agents/a2a-1',
+        expect.objectContaining({
+          method: 'DELETE',
+        })
+      );
+    });
+
+    it('registerA2aAgent should throw on HTTP error', async () => {
+      // Given: Server returns error
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+      });
+
+      // When/Then: Should throw
+      await expect(registerA2aAgent('http://invalid-agent')).rejects.toThrow('Failed to register A2A agent');
     });
   });
 

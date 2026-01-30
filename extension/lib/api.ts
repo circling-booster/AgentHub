@@ -166,3 +166,58 @@ export async function getServerTools(serverId: string): Promise<import('./types'
 
   return response.json();
 }
+
+/**
+ * Register A2A agent (authenticated)
+ */
+export async function registerA2aAgent(url: string, name?: string): Promise<import('./types').A2aAgent> {
+  const response = await authenticatedFetch('/api/a2a/agents', {
+    method: 'POST',
+    body: JSON.stringify({ url, name }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to register A2A agent');
+  }
+
+  return response.json();
+}
+
+/**
+ * List all registered A2A agents (authenticated)
+ */
+export async function listA2aAgents(): Promise<import('./types').A2aAgent[]> {
+  const response = await authenticatedFetch('/api/a2a/agents');
+
+  if (!response.ok) {
+    throw new Error('Failed to list A2A agents');
+  }
+
+  return response.json();
+}
+
+/**
+ * Get a specific A2A agent by ID (authenticated)
+ */
+export async function getA2aAgent(agentId: string): Promise<import('./types').A2aAgent> {
+  const response = await authenticatedFetch(`/api/a2a/agents/${agentId}`);
+
+  if (!response.ok) {
+    throw new Error('Failed to get A2A agent');
+  }
+
+  return response.json();
+}
+
+/**
+ * Remove A2A agent (authenticated)
+ */
+export async function removeA2aAgent(agentId: string): Promise<void> {
+  const response = await authenticatedFetch(`/api/a2a/agents/${agentId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to remove A2A agent');
+  }
+}
