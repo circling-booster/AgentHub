@@ -187,7 +187,7 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 | Type | Resource | Execution |
 |------|----------|-----------|
 | MCP Test Server | `http://127.0.0.1:9000/mcp` (local Synapse) | `SYNAPSE_PORT=9000 python -m synapse` |
-| A2A Agents | Local A2A Agent Server (in development) | TBD |
+| A2A Test Agent | `http://127.0.0.1:9001` (Echo Agent) | conftest subprocess 자동 시작 |
 
 **MCP Server Project:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
 

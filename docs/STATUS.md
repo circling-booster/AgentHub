@@ -1,8 +1,8 @@
 # AgentHub Project Status
 
 > **Last Updated:** 2026-01-30
-> **Current Phase:** Phase 2.5 Complete → Phase 3 준비
-> **Active Branch:** `feature/phase-2-mcp`
+> **Current Phase:** Phase 3 Part A Complete → Part B 준비
+> **Active Branch:** `feature/phase-3`
 
 ---
 
@@ -10,10 +10,11 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 70% (Phase 2.5 Complete, Phase 3 준비) |
-| **Backend Coverage** | 89.55% (Target: 80%) |
+| **Overall Progress** | 75% (Phase 3 Part A Complete) |
+| **Backend Coverage** | 90.63% (Target: 80%) |
+| **Backend Tests** | 315 tests (pytest) |
 | **Extension Tests** | 129 tests (Vitest) |
-| **Last Milestone** | Phase 2.5 수동검증 Complete (2026-01-30) |
+| **Last Milestone** | Phase 3 Part A Complete (2026-01-30) |
 
 ---
 
@@ -26,7 +27,7 @@
 | Phase 1.5 | ✅ Complete | 100% | Security Layer (96% coverage) |
 | Phase 2 | ✅ Complete | 100% | MCP Integration (88% coverage) |
 | Phase 2.5 | ✅ Complete | 100% | Chrome Extension (129 tests + 수동검증) |
-| **Phase 3** | **📋 Planned** | **0%** | **Stability + UI Polish + A2A** |
+| **Phase 3** | **🚧 In Progress** | **50%** | **Part A: A2A Core (90.63% coverage)** |
 | Phase 4 | 📋 Planned | 0% | Advanced Features |
 
 **범례:**
@@ -68,6 +69,38 @@
 
 ---
 
+## 🎯 Phase 3 Part A 완료 요약
+
+**완료 일자:** 2026-01-30
+**결과:** A2A 전체 스택 구현 완료, DoD 18/18 항목 (100%) 통과
+
+### 완료된 Steps (2-7)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **1** | Backend Stability Hardening | 5개 테스트 | ⚠️ 기존 구현 활용 |
+| **2** | A2A Echo Agent Fixture | 3개 테스트 | ✅ |
+| **3** | A2aClientAdapter | 18개 테스트 (unit 11 + integration 7) | ✅ |
+| **4** | RegistryService A2A 지원 | 6개 테스트 | ✅ |
+| **5** | A2A HTTP Routes | 10개 테스트 | ✅ |
+| **6** | A2A Server Exposure | 3개 테스트 | ✅ |
+| **7** | Orchestrator A2A Integration | 4개 테스트 | ✅ |
+
+### 핵심 성과
+
+- ✅ **A2A 전체 스택**: Client Adapter, Server Exposure, Orchestrator sub_agents, HTTP CRUD API
+- ✅ **안정성 강화**: Zombie Task 취소, Thread Isolation, 구조화된 로깅
+- ✅ **테스트 품질**: 47개 A2A 테스트 (315 tests total, 99.7% 통과율)
+- ✅ **커버리지 향상**: 89.55% → 90.63% (+1.08%p, 목표 80% 대비 +10.63%p)
+- ✅ **아키텍처 원칙**: Domain Layer 순수성 유지, Hexagonal Architecture 준수
+
+### Part B로 이관된 항목
+
+- LLM이 A2A sub_agent를 자동 호출하는 통합 테스트 (E2E에서 검증 예정)
+- Extension UI에 A2A 에이전트 표시 기능
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -75,15 +108,18 @@
 | Domain Core | 90.84% | 80% | ✅ |
 | Security Layer | 96% | - | ✅ |
 | MCP Integration | 88% | 70% | ✅ |
+| A2A Integration | 90.63% | 80% | ✅ |
 | Extension (Vitest) | 129 tests | - | ✅ |
+| Backend (pytest) | 315 tests | - | ✅ 99.7% 통과 |
 | E2E Tests | 10 passed, 2 skipped | - | ✅ 수동검증 완료 |
 
-**Overall Backend Coverage:** 89.55% (Target: 80%)
+**Overall Backend Coverage:** 90.63% (Target: 80%)
 
 ---
 
 ## 📅 Recent Milestones
 
+- **2026-01-30**: Phase 3 Part A Complete - A2A Core Integration (90.63% coverage, 315 tests)
 - **2026-01-30**: Phase 2.5 Complete - 수동검증 완료 (6건 버그 수정)
 - **2026-01-29**: Phase 2 Complete - MCP Integration (88% coverage)
 - **2026-01-28**: Phase 1.5 Complete - Security Layer (96% coverage)
@@ -91,21 +127,20 @@
 
 ---
 
-## ⚡ Next Actions (Phase 3)
+## ⚡ Next Actions (Phase 3 Part B)
 
 **범례:** 🤖 자동화됨 | 👤 수동 실행 필요
 
 | Priority | Task | Type | Status |
 |:--------:|------|:----:|:------:|
-| 🔴 High | 3.3.1 MCP Tools 목록 UI | 🤖 구현 | Not Started |
-| 🔴 High | 3.3.2 대화 히스토리 유지 | 🤖 구현 | Not Started |
-| 🟡 Medium | 3.1 Zombie Task Killer | 🤖 구현 | Not Started |
-| 🟡 Medium | 3.2 Async Thread Isolation | 🤖 구현 | Not Started |
-| 🟡 Medium | 3.3.3 UI Polish (코드 블록) | 🤖 구현 | Not Started |
-| 🟢 Low | 3.4 A2A Basic Integration | 🤖 구현 | Not Started |
-| 🟢 Low | 3.5 E2E Tests (Playwright) | 🤖 구현 | Not Started |
+| 🔴 High | 8.1 MCP Tools 목록 UI | 🤖 구현 | Not Started |
+| 🔴 High | 8.2 대화 히스토리 유지 | 🤖 구현 | Not Started |
+| 🔴 High | 8.3 UI Polish (코드 블록 하이라이팅) | 🤖 구현 | Not Started |
+| 🔴 High | 8.4 A2A 에이전트 표시 | 🤖 구현 | Not Started |
+| 🟡 Medium | 9 Full Playwright E2E Tests | 🤖 구현 | Not Started |
+| 🟡 Medium | 10 Documentation Updates | 🤖 구현 | Not Started |
 
-**📋 Detailed Plan:** [phase3.0.md](plans/phase3.0.md)
+**📋 Detailed Plan:** [phase3.0.md](plans/phase3.0.md#part-b-ui-polish--e2e-tests-steps-8-10)
 
 ---
 

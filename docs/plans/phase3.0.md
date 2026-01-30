@@ -528,6 +528,17 @@ feat(phase3): Step 7 - Orchestrator A2A sub-agent integration and DI wiring
 - [ ] `CLAUDE.md` — Test Resources 테이블에 A2A 테스트 서버 추가
 - [ ] `docs/STATUS.md` — Phase 3 Part A 진행 상태 반영
 
+### 범위 제한 및 Part B 이관 항목
+
+**Part A 검증 수준:**
+- Orchestrator A2A 통합은 **API 레벨 검증**만 수행 (sub_agents 추가/제거 확인)
+- 실제 LLM이 A2A sub_agent를 **자동으로 호출**하는 end-to-end 통합 테스트는 **Part B Step 9 (E2E Tests)로 이관**
+- 이유: Part A는 Backend API 구축에 집중, E2E 시나리오는 Part B에서 Playwright로 검증
+
+**Part B로 이관된 LLM 통합 테스트:**
+- `test_llm_calls_a2a_sub_agent`: LLM이 A2A sub_agent와 대화하는 시나리오
+- Playwright E2E에서 Extension → Server → LLM → A2A agent 전체 흐름 검증
+
 ---
 
 # Part B: UI Polish + E2E Tests (Steps 8-10)
