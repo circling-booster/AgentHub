@@ -135,3 +135,39 @@ class TestEndpoint:
         # Then
         parts = endpoint.id.split("-")
         assert len(parts) == 5
+
+    def test_a2a_endpoint_with_agent_card(self):
+        """
+        Given: A2A 엔드포인트
+        When: agent_card를 설정하면
+        Then: agent_card 필드가 저장됨
+        """
+        # Given
+        agent_card = {
+            "name": "test_agent",
+            "description": "Test A2A Agent",
+            "version": "1.0.0",
+        }
+
+        # When
+        endpoint = Endpoint(
+            url="http://localhost:9001",
+            type=EndpointType.A2A,
+            agent_card=agent_card,
+        )
+
+        # Then
+        assert endpoint.agent_card == agent_card
+        assert endpoint.agent_card["name"] == "test_agent"
+
+    def test_mcp_endpoint_agent_card_defaults_to_none(self):
+        """
+        Given: MCP 엔드포인트
+        When: agent_card를 지정하지 않으면
+        Then: None
+        """
+        # When
+        endpoint = Endpoint(url="https://example.com/mcp", type=EndpointType.MCP)
+
+        # Then
+        assert endpoint.agent_card is None

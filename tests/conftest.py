@@ -77,21 +77,21 @@ def sample_endpoint_data():
 
 def _wait_for_health(url: str, timeout: int = 10) -> bool:
     """
-    Wait for server health endpoint to respond.
+    Wait for A2A server to be ready by checking agent card endpoint.
 
     Args:
-        url: Base URL (health endpoint is {url}/health)
+        url: Base URL (checks {url}/.well-known/agent.json)
         timeout: Max seconds to wait
 
     Returns:
-        True if healthy, False if timeout
+        True if ready, False if timeout
     """
-    health_url = f"{url}/health"
+    agent_card_url = f"{url}/.well-known/agent.json"
     start_time = time.time()
 
     while time.time() - start_time < timeout:
         try:
-            response = httpx.get(health_url, timeout=2.0)
+            response = httpx.get(agent_card_url, timeout=2.0)
             if response.status_code == 200:
                 return True
         except (httpx.ConnectError, httpx.TimeoutException):

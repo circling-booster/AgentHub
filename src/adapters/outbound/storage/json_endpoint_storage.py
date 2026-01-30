@@ -145,6 +145,7 @@ class JsonEndpointStorage(EndpointStoragePort):
                 }
                 for tool in endpoint.tools
             ],
+            "agent_card": endpoint.agent_card,  # dict | None → JSON 호환
         }
 
     def _deserialize_endpoint(self, data: dict) -> "Endpoint":
@@ -175,6 +176,7 @@ class JsonEndpointStorage(EndpointStoragePort):
             status=EndpointStatus(data["status"]),  # str → enum
             registered_at=datetime.fromisoformat(data["registered_at"]),  # ISO str → datetime
             tools=tools,
+            agent_card=data.get("agent_card"),  # 기존 데이터 하위 호환 (None default)
         )
 
         return endpoint

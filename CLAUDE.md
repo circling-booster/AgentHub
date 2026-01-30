@@ -57,9 +57,9 @@ uvicorn src.main:app --host localhost --port 8000
 # Extension dev
 cd extension && npm run dev
 
-# Tests
-pytest
-pytest --cov=src --cov-report=html
+# Tests (Token-optimized)
+pytest -q --tb=line -x                    # Fast failure detection
+pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 ```
 
 **Environment:** Set API keys in `.env` file (ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY)
@@ -67,10 +67,12 @@ pytest --cov=src --cov-report=html
 ### Automated Workflow (Hooks)
 
 - **PostToolUse Hook**: Auto ruff formatting after code changes
-- **Stop Hook**: Run unit tests on response completion
-- **UserPromptSubmit Hook**: Full test + coverage verification on commit/pr/push
+- **Stop Hook**: Run unit tests on response completion (`pytest tests/unit/ -q --tb=line -x`)
+- **UserPromptSubmit Hook**: Full test + coverage verification on commit/pr/push (`pytest tests/ --cov=src --cov-fail-under=80 -q`)
 - **Git pre-commit hook**: Block direct commits to main branch
 - **GitHub Actions**: Block PRs with <80% coverage
+
+**Note:** All pytest hooks use token-optimized options (`-q --tb=line -x`) to minimize Claude Code context consumption.
 
 Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 
@@ -164,6 +166,27 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 - Isolate tests based on Port interfaces
 
 **Test Linting:** ARG (unused arguments) rule disabled in `tests/` folder (for Fake Adapter signature compliance)
+
+### Pytest Token Optimization
+
+**IMPORTANT:** When working with Claude Code, pytest output consumes tokens from the AI context budget. Use optimized options to reduce costs by **95%**.
+
+| Pytest Options | Token Cost (3 failures) | When to Use |
+|----------------|-------------------------|-------------|
+| `pytest -v` (default) | ~2,000-5,000+ ❌ | **NEVER** with AI agents |
+| `--tb=line` | ~300-500 ⚠️ | Debugging phase |
+| `-q --tb=line -x` | ~50-80 🚀 | **RECOMMENDED** for AI |
+
+**Key Options:**
+- `-q`: Quiet mode (no verbose headers, success = `.` dot)
+- `--tb=line`: One-line traceback (file:line:error only)
+- `-x` / `--maxfail=1`: Stop at first failure (prevent "chain explosion")
+
+**Avoid:**
+- `-v` (verbose): Prints ALL test names, wasting tokens on PASSED tests
+- Long tracebacks: Full call stack is unnecessary when Claude has file context
+
+**References:** [pytest docs](https://docs.pytest.org/en/stable/how-to/output.html) | [AI TDD guide](https://www.builder.io/blog/test-driven-development-ai)
 
 ---
 

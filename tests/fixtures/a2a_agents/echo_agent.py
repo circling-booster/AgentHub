@@ -12,6 +12,7 @@ Example:
 """
 
 import sys
+from collections.abc import AsyncGenerator
 from pathlib import Path
 
 # Add project root to path for imports
@@ -20,13 +21,16 @@ sys.path.insert(0, str(project_root))
 
 from google.adk.a2a.utils.agent_to_a2a import to_a2a  # noqa: E402
 from google.adk.agents import BaseAgent  # noqa: E402
+from google.adk.events import Event  # noqa: E402
+from google.adk.runners import InvocationContext  # noqa: E402
+from google.genai.types import Content, Part  # noqa: E402
 
 
 class EchoAgent(BaseAgent):
     """
     Echo agent that returns user input without LLM calls.
 
-    Uses callback pattern to bypass LLM execution entirely.
+    Implements BaseAgent with correct signature for A2A integration testing.
     """
 
     def __init__(self):
@@ -35,17 +39,34 @@ class EchoAgent(BaseAgent):
             description="A simple echo agent that returns user input for testing A2A integration",
         )
 
-    async def _run_async_impl(self, request: str) -> str:
+    async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
         """
-        Main execution method - returns echo response.
+        Main execution method - returns echo response as Event stream.
 
         Args:
-            request: User input string
+            ctx: Invocation context containing user message
 
-        Returns:
-            Echo response with prefix
+        Yields:
+            Event with echo response
         """
-        return f"Echo: {request}"
+        # Extract user message from context
+        user_message = ""
+        if ctx.user_content:
+            if isinstance(ctx.user_content, str):
+                user_message = ctx.user_content
+            elif isinstance(ctx.user_content, Content):
+                # Extract text from Content parts
+                for part in ctx.user_content.parts:
+                    if hasattr(part, "text") and part.text:
+                        user_message += part.text
+
+        # Yield echo response as Event
+        echo_text = f"Echo: {user_message}"
+        yield Event(
+            author=self.name,
+            invocation_id=ctx.invocation_id,
+            content=Content(parts=[Part(text=echo_text)]),
+        )
 
 
 def main():
@@ -63,12 +84,11 @@ def main():
     # Create echo agent
     agent = EchoAgent()
 
-    # Convert to A2A ASGI app (don't pass port here)
-    a2a_app = to_a2a(agent)
+    # Convert to A2A ASGI app with correct host/port for agent card
+    a2a_app = to_a2a(agent, host="127.0.0.1", port=port)
 
     print(f"Starting Echo A2A Agent on port {port}...", flush=True)
     print(f"Agent Card: http://127.0.0.1:{port}/.well-known/agent.json", flush=True)
-    print(f"Health Check: http://127.0.0.1:{port}/health", flush=True)
 
     # Run ASGI server
     uvicorn.run(a2a_app, host="127.0.0.1", port=port, log_level="error")

@@ -11,20 +11,22 @@ import pytest
 class TestA2aEchoAgentFixture:
     """Echo agent fixture smoke tests"""
 
-    def test_echo_agent_health(self, a2a_echo_agent):
+    def test_echo_agent_ready(self, a2a_echo_agent):
         """
         Given: Echo agent is running
-        When: /health endpoint is called
-        Then: Returns 200 OK
+        When: /.well-known/agent.json endpoint is called
+        Then: Returns 200 OK with agent card
         """
         # Given: fixture provides base URL
         base_url = a2a_echo_agent
 
-        # When: call health endpoint
-        response = httpx.get(f"{base_url}/health", timeout=5.0)
+        # When: call agent card endpoint
+        response = httpx.get(f"{base_url}/.well-known/agent.json", timeout=5.0)
 
-        # Then: healthy
+        # Then: agent is ready
         assert response.status_code == 200
+        card = response.json()
+        assert isinstance(card, dict)
 
     def test_echo_agent_card(self, a2a_echo_agent):
         """
@@ -47,21 +49,21 @@ class TestA2aEchoAgentFixture:
         assert isinstance(card, dict)
 
     @pytest.mark.asyncio
-    async def test_echo_agent_process_endpoint_exists(self, a2a_echo_agent):
+    async def test_echo_agent_jsonrpc_endpoint_exists(self, a2a_echo_agent):
         """
         Given: Echo agent is running
-        When: /process endpoint is checked
-        Then: Endpoint exists (may require specific A2A format)
+        When: POST / endpoint is checked (JSON-RPC 2.0)
+        Then: Endpoint exists and responds
         """
         # Given
         base_url = a2a_echo_agent
 
-        # When: check process endpoint (OPTIONS or lightweight check)
+        # When: check JSON-RPC endpoint with OPTIONS
         async with httpx.AsyncClient() as client:
-            # Just verify endpoint responds (A2A protocol requires specific request format)
-            response = await client.options(f"{base_url}/process", timeout=5.0)
+            # Verify endpoint exists (A2A uses POST / for JSON-RPC)
+            response = await client.options(f"{base_url}/", timeout=5.0)
 
-            # Then: endpoint exists (may return 405 Method Not Allowed, but not 404)
+            # Then: endpoint exists (may return 200, 204, or 405)
             assert response.status_code in [200, 204, 405], (
-                f"Process endpoint should exist, got {response.status_code}"
+                f"JSON-RPC endpoint should exist, got {response.status_code}"
             )

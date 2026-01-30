@@ -248,6 +248,55 @@ class TestJsonEndpointStoragePersistence:
         assert retrieved.id == sample_endpoint.id
         assert retrieved.url == sample_endpoint.url
 
+
+class TestJsonEndpointStorageA2A:
+    """A2A Endpoint agent_card 직렬화 테스트"""
+
+    async def test_save_and_load_a2a_endpoint_with_agent_card(self, storage):
+        """
+        Given: agent_card가 있는 A2A Endpoint
+        When: 저장 후 조회하면
+        Then: agent_card가 그대로 복원됨
+        """
+        # Given
+        agent_card = {
+            "name": "test_agent",
+            "description": "Test A2A Agent",
+            "version": "1.0.0",
+            "api": {"protocol": "a2a", "version": "1.0"},
+        }
+        a2a_endpoint = Endpoint(
+            url="http://localhost:9001",
+            type=EndpointType.A2A,
+            name="Test A2A",
+            agent_card=agent_card,
+        )
+
+        # When
+        await storage.save_endpoint(a2a_endpoint)
+        retrieved = await storage.get_endpoint(a2a_endpoint.id)
+
+        # Then
+        assert retrieved is not None
+        assert retrieved.type == EndpointType.A2A
+        assert retrieved.agent_card == agent_card
+        assert retrieved.agent_card["name"] == "test_agent"
+
+    async def test_mcp_endpoint_agent_card_is_none(self, storage, sample_endpoint):
+        """
+        Given: MCP Endpoint (agent_card 없음)
+        When: 저장 후 조회하면
+        Then: agent_card는 None
+        """
+        # When
+        await storage.save_endpoint(sample_endpoint)
+        retrieved = await storage.get_endpoint(sample_endpoint.id)
+
+        # Then
+        assert retrieved is not None
+        assert retrieved.type == EndpointType.MCP
+        assert retrieved.agent_card is None
+
     async def test_json_file_format(self, tmp_path, sample_endpoint):
         """JSON 파일 형식 검증"""
         # Given: 엔드포인트 저장
