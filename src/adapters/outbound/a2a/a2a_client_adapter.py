@@ -45,7 +45,7 @@ class A2aClientAdapter(A2aPort):
         Raises:
             EndpointConnectionError: Agent Card fetch 실패 시
         """
-        url = endpoint.url
+        url = endpoint.url.rstrip("/")  # Remove trailing slash
         agent_card_url = f"{url}{self.AGENT_CARD_PATH}"
 
         try:

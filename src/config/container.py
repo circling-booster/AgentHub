@@ -8,6 +8,7 @@ Phase 2 확장:
 
 from dependency_injector import containers, providers
 
+from src.adapters.outbound.a2a.a2a_client_adapter import A2aClientAdapter
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 from src.adapters.outbound.adk.orchestrator_adapter import AdkOrchestratorAdapter
 from src.adapters.outbound.storage.json_endpoint_storage import JsonEndpointStorage
@@ -54,6 +55,9 @@ class Container(containers.DeclarativeContainer):
         dynamic_toolset=dynamic_toolset,
     )
 
+    # A2A Adapter
+    a2a_client_adapter = providers.Singleton(A2aClientAdapter)
+
     # Domain Services
     conversation_service = providers.Factory(
         ConversationService,
@@ -70,4 +74,5 @@ class Container(containers.DeclarativeContainer):
         RegistryService,
         toolset=dynamic_toolset,
         storage=endpoint_storage,
+        a2a_client=a2a_client_adapter,
     )
