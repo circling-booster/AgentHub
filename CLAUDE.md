@@ -169,24 +169,14 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 
 ### Pytest Token Optimization
 
-**IMPORTANT:** When working with Claude Code, pytest output consumes tokens from the AI context budget. Use optimized options to reduce costs by **95%**.
+**AI Context Budget:** Use `-q --tb=line -x` to reduce pytest output tokens by 95%.
 
-| Pytest Options | Token Cost (3 failures) | When to Use |
-|----------------|-------------------------|-------------|
-| `pytest -v` (default) | ~2,000-5,000+ ❌ | **NEVER** with AI agents |
-| `--tb=line` | ~300-500 ⚠️ | Debugging phase |
-| `-q --tb=line -x` | ~50-80 🚀 | **RECOMMENDED** for AI |
+- `-q`: Quiet mode (dot summary)
+- `--tb=line`: One-line traceback
+- `-x`: Stop at first failure
+- **Avoid `-v`**: Wastes tokens on passed tests
 
-**Key Options:**
-- `-q`: Quiet mode (no verbose headers, success = `.` dot)
-- `--tb=line`: One-line traceback (file:line:error only)
-- `-x` / `--maxfail=1`: Stop at first failure (prevent "chain explosion")
-
-**Avoid:**
-- `-v` (verbose): Prints ALL test names, wasting tokens on PASSED tests
-- Long tracebacks: Full call stack is unnecessary when Claude has file context
-
-**References:** [pytest docs](https://docs.pytest.org/en/stable/how-to/output.html) | [AI TDD guide](https://www.builder.io/blog/test-driven-development-ai)
+**Reference:** [pytest docs](https://docs.pytest.org/en/stable/how-to/output.html)
 
 ---
 
