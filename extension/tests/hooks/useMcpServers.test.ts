@@ -163,4 +163,70 @@ describe('useMcpServers', () => {
     // Then: Error state set
     expect(result.current.error).toBe('Connection refused');
   });
+
+  it('should load tools for a server via loadTools()', async () => {
+    // Given: Server tools API returns tools
+    const mockTools = [
+      { name: 'echo', description: 'Echo tool', input_schema: {} },
+      { name: 'search', description: 'Search tool', input_schema: {} },
+    ];
+    vi.spyOn(apiModule, 'getServerTools').mockResolvedValue(mockTools);
+
+    // Initial server list
+    vi.spyOn(apiModule, 'listMcpServers').mockResolvedValue([
+      {
+        id: 'srv-1',
+        name: 'Test Server',
+        url: 'http://localhost:9000/mcp',
+        enabled: true,
+        registered_at: '2026-01-30T00:00:00Z',
+      },
+    ]);
+
+    const { result } = renderHook(() => useMcpServers());
+
+    // Load servers first
+    await act(async () => {
+      await result.current.loadServers();
+    });
+
+    // When: Load tools for server
+    await act(async () => {
+      await result.current.loadTools('srv-1');
+    });
+
+    // Then: Tools are loaded and attached to server
+    expect(apiModule.getServerTools).toHaveBeenCalledWith('srv-1');
+    expect(result.current.servers[0].tools).toHaveLength(2);
+    expect(result.current.servers[0].tools![0].name).toBe('echo');
+  });
+
+  it('should handle loadTools error gracefully', async () => {
+    // Given: Server list exists, but tools API fails
+    vi.spyOn(apiModule, 'listMcpServers').mockResolvedValue([
+      {
+        id: 'srv-1',
+        name: 'Test Server',
+        url: 'http://localhost:9000/mcp',
+        enabled: true,
+        registered_at: '2026-01-30T00:00:00Z',
+      },
+    ]);
+    vi.spyOn(apiModule, 'getServerTools').mockRejectedValue(new Error('Server timeout'));
+
+    const { result } = renderHook(() => useMcpServers());
+
+    await act(async () => {
+      await result.current.loadServers();
+    });
+
+    // When: Load tools fails
+    await act(async () => {
+      await result.current.loadTools('srv-1');
+    });
+
+    // Then: Error is set, server still exists without tools
+    expect(result.current.error).toBe('Failed to load tools: Server timeout');
+    expect(result.current.servers[0].tools).toBeUndefined();
+  });
 });

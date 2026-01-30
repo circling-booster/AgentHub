@@ -18,6 +18,7 @@ describe('McpServerManager', () => {
     loadServers: vi.fn(),
     addServer: vi.fn(),
     removeServer: vi.fn(),
+    loadTools: vi.fn(),
   };
 
   beforeEach(() => {
@@ -123,5 +124,140 @@ describe('McpServerManager', () => {
     render(<McpServerManager />);
 
     expect(screen.getByText('No MCP servers registered')).toBeDefined();
+  });
+
+  it('should show expand button for servers', () => {
+    mockUseMcpServers.mockReturnValue({
+      ...defaultMock,
+      servers: [
+        { id: 'srv-1', name: 'Test Server', url: 'http://localhost:9000/mcp', enabled: true, registered_at: '' },
+      ],
+    });
+
+    render(<McpServerManager />);
+
+    // Expand button should be present (▶ or ▼)
+    const expandButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '▶' || btn.textContent === '▼');
+    expect(expandButtons.length).toBeGreaterThan(0);
+  });
+
+  it('should expand server and load tools when expand button clicked', async () => {
+    const loadTools = vi.fn();
+    mockUseMcpServers.mockReturnValue({
+      ...defaultMock,
+      loadTools,
+      servers: [
+        { id: 'srv-1', name: 'Test Server', url: 'http://localhost:9000/mcp', enabled: true, registered_at: '' },
+      ],
+    });
+
+    render(<McpServerManager />);
+
+    const expandButton = screen.getAllByRole('button').find(btn => btn.textContent === '▶');
+    expect(expandButton).toBeDefined();
+
+    // Click to expand
+    await act(async () => {
+      fireEvent.click(expandButton!);
+    });
+
+    // loadTools should be called (since tools are not present)
+    expect(loadTools).toHaveBeenCalledWith('srv-1');
+  });
+
+  it('should display tools when server is expanded', async () => {
+    const loadTools = vi.fn();
+    mockUseMcpServers.mockReturnValue({
+      ...defaultMock,
+      loadTools,
+      servers: [
+        {
+          id: 'srv-1',
+          name: 'Test Server',
+          url: 'http://localhost:9000/mcp',
+          enabled: true,
+          registered_at: '',
+          tools: [
+            { name: 'echo', description: 'Echo tool', input_schema: {} },
+            { name: 'search', description: 'Search tool', input_schema: {} },
+          ],
+        },
+      ],
+    });
+
+    render(<McpServerManager />);
+
+    const expandButton = screen.getAllByRole('button').find(btn => btn.textContent === '▶');
+    await act(async () => {
+      fireEvent.click(expandButton!);
+    });
+
+    // Tools should be displayed
+    expect(screen.getByText('echo')).toBeDefined();
+    expect(screen.getByText('search')).toBeDefined();
+    expect(screen.getByText('Echo tool')).toBeDefined();
+  });
+
+  it('should not call loadTools if tools already loaded', async () => {
+    const loadTools = vi.fn();
+    mockUseMcpServers.mockReturnValue({
+      ...defaultMock,
+      loadTools,
+      servers: [
+        {
+          id: 'srv-1',
+          name: 'Test Server',
+          url: 'http://localhost:9000/mcp',
+          enabled: true,
+          registered_at: '',
+          tools: [{ name: 'echo', description: 'Echo tool', input_schema: {} }],
+        },
+      ],
+    });
+
+    render(<McpServerManager />);
+
+    const expandButton = screen.getAllByRole('button').find(btn => btn.textContent === '▶');
+    await act(async () => {
+      fireEvent.click(expandButton!);
+    });
+
+    // loadTools should NOT be called (tools already present)
+    expect(loadTools).not.toHaveBeenCalled();
+  });
+
+  it('should collapse server when expand button clicked again', async () => {
+    mockUseMcpServers.mockReturnValue({
+      ...defaultMock,
+      servers: [
+        {
+          id: 'srv-1',
+          name: 'Test Server',
+          url: 'http://localhost:9000/mcp',
+          enabled: true,
+          registered_at: '',
+          tools: [{ name: 'echo', description: 'Echo tool', input_schema: {} }],
+        },
+      ],
+    });
+
+    render(<McpServerManager />);
+
+    const expandButton = screen.getAllByRole('button').find(btn => btn.textContent === '▶');
+
+    // Expand
+    await act(async () => {
+      fireEvent.click(expandButton!);
+    });
+    expect(screen.getByText('echo')).toBeDefined();
+
+    // Collapse
+    const collapseButton = screen.getAllByRole('button').find(btn => btn.textContent === '▼');
+    await act(async () => {
+      fireEvent.click(collapseButton!);
+    });
+
+    // Tools should not be visible
+    expect(screen.queryByText('echo')).toBeNull();
   });
 });

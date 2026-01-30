@@ -2,14 +2,16 @@
  * MCP Server management component
  *
  * Provides UI for registering, listing, and removing MCP servers.
+ * Shows expandable tools list for each server.
  */
 
 import { useState, useEffect } from 'react';
 import { useMcpServers } from '../hooks/useMcpServers';
 
 export function McpServerManager() {
-  const { servers, loading, error, loadServers, addServer, removeServer } = useMcpServers();
+  const { servers, loading, error, loadServers, addServer, removeServer, loadTools } = useMcpServers();
   const [url, setUrl] = useState('');
+  const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadServers();
@@ -20,6 +22,21 @@ export function McpServerManager() {
     if (!trimmed) return;
     await addServer(trimmed);
     setUrl('');
+  };
+
+  const toggleServerExpand = async (serverId: string) => {
+    const newExpanded = new Set(expandedServers);
+    if (newExpanded.has(serverId)) {
+      newExpanded.delete(serverId);
+    } else {
+      newExpanded.add(serverId);
+      // Load tools when expanding (if not already loaded)
+      const server = servers.find(s => s.id === serverId);
+      if (server && !server.tools) {
+        await loadTools(serverId);
+      }
+    }
+    setExpandedServers(newExpanded);
   };
 
   return (
@@ -45,11 +62,38 @@ export function McpServerManager() {
       <div className="server-list">
         {servers.map((server) => (
           <div key={server.id} className="server-item">
-            <div className="server-info">
-              <span className="server-name">{server.name}</span>
-              <span className="server-url">{server.url}</span>
+            <div className="server-header">
+              <button
+                className="expand-button"
+                onClick={() => toggleServerExpand(server.id)}
+              >
+                {expandedServers.has(server.id) ? '▼' : '▶'}
+              </button>
+              <div className="server-info">
+                <span className="server-name">{server.name}</span>
+                <span className="server-url">{server.url}</span>
+              </div>
+              <button onClick={() => removeServer(server.id)}>Remove</button>
             </div>
-            <button onClick={() => removeServer(server.id)}>Remove</button>
+
+            {expandedServers.has(server.id) && (
+              <div className="tools-list">
+                {!server.tools && <div className="loading-tools">Loading tools...</div>}
+                {server.tools && server.tools.length === 0 && (
+                  <div className="no-tools">No tools available</div>
+                )}
+                {server.tools && server.tools.length > 0 && (
+                  <ul>
+                    {server.tools.map((tool) => (
+                      <li key={tool.name} className="tool-item">
+                        <span className="tool-name">{tool.name}</span>
+                        <span className="tool-description">{tool.description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

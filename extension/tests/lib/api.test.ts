@@ -9,6 +9,7 @@ import {
   registerMcpServer,
   listMcpServers,
   removeMcpServer,
+  getServerTools,
 } from '../../lib/api';
 import { STORAGE_KEYS } from '../../lib/constants';
 
@@ -298,6 +299,50 @@ describe('API Client', () => {
           method: 'DELETE',
         })
       );
+    });
+
+    it('getServerTools should GET /api/mcp/servers/:id/tools', async () => {
+      // Given: Server returns tools for a specific server
+      const mockTools = [
+        {
+          name: 'echo',
+          description: 'Echo tool',
+          input_schema: { type: 'object', properties: {} },
+        },
+        {
+          name: 'search',
+          description: 'Search tool',
+          input_schema: { type: 'object', properties: { query: { type: 'string' } } },
+        },
+      ];
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockTools,
+      });
+
+      // When: Get tools for server mcp-1
+      const result = await getServerTools('mcp-1');
+
+      // Then: Returns tools array
+      expect(result).toHaveLength(2);
+      expect(result[0].name).toBe('echo');
+      expect(result[1].name).toBe('search');
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/mcp/servers/mcp-1/tools',
+        expect.any(Object)
+      );
+    });
+
+    it('getServerTools should throw on HTTP error', async () => {
+      // Given: Server returns error
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      });
+
+      // When/Then: Should throw
+      await expect(getServerTools('invalid-id')).rejects.toThrow('Failed to get server tools');
     });
   });
 

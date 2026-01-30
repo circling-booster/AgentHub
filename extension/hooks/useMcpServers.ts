@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import type { McpServer } from '../lib/types';
-import { listMcpServers, registerMcpServer, removeMcpServer } from '../lib/api';
+import { listMcpServers, registerMcpServer, removeMcpServer, getServerTools } from '../lib/api';
 
 interface McpServersState {
   servers: McpServer[];
@@ -15,6 +15,7 @@ interface McpServersState {
   loadServers: () => Promise<void>;
   addServer: (url: string, name?: string) => Promise<void>;
   removeServer: (serverId: string) => Promise<void>;
+  loadTools: (serverId: string) => Promise<void>;
 }
 
 export function useMcpServers(): McpServersState {
@@ -56,6 +57,24 @@ export function useMcpServers(): McpServersState {
     }
   }, [loadServers]);
 
+  const loadTools = useCallback(async (serverId: string) => {
+    setError(null);
+    try {
+      const tools = await getServerTools(serverId);
+      setServers(prev =>
+        prev.map(server =>
+          server.id === serverId ? { ...server, tools } : server
+        )
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Failed to load tools: ${err.message}`
+          : 'Failed to load tools'
+      );
+    }
+  }, []);
+
   return {
     servers,
     loading,
@@ -63,5 +82,6 @@ export function useMcpServers(): McpServersState {
     loadServers,
     addServer,
     removeServer,
+    loadTools,
   };
 }

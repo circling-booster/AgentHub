@@ -153,3 +153,16 @@ export async function removeMcpServer(serverId: string): Promise<void> {
     throw new Error('Failed to remove MCP server');
   }
 }
+
+/**
+ * Get tools from a specific MCP server (authenticated)
+ */
+export async function getServerTools(serverId: string): Promise<import('./types').Tool[]> {
+  const response = await authenticatedFetch(`/api/mcp/servers/${serverId}/tools`);
+
+  if (!response.ok) {
+    throw new Error('Failed to get server tools');
+  }
+
+  return response.json();
+}
