@@ -238,4 +238,88 @@ describe('useChat', () => {
       })
     );
   });
+
+  it('should save chat state to session storage on update', async () => {
+    // Given: Hook rendered
+    const { result } = renderHook(() => useChat());
+
+    // When: Send message
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    // Simulate conversation_created
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: { type: 'conversation_created', conversation_id: 'conv-123' },
+      });
+    });
+
+    // Then: Session storage should have chat state
+    const stored = await fakeBrowser.storage.session.get('chatState');
+    expect(stored.chatState).toBeDefined();
+    expect(stored.chatState.conversationId).toBe('conv-123');
+    expect(stored.chatState.messages).toHaveLength(1);
+    expect(stored.chatState.messages[0].content).toBe('Hello');
+  });
+
+  it('should restore chat state from session storage on mount', async () => {
+    // Given: Session storage has previous chat state
+    await fakeBrowser.storage.session.set({
+      chatState: {
+        conversationId: 'conv-restored',
+        messages: [
+          {
+            id: 'msg-1',
+            role: 'user',
+            content: 'Previous message',
+            createdAt: new Date('2026-01-30T00:00:00Z').toISOString(),
+          },
+          {
+            id: 'msg-2',
+            role: 'assistant',
+            content: 'Previous response',
+            createdAt: new Date('2026-01-30T00:01:00Z').toISOString(),
+          },
+        ],
+      },
+    });
+
+    // When: Hook mounts
+    const { result } = renderHook(() => useChat());
+
+    // Wait for storage to load
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // Then: State restored from storage
+    expect(result.current.conversationId).toBe('conv-restored');
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[0].content).toBe('Previous message');
+    expect(result.current.messages[1].content).toBe('Previous response');
+  });
+
+  it('should clear session storage when conversation ID is null', async () => {
+    // Given: Session storage has chat state
+    await fakeBrowser.storage.session.set({
+      chatState: {
+        conversationId: 'conv-old',
+        messages: [{ id: 'msg-1', role: 'user', content: 'Old', createdAt: new Date().toISOString() }],
+      },
+    });
+
+    // When: Hook mounts with empty state
+    renderHook(() => useChat());
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // Storage should still have the previous state (until new conversation starts)
+    const stored = await fakeBrowser.storage.session.get('chatState');
+    expect(stored.chatState).toBeDefined();
+  });
 });

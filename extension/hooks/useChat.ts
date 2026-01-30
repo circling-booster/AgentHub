@@ -3,6 +3,7 @@
  *
  * Handles message sending, SSE streaming events, and conversation state.
  * Communicates with Background Service Worker via chrome.runtime messages.
+ * Persists chat state to chrome.storage.session for tab switching.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -18,6 +19,18 @@ interface ChatState {
   sendMessage: (content: string) => Promise<void>;
 }
 
+interface StoredChatState {
+  conversationId: string | null;
+  messages: Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    createdAt: string;
+  }>;
+}
+
+const STORAGE_KEY = 'chatState';
+
 export function useChat(): ChatState {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -26,6 +39,37 @@ export function useChat(): ChatState {
 
   // Use ref for streaming state to avoid stale closure in listener
   const streamingRef = useRef(false);
+
+  // Restore chat state from session storage on mount
+  useEffect(() => {
+    (async () => {
+      const stored = await browser.storage.session.get(STORAGE_KEY);
+      if (stored[STORAGE_KEY]) {
+        const state: StoredChatState = stored[STORAGE_KEY];
+        setConversationId(state.conversationId);
+        setMessages(
+          state.messages.map((msg) => ({
+            ...msg,
+            createdAt: new Date(msg.createdAt),
+          }))
+        );
+      }
+    })();
+  }, []);
+
+  // Save chat state to session storage on update
+  useEffect(() => {
+    (async () => {
+      const state: StoredChatState = {
+        conversationId,
+        messages: messages.map((msg) => ({
+          ...msg,
+          createdAt: msg.createdAt.toISOString(),
+        })),
+      };
+      await browser.storage.session.set({ [STORAGE_KEY]: state });
+    })();
+  }, [messages, conversationId]);
 
   // Listen for stream events from Background
   useEffect(() => {
