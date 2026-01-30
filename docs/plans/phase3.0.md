@@ -86,16 +86,16 @@ Phase 3은 범위가 넓어 두 개의 독립적인 파트로 분리합니다:
 
 ### 선행 조건
 
-- [ ] 기존 테스트 전체 통과: `pytest tests/ -v` (262 selected)
-- [ ] Coverage >= 80%: `pytest --cov=src --cov-fail-under=80` (현재 89.66%)
-- [ ] 브랜치 확인: `feature/phase-3` 생성
+- [x] 기존 테스트 전체 통과: `pytest tests/ -v` (262 selected)
+- [x] Coverage >= 80%: `pytest --cov=src --cov-fail-under=80` (현재 89.66%)
+- [x] 브랜치 확인: `feature/phase-3` 생성
 
-### 필수 웹 검색 (Plan 단계)
+### 필수 웹 검색 (Plan 단계) ✅
 
-- [ ] `google adk RemoteA2aAgent constructor 2026` — import 경로, 생성자 파라미터
-- [ ] `google adk to_a2a utility return type 2026` — 반환 타입 (ASGI app? blocking?)
-- [ ] `A2A protocol agent card schema 2026` — Agent Card JSON 필드 목록
-- [ ] `google adk agent without LLM callback 2026` — 테스트용 non-LLM agent 가능 여부
+- [x] `google adk RemoteA2aAgent constructor 2026` — ✅ `name`, `description`, `agent_card` (URL)
+- [x] `google adk to_a2a utility return type 2026` — ✅ ASGI application (FastAPI 마운트 가능)
+- [x] `A2A protocol agent card schema 2026` — ✅ 필수: `name`, `description`, `version`, `api`, `auth`
+- [x] `google adk agent without LLM callback 2026` — ✅ Callback으로 LLM 우회 가능 (테스트용)
 
 ### Step별 재검증 게이트
 
