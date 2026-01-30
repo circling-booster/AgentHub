@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { fakeBrowser } from 'wxt/testing';
 import { streamChat } from '../../lib/sse';
 import type { StreamEvent } from '../../lib/types';
 
 describe('SSE Client', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     global.fetch = vi.fn();
+    // Provide extension token for authenticated SSE requests
+    await fakeBrowser.storage.session.set({ extensionToken: 'test-token-123' });
   });
 
   afterEach(() => {

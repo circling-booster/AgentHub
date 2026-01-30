@@ -1,23 +1,25 @@
 # AgentHub
 
-Google ADK 기반 MCP + A2A 통합 Agent System
+Google ADK-based MCP + A2A Integrated Agent System
 
 ---
 
-## 🎯 What You Need to Know First
+## 🎯 Quick Reference
 
-| 항목 | 내용 |
-|------|------|
-| **목적** | 로컬 환경에서 MCP/A2A 도구를 Chrome Extension으로 통합 |
+| Item | Details |
+|------|---------|
+| **Purpose** | Integrate MCP/A2A tools via Chrome Extension in local environment |
 | **Language** | Python 3.10+ (Backend) + TypeScript (Extension) |
 | **Architecture** | Hexagonal (Ports and Adapters) |
 | **Agent Framework** | Google ADK 1.23.0+ with LiteLLM |
-| **Default Model** | `anthropic/claude-sonnet-4-20250514` |
+| **Default Model** | `openai/gpt-4o-mini` |
 
 **Core Flow:**
 ```
 Chrome Extension → AgentHub API (localhost:8000) → MCP Servers / A2A Agents
 ```
+
+**Current Status:** See [@docs/STATUS.md](docs/STATUS.md) for real-time progress, coverage, and next actions.
 
 ---
 
@@ -46,9 +48,7 @@ tests/                # TDD (80% coverage target)
 
 ---
 
-## 🚀 How to Work
-
-### Quick Start
+## 🚀 Quick Start
 
 ```bash
 # Server
@@ -62,167 +62,122 @@ pytest
 pytest --cov=src --cov-report=html
 ```
 
-**Environment:** `.env` 파일에 API 키 설정 (ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY)
+**Environment:** Set API keys in `.env` file (ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY)
 
-### Development Workflow
+### Automated Workflow (Hooks)
 
-**자동화 (Hooks):**
-- **PostToolUse Hook**: 코드 수정 후 자동 ruff 포맷팅
-- **Stop Hook**: 응답 완료 시 Unit 테스트 실행
-- **UserPromptSubmit Hook**: commit/pr/push 시 전체 테스트 + 커버리지 검증
-- **Git pre-commit hook**: main 브랜치 직접 커밋 차단
-- **GitHub Actions**: PR 시 커버리지 80% 미만 차단
+- **PostToolUse Hook**: Auto ruff formatting after code changes
+- **Stop Hook**: Run unit tests on response completion
+- **UserPromptSubmit Hook**: Full test + coverage verification on commit/pr/push
+- **Git pre-commit hook**: Block direct commits to main branch
+- **GitHub Actions**: Block PRs with <80% coverage
 
-자세한 내용: `.claude/settings.json` 및 `.github/workflows/ci.yml` 참조
+Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 
 ---
 
 ## ⚠️ Critical Constraints & Solutions
 
-| 제약 | 해결책 |
-|------|--------|
-| Service Worker 30s timeout | Offscreen Document 사용 |
-| MCPToolset.get_tools() is async | Async Factory Pattern (FastAPI startup 초기화) |
+| Constraint | Solution |
+|------------|----------|
+| MCPToolset.get_tools() is async | Async Factory Pattern (FastAPI startup initialization) |
 | SQLite concurrent writes | WAL mode + write lock |
-| Google Built-in Tools (SearchTool 등) | Gemini 전용 → MCP 서버로 대체 |
+| Google Built-in Tools (SearchTool, etc.) | Gemini-only → Replace with MCP servers |
 
 ---
 
 ## 🔐 Key Principles
 
-**IMPORTANT: 이 원칙들은 반드시 준수해야 합니다.**
+**IMPORTANT: These principles MUST be followed.**
 
-1. **Domain Layer 순수성**
-   - YOU MUST NOT import 외부 라이브러리 (ADK, FastAPI, SQLite 등) in `src/domain/`
-   - 도메인은 순수 Python만 사용 (헥사고날 아키텍처 핵심)
+1. **Domain Layer Purity**
+   - YOU MUST NOT import external libraries (ADK, FastAPI, SQLite, etc.) in `src/domain/`
+   - Domain uses pure Python only (core of hexagonal architecture)
 
-2. **Standards Verification Protocol (교차 검증)**
-   - MCP/A2A/ADK는 빠르게 진화하는 표준
-   - **Plan 단계**: 아키텍처/API 설계 전 웹 검색으로 최신 스펙 확인
-   - **구현 단계**: 코드 작성 전 API 메서드명/파라미터 재검증
-   - IMPORTANT: Plan → 구현 간 스펙 변경 가능성 있으므로 **양 단계 모두 검색 필수**
-   - 상세: @docs/guides/standards-verification.md
+2. **Standards Verification Protocol (Cross-Validation)**
+   - MCP/A2A/ADK are rapidly evolving standards
+   - **Plan Phase**: Verify latest specs via web search before architecture/API design
+   - **Implementation Phase**: Re-verify API method names/parameters before coding
+   - IMPORTANT: Specs may change between Plan → Implementation, so **search BOTH phases**
+   - Details: @docs/guides/standards-verification.md
 
 3. **Hexagonal Architecture**
-   - 도메인이 외부에 의존하지 않음
-   - 어댑터가 도메인 Port 인터페이스를 구현
-   - 테스트 시 Fake Adapter 사용 (Mocking 금지)
+   - Domain does not depend on external systems
+   - Adapters implement Domain Port interfaces
+   - Use Fake Adapters for testing (no mocking)
 
 4. **Security First**
-   - localhost API는 Token Handshake 필수 (Drive-by RCE 방지)
-   - Extension ↔ Server 간 X-Extension-Token 헤더 검증
-   - 상세: @docs/guides/implementation-guide.md#9-보안-패턴
+   - localhost API requires Token Handshake (prevent Drive-by RCE)
+   - Extension ↔ Server X-Extension-Token header verification
+   - Details: @docs/guides/implementation-guide.md#9-security-patterns
 
-5. **TDD 필수 (Test-First Development)**
+5. **TDD Required (Test-First Development)**
    - YOU MUST NOT implement any entity, service, or adapter without writing tests FIRST
-   - Red-Green-Refactor 사이클 엄수: 실패하는 테스트 → 최소 구현 → 리팩토링
-   - 테스트 없는 구현 코드는 커밋/PR 불가
+   - Follow Red-Green-Refactor cycle: failing test → minimal implementation → refactoring
+   - Code without tests cannot be committed/PR'd
 
 6. **MCP Transport**
-   - Streamable HTTP 우선 (2025년 권장)
-   - SSE fallback (레거시 서버 호환)
+   - Streamable HTTP preferred (2025 recommendation)
+   - SSE fallback (legacy server compatibility)
 
 ---
 
 ## 🚫 Critical Don'ts
 
-| 금지 사항 | 이유 |
-|----------|------|
-| Domain Layer에 ADK/FastAPI import | 헥사고날 아키텍처 위반 |
-| main 브랜치 직접 수정 | PreToolUse Hook 차단 (exit 2) |
-| .env 파일 커밋 | 보안 위험 |
-| EventSource 사용 (SSE) | POST SSE는 fetch ReadableStream 필요 |
-| 테스트 없이 구현 코드 작성 | TDD 필수: 반드시 테스트 먼저 작성 (Red-Green-Refactor) |
-| 테스트 없이 PR | 80% 커버리지 미만 시 CI 차단 |
+| Prohibited Action | Reason |
+|-------------------|--------|
+| Import ADK/FastAPI in Domain Layer | Violates hexagonal architecture |
+| Direct modification of main branch | PreToolUse Hook blocks (exit 2) |
+| Use EventSource (SSE) | POST SSE requires fetch ReadableStream |
+| Write implementation code without tests | TDD required: write tests first (Red-Green-Refactor) |
+| PR without tests | CI blocks if coverage <80% |
 
 ---
 
 ## 📚 Documentation Strategy
 
-**상황별 참조 문서 (Progressive Disclosure):**
+**Situational Reference (Progressive Disclosure):**
 
-| 상황 | 참조 문서 |
-|------|----------|
-| **프로젝트 이해** | @README.md (빠른 시작, 설치) |
-| **아키텍처 설계** | @docs/guides/architecture.md (헥사고날 구조) |
-| **구현 패턴** | @docs/guides/implementation-guide.md (코드 예시) |
-| **Extension 개발** | @docs/guides/extension-guide.md (Offscreen Document) |
-| **보안 구현** | @docs/guides/implementation-guide.md#9-보안-패턴 |
-| **Standards 검증** | @docs/guides/standards-verification.md |
-| **Skill & Agent 활용** | @docs/guides/skill-agent-guide.md (Phase별 워크플로우) |
-| **Phase 계획** | @docs/roadmap.md |
-| **리스크 평가** | @docs/archive/risk-assessment.md |
-| **ADR 기록** | @docs/decisions/ |
+| Situation | Reference Document |
+|-----------|-------------------|
+| **Project Status** | @docs/STATUS.md (progress, coverage, next actions) |
+| **Quick Start** | @README.md (installation, usage) |
+| **Implementation Patterns** | @docs/guides/implementation-guide.md (code examples) |
+| **Security Implementation** | @docs/guides/implementation-guide.md#9-security-patterns |
+| **Standards Verification** | @docs/guides/standards-verification.md |
+| **Phase Plans** | @docs/roadmap.md |
+| **ADR Records** | @docs/decisions/ |
 
 ---
 
 ## 🧪 Test Strategy (TDD + Hexagonal)
 
-| Phase | 테스트 유형 | 대상 | 커버리지 목표 |
-|-------|-----------|------|--------------|
+| Phase | Test Type | Target | Coverage Goal |
+|-------|-----------|--------|---------------|
 | Phase 1 | Unit | Domain Layer | 80% |
 | Phase 2 | Integration | MCP Adapter, API | 70% |
 | Phase 3 | E2E | Full Stack | Critical Path |
 
-**TDD 원칙:**
-- Red-Green-Refactor 사이클 엄수
-- Domain Layer는 Fake Adapter로 테스트 (외부 의존성 없이)
-- Port 인터페이스 기반 테스트 격리
+**TDD Principles:**
+- Follow Red-Green-Refactor cycle strictly
+- Test Domain Layer with Fake Adapters (no external dependencies)
+- Isolate tests based on Port interfaces
 
-**테스트 린트:** `tests/` 폴더에서 ARG (미사용 인자) 규칙 비활성화됨 (Fake Adapter 시그니처 준수 목적)
-
----
-
-## 🤖 품질 검증 체크리스트
-
-| 시점 | 필요 작업 |
-|------|----------|
-| Entity/Service 구현 전 | TDD 테스트 먼저 작성 |
-| 아키텍처 변경 시 | 헥사고날 아키텍처 원칙 준수 검토 |
-| 보안 코드 작성 후 | 보안 취약점 검토 |
-| 기능 완료/PR 전 | 코드 품질 및 아키텍처 리뷰 |
-
----
-
-## 🌐 Working Guidelines
-
-- **한국어**로 소통 (별도 지시 없으면)
-- **웹 검색 교차 검증** (MCP/A2A/ADK):
-  - **Plan 단계**: 설계 전 최신 스펙/Breaking Changes 확인
-  - **구현 단계**: 코드 작성 전 API 시그니처 재검증
-  - 불확실 시 즉시 웹 검색 (추측 금지)
-- **Fake Adapter 패턴**: 테스트 시 Mocking 대신 Fake 구현체 사용
-- **코드 패턴**: @docs/guides/implementation-guide.md 참조
-
+**Test Linting:** ARG (unused arguments) rule disabled in `tests/` folder (for Fake Adapter signature compliance)
 
 ---
 
 ## 🧩 Test Resources
 
-> **정책:** MCP 및 A2A 서버는 외부 서버가 아닌 **로컬 서버만으로 테스트**합니다.
+> **Policy:** Test with **local servers only**, not external servers.
 
-| Type | Resource | 실행 방법 |
-|------|----------|----------|
-| MCP Test Server | `http://127.0.0.1:9000/mcp` (로컬 Synapse) | `SYNAPSE_PORT=9000 python -m synapse` |
-| A2A Agents | 로컬 A2A Agent Server (구현 중) | TBD |
+| Type | Resource | Execution |
+|------|----------|-----------|
+| MCP Test Server | `http://127.0.0.1:9000/mcp` (local Synapse) | `SYNAPSE_PORT=9000 python -m synapse` |
+| A2A Agents | Local A2A Agent Server (in development) | TBD |
 
-**MCP 서버 프로젝트:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
-
----
-
-## 📝 Folder Documentation
-
-**중요 폴더는 README.md 포함해야 함:**
-
-| 폴더 | 우선순위 | 생성 시점 |
-|------|:-------:|----------|
-| `src/` | 🔴 필수 | Phase 1 시작 |
-| `src/domain/` | 🔴 필수 | Phase 1 완료 |
-| `src/config/` | 🔴 필수 | Phase 1 완료 |
-| `tests/` | 🔴 필수 | Phase 1 완료 |
-| `src/adapters/` | 🟡 중요 | Phase 2 완료 |
-| `extension/` | 🟢 권장 | Phase 2.5 완료 |
+**MCP Server Project:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
 
 ---
 
-*최적화 완료: 2026-01-29*
+*Last Optimized: 2026-01-30*

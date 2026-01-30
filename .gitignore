@@ -190,3 +190,6 @@ node_modules/
 
 # WXT Extension build output
 .output/
+
+# AgentHub data directory (SQLite DB, endpoints.json)
+data/

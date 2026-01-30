@@ -52,6 +52,13 @@ export default defineBackground(() => {
   async function handleStartStreamChat(payload: { conversationId: string | null; message: string }) {
     const requestId = crypto.randomUUID();
 
+    // Read token from session storage (Background has access)
+    const stored = await browser.storage.session.get(STORAGE_KEYS.EXTENSION_TOKEN);
+    const token = stored[STORAGE_KEYS.EXTENSION_TOKEN] as string;
+    if (!token) {
+      throw new Error('Not authenticated. Extension token not found.');
+    }
+
     // Ensure offscreen document exists
     await ensureOffscreenDocument(OFFSCREEN_DOCUMENT_PATH);
 
@@ -59,12 +66,13 @@ export default defineBackground(() => {
     const controller = new AbortController();
     activeStreams.set(requestId, controller);
 
-    // Forward to offscreen document
+    // Forward to offscreen document (include token since offscreen can't access session storage)
     await browser.runtime.sendMessage({
       type: MessageType.STREAM_CHAT,
       payload: {
         ...payload,
         requestId,
+        token,
       },
     });
   }

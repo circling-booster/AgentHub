@@ -8,6 +8,9 @@
 import { API_BASE } from './constants';
 import type { StreamEvent } from './types';
 
+// Re-export StreamEvent for offscreen-handlers compatibility
+export type { StreamEvent } from './types';
+
 /**
  * Stream chat with POST-based SSE
  *
@@ -15,6 +18,7 @@ import type { StreamEvent } from './types';
  * @param message - User message
  * @param onEvent - Callback for each SSE event
  * @param signal - AbortSignal for cancellation
+ * @param token - Extension authentication token
  * @throws Error if HTTP error or network error
  */
 export async function streamChat(
@@ -22,13 +26,20 @@ export async function streamChat(
   message: string,
   onEvent: (event: StreamEvent) => void,
   signal?: AbortSignal,
+  token?: string,
 ): Promise<void> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+  };
+
+  if (token) {
+    headers['X-Extension-Token'] = token;
+  }
+
   const response = await fetch(`${API_BASE}/api/chat/stream`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'text/event-stream',
-    },
+    headers,
     body: JSON.stringify({
       conversation_id: conversationId,
       message,

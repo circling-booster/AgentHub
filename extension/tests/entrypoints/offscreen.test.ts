@@ -34,14 +34,16 @@ describe('Offscreen Document Handlers', () => {
         conversationId: 'conv-123',
         message: 'Test message',
         requestId: 'req-123',
+        token: 'test-token',
       });
 
-      // Then: streamChat called with correct parameters
+      // Then: streamChat called with correct parameters (including token)
       expect(mockStreamChat).toHaveBeenCalledWith(
         'conv-123',
         'Test message',
         expect.any(Function),
-        expect.any(AbortSignal)
+        expect.any(AbortSignal),
+        'test-token',
       );
 
       // Events forwarded to Background
@@ -76,6 +78,7 @@ describe('Offscreen Document Handlers', () => {
         conversationId: 'conv-123',
         message: 'Test',
         requestId: 'req-123',
+        token: 'test-token',
       });
 
       // Then: DONE message sent
@@ -97,6 +100,7 @@ describe('Offscreen Document Handlers', () => {
         conversationId: null,
         message: 'Test',
         requestId: 'req-123',
+        token: 'test-token',
       });
 
       // Then: ERROR message sent
@@ -117,6 +121,7 @@ describe('Offscreen Document Handlers', () => {
         conversationId: null,
         message: 'Test',
         requestId: 'req-123',
+        token: 'test-token',
       });
 
       // Then: Stream removed from active streams
@@ -143,6 +148,7 @@ describe('Offscreen Document Handlers', () => {
         conversationId: null,
         message: 'Test',
         requestId: 'req-123',
+        token: 'test-token',
       });
 
       // Wait for stream to start
@@ -194,12 +200,14 @@ describe('Offscreen Document Handlers', () => {
         conversationId: null,
         message: 'Test 1',
         requestId: 'req-1',
+        token: 'test-token',
       });
 
       const stream2 = handleStreamChat({
         conversationId: null,
         message: 'Test 2',
         requestId: 'req-2',
+        token: 'test-token',
       });
 
       // Then: Both streams active

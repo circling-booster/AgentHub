@@ -10,5 +10,5 @@ export const STORAGE_KEYS = {
 /** Health check interval in minutes (0.5 = 30 seconds) */
 export const HEALTH_CHECK_INTERVAL_MINUTES = 0.5;
 
-/** Offscreen document path */
-export const OFFSCREEN_DOCUMENT_PATH = 'offscreen/index.html';
+/** Offscreen document path (WXT compiles entrypoints/offscreen/index.html → offscreen.html) */
+export const OFFSCREEN_DOCUMENT_PATH = 'offscreen.html';

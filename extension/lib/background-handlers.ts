@@ -49,6 +49,9 @@ export async function ensureOffscreenDocument(documentPath: string): Promise<voi
     reasons: ['WORKERS' as any],
     justification: 'Handle long-running LLM API requests that exceed Service Worker timeout',
   });
+
+  // Wait for document to load and register its message listener
+  await new Promise((resolve) => setTimeout(resolve, 200));
 }
 
 // ==================== Health Check ====================
