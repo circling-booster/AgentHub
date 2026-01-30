@@ -8,18 +8,16 @@
 
 ## Development Status
 
-**Current Phase:** Phase 2.0 (MCP Integration) Complete
+**Current Phase:** Phase 2.5 (Chrome Extension) - 95% Complete
 
-| Feature | Status | Coverage |
-|---------|:------:|:--------:|
-| Domain Core | Complete | 91% |
-| Security Layer | Complete | 96% |
-| **MCP Integration** | **Complete** | **88%** |
-| **Chrome Extension** | **Complete** | **129 tests** |
-| A2A Integration | Planned (Phase 3) | - |
+**Quick Status:**
+- ✅ Phase 0-2: Complete (Domain Core, Security, MCP Integration)
+- 🚧 Phase 2.5: In Progress (Extension 수동 검증 대기)
+- 📋 Phase 3-4: Planned (A2A Integration, Advanced Features)
 
+**📊 [→ View Detailed Status Dashboard](docs/STATUS.md)**
 
-See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
+See [docs/roadmap.md](docs/roadmap.md) for overall roadmap and [docs/STATUS.md](docs/STATUS.md) for current progress.
 
 ---
 
@@ -120,14 +118,18 @@ cd extension && npm run dev
 
 ## 문서
 
-| 문서 | 설명 |
-|------|------|
-| [docs/architecture.md](docs/architecture.md) | 헥사고날 아키텍처 설계 |
-| [docs/implementation-guide.md](docs/implementation-guide.md) | 구현 패턴 및 코드 예시 |
-| [docs/extension-guide.md](docs/extension-guide.md) | Chrome Extension 개발 가이드 |
-| [docs/risk-assessment.md](docs/risk-assessment.md) | 리스크 평가 및 완화 전략 |
-| [docs/feasibility-analysis-2026-01.md](docs/feasibility-analysis-2026-01.md) | 기술 스택 분석 |
-| [docs/decisions/](docs/decisions/) | Architecture Decision Records (ADR) |
+**📊 [현재 프로젝트 상태](docs/STATUS.md)** | **🗺️ [전체 로드맵](docs/roadmap.md)** | **📚 [전체 문서 목록](docs/)**
+
+### 주요 가이드
+
+| 가이드 | 설명 |
+|--------|------|
+| [guides/architecture.md](docs/guides/architecture.md) | 헥사고날 아키텍처 설계 |
+| [guides/implementation-guide.md](docs/guides/implementation-guide.md) | 구현 패턴 및 코드 예시 |
+| [guides/extension-guide.md](docs/guides/extension-guide.md) | Chrome Extension 개발 가이드 |
+| [guides/skill-agent-guide.md](docs/guides/skill-agent-guide.md) | Phase별 Skill/Agent 활용 전략 |
+
+**→ [View all documentation](docs/)**
 
 ---
 
@@ -198,7 +200,7 @@ pytest --cov=src --cov-report=html
 pytest --cov=src --cov-fail-under=80
 ```
 
-**자세한 흐름도:** [docs/pre-implementation-review.md](docs/pre-implementation-review.md#자동화-흐름도)
+**자세한 흐름도:** [docs/archive/pre-implementation-review.md](docs/archive/pre-implementation-review.md#자동화-흐름도)
 
 ---
 

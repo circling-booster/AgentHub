@@ -728,8 +728,8 @@ cd extension && npm run dev
 
 ## 참조
 
-- [docs/extension-guide.md](../docs/extension-guide.md) — Extension 아키텍처 설계
-- [docs/implementation-guide.md#9](../docs/implementation-guide.md) — Token Handshake 서버 측
+- [docs/guides/extension-guide.md](../guides/extension-guide.md) — Extension 아키텍처 설계
+- [docs/guides/implementation-guide.md#9](../guides/implementation-guide.md) — Token Handshake 서버 측
 - `.claude/skills/agenthub-extension/` — WXT, Offscreen, SSE 구현 패턴
 - [WXT Framework](https://wxt.dev/)
 - [Chrome Offscreen API](https://developer.chrome.com/docs/extensions/reference/api/offscreen)

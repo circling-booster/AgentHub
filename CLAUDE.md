@@ -101,7 +101,7 @@ pytest --cov=src --cov-report=html
    - **Plan 단계**: 아키텍처/API 설계 전 웹 검색으로 최신 스펙 확인
    - **구현 단계**: 코드 작성 전 API 메서드명/파라미터 재검증
    - IMPORTANT: Plan → 구현 간 스펙 변경 가능성 있으므로 **양 단계 모두 검색 필수**
-   - 상세: @docs/standards-verification.md
+   - 상세: @docs/guides/standards-verification.md
 
 3. **Hexagonal Architecture**
    - 도메인이 외부에 의존하지 않음
@@ -111,7 +111,7 @@ pytest --cov=src --cov-report=html
 4. **Security First**
    - localhost API는 Token Handshake 필수 (Drive-by RCE 방지)
    - Extension ↔ Server 간 X-Extension-Token 헤더 검증
-   - 상세: @docs/implementation-guide.md#9-보안-패턴
+   - 상세: @docs/guides/implementation-guide.md#9-보안-패턴
 
 5. **TDD 필수 (Test-First Development)**
    - YOU MUST NOT implement any entity, service, or adapter without writing tests FIRST
@@ -144,14 +144,14 @@ pytest --cov=src --cov-report=html
 | 상황 | 참조 문서 |
 |------|----------|
 | **프로젝트 이해** | @README.md (빠른 시작, 설치) |
-| **아키텍처 설계** | @docs/architecture.md (헥사고날 구조) |
-| **구현 패턴** | @docs/implementation-guide.md (코드 예시) |
-| **Extension 개발** | @docs/extension-guide.md (Offscreen Document) |
-| **보안 구현** | @docs/implementation-guide.md#9-보안-패턴 |
-| **Standards 검증** | @docs/standards-verification.md |
-| **Skill & Agent 활용** | @docs/skill-agent-guide.md (Phase별 워크플로우) |
+| **아키텍처 설계** | @docs/guides/architecture.md (헥사고날 구조) |
+| **구현 패턴** | @docs/guides/implementation-guide.md (코드 예시) |
+| **Extension 개발** | @docs/guides/extension-guide.md (Offscreen Document) |
+| **보안 구현** | @docs/guides/implementation-guide.md#9-보안-패턴 |
+| **Standards 검증** | @docs/guides/standards-verification.md |
+| **Skill & Agent 활용** | @docs/guides/skill-agent-guide.md (Phase별 워크플로우) |
 | **Phase 계획** | @docs/roadmap.md |
-| **리스크 평가** | @docs/risk-assessment.md |
+| **리스크 평가** | @docs/archive/risk-assessment.md |
 | **ADR 기록** | @docs/decisions/ |
 
 ---
@@ -192,7 +192,8 @@ pytest --cov=src --cov-report=html
   - **구현 단계**: 코드 작성 전 API 시그니처 재검증
   - 불확실 시 즉시 웹 검색 (추측 금지)
 - **Fake Adapter 패턴**: 테스트 시 Mocking 대신 Fake 구현체 사용
-- **코드 패턴**: @docs/implementation-guide.md 참조
+- **코드 패턴**: @docs/guides/implementation-guide.md 참조
+
 
 ---
 
