@@ -22,7 +22,7 @@ class ServerSettings(BaseModel):
 class LLMSettings(BaseModel):
     """LLM 설정"""
 
-    default_model: str = "anthropic/claude-sonnet-4-20250514"
+    default_model: str = "openai/gpt-4o-mini"
     timeout: int = 120
 
 

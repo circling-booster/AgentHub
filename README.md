@@ -8,18 +8,16 @@
 
 ## Development Status
 
-**Current Phase:** Phase 2.0 (MCP Integration) Complete
+**Current Phase:** Phase 2.5 Complete → Phase 3 준비
 
-| Feature | Status | Coverage |
-|---------|:------:|:--------:|
-| Domain Core | Complete | 91% |
-| Security Layer | Complete | 96% |
-| **MCP Integration** | **Complete** | **88%** |
-| Chrome Extension | Planned (Phase 2.5) | - |
-| A2A Integration | Planned (Phase 3) | - |
+**Quick Status:**
+- ✅ Phase 0-2.5: Complete (Domain Core, Security, MCP Integration, Chrome Extension)
+- 📋 Phase 3: Planned (Stability + UI Polish + A2A Basic Integration)
+- 📋 Phase 4: Planned (Advanced Features)
 
+**📊 [→ View Detailed Status Dashboard](docs/STATUS.md)**
 
-See [docs/roadmap.md](docs/roadmap.md) for detailed timeline.
+See [docs/roadmap.md](docs/roadmap.md) for overall roadmap and [docs/STATUS.md](docs/STATUS.md) for current progress.
 
 ---
 
@@ -116,18 +114,60 @@ uvicorn src.main:app --host localhost --port 8000
 cd extension && npm run dev
 ```
 
+### 사용 방법
+
+#### 1. Chrome Extension 로드
+
+```bash
+# Extension 빌드 (프로덕션)
+cd extension && npm run build
+
+# Chrome 브라우저에서:
+# 1. chrome://extensions/ 접속
+# 2. 우측 상단 "개발자 모드" 활성화
+# 3. "압축해제된 확장 프로그램을 로드합니다." 클릭
+# 4. extension/.output/chrome-mv3 폴더 선택
+```
+
+개발 모드(`npm run dev`)에서는 코드 변경 시 자동 리로드됩니다.
+
+#### 2. 서버 연결 확인
+
+- Extension 설치 후 자동으로 `localhost:8000`과 Token Handshake 수행
+- 우측 상단 Extension 아이콘 - "Connected" 초록색 표시 확인
+- 브라우저 재시작 시 자동으로 토큰 재교환 (서버 재시작 전까지 동일 토큰 유지)
+
+#### 3. Sidepanel 사용
+
+- Extension 아이콘 클릭 → "Open Sidepanel" 버튼
+- 또는 브라우저 우측 사이드바에서 AgentHub 아이콘 클릭
+- 채팅창에 메시지 입력 → LLM 응답 스트리밍 수신
+
+#### 4. MCP 서버 등록
+
+- Sidepanel 하단 "MCP Servers" 탭 클릭
+- "Add Server" 버튼 → MCP 서버 URL 입력 (예: `http://127.0.0.1:9000/mcp`)
+- 등록 성공 시 서버 목록에 표시
+- 등록된 MCP 서버의 도구는 LLM이 자동으로 사용
+
+**참고:** MCP 테스트 서버 실행 방법은 [extension/README.md](extension/README.md) 참조
+
 ---
 
 ## 문서
 
-| 문서 | 설명 |
-|------|------|
-| [docs/architecture.md](docs/architecture.md) | 헥사고날 아키텍처 설계 |
-| [docs/implementation-guide.md](docs/implementation-guide.md) | 구현 패턴 및 코드 예시 |
-| [docs/extension-guide.md](docs/extension-guide.md) | Chrome Extension 개발 가이드 |
-| [docs/risk-assessment.md](docs/risk-assessment.md) | 리스크 평가 및 완화 전략 |
-| [docs/feasibility-analysis-2026-01.md](docs/feasibility-analysis-2026-01.md) | 기술 스택 분석 |
-| [docs/decisions/](docs/decisions/) | Architecture Decision Records (ADR) |
+**📊 [현재 프로젝트 상태](docs/STATUS.md)** | **🗺️ [전체 로드맵](docs/roadmap.md)** | **📚 [전체 문서 목록](docs/)**
+
+### 주요 가이드
+
+| 가이드 | 설명 |
+|--------|------|
+| [guides/architecture.md](docs/guides/architecture.md) | 헥사고날 아키텍처 설계 |
+| [guides/implementation-guide.md](docs/guides/implementation-guide.md) | 구현 패턴 및 코드 예시 |
+| [guides/extension-guide.md](docs/guides/extension-guide.md) | Chrome Extension 개발 가이드 |
+| [guides/skill-agent-guide.md](docs/guides/skill-agent-guide.md) | Phase별 Skill/Agent 활용 전략 |
+
+**→ [View all documentation](docs/)**
 
 ---
 
@@ -198,7 +238,7 @@ pytest --cov=src --cov-report=html
 pytest --cov=src --cov-fail-under=80
 ```
 
-**자세한 흐름도:** [docs/pre-implementation-review.md](docs/pre-implementation-review.md#자동화-흐름도)
+**자세한 흐름도:** [docs/archive/pre-implementation-review.md](docs/archive/pre-implementation-review.md#자동화-흐름도)
 
 ---
 

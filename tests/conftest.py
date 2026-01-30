@@ -5,7 +5,12 @@ AgentHub 공통 테스트 픽스처
 pytest가 자동으로 이 파일을 로드합니다.
 """
 
-import pytest
+from dotenv import load_dotenv
+
+# .env 파일 로드 (LLM 테스트에서 API 키 필요)
+load_dotenv()
+
+import pytest  # noqa: E402
 
 
 def pytest_addoption(parser):

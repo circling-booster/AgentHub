@@ -751,9 +751,9 @@ curl -i -X OPTIONS http://localhost:8000/auth/token \
 
 ### 프로젝트 문서
 
-- [docs/implementation-guide.md#9-보안-패턴](../implementation-guide.md) - 상세 코드 예시 및 보안 패턴
-- [docs/risk-assessment.md#2-즉시-반영-항목](../risk-assessment.md) - Drive-by RCE 완화책
-- [docs/architecture.md](../architecture.md) - 헥사고날 아키텍처 설계
+- [docs/guides/implementation-guide.md#9-보안-패턴](../guides/implementation-guide.md) - 상세 코드 예시 및 보안 패턴
+- [docs/archive/risk-assessment.md#2-즉시-반영-항목](../archive/risk-assessment.md) - Drive-by RCE 완화책
+- [docs/guides/architecture.md](../guides/architecture.md) - 헥사고날 아키텍처 설계
 - [docs/roadmap.md](../roadmap.md) - Phase 1.5 목표 및 DoD
 
 ### 외부 참조

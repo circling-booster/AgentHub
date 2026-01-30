@@ -1,0 +1,16 @@
+# <type>(<scope>): <subject>
+#
+# Type: docs, feat, fix, refactor, test, chore
+# Scope: phase1, phase2, status, readme, etc.
+#
+# Examples:
+# docs(status): Phase 2.5 complete - update STATUS.md
+# docs(phase3): Add Phase 3.0 plan
+# feat(mcp): Implement DynamicToolset
+#
+# Body (optional):
+# - Updated Current Phase to Phase 3.0
+# - Marked Phase 2.5 as complete in Progress table
+# - Added Next Actions for Phase 3
+#
+# Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
