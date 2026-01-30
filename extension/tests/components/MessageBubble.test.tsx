@@ -41,4 +41,59 @@ describe('MessageBubble', () => {
     render(<MessageBubble message={assistantMessage} />);
     expect(screen.getByText('Agent')).toBeDefined();
   });
+
+  it('should render code blocks with syntax highlighting', () => {
+    const messageWithCode: ChatMessage = {
+      id: 'msg-3',
+      role: 'assistant',
+      content: 'Here is code:\n```python\nprint("hello")\n```',
+      createdAt: new Date(),
+    };
+
+    render(<MessageBubble message={messageWithCode} />);
+
+    // Check that code block is rendered
+    expect(screen.getByTestId('code-block')).toBeDefined();
+
+    // Check language label
+    expect(screen.getByText('python')).toBeDefined();
+  });
+
+  it('should render multiple code blocks in a message', () => {
+    const messageWithMultipleCode: ChatMessage = {
+      id: 'msg-4',
+      role: 'assistant',
+      content: 'First:\n```js\nconst x = 1;\n```\nSecond:\n```py\nprint(2)\n```',
+      createdAt: new Date(),
+    };
+
+    render(<MessageBubble message={messageWithMultipleCode} />);
+
+    // Check that both code blocks are rendered
+    const codeBlocks = screen.getAllByTestId('code-block');
+    expect(codeBlocks).toHaveLength(2);
+
+    // Check language labels
+    expect(screen.getByText('js')).toBeDefined();
+    expect(screen.getByText('py')).toBeDefined();
+  });
+
+  it('should render text and code blocks together', () => {
+    const mixedMessage: ChatMessage = {
+      id: 'msg-5',
+      role: 'assistant',
+      content: 'Here is a function:\n```typescript\nfunction add(a: number, b: number) { return a + b; }\n```\nThis adds two numbers.',
+      createdAt: new Date(),
+    };
+
+    render(<MessageBubble message={mixedMessage} />);
+
+    // Check text content
+    expect(screen.getByText('Here is a function:')).toBeDefined();
+    expect(screen.getByText('This adds two numbers.')).toBeDefined();
+
+    // Check code block
+    expect(screen.getByTestId('code-block')).toBeDefined();
+    expect(screen.getByText('typescript')).toBeDefined();
+  });
 });
