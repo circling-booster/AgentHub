@@ -18,11 +18,14 @@ declare module '#imports' {
   export { InvalidMatchPattern, MatchPattern } from 'wxt/utils/match-patterns';
   export { useState, useCallback, useMemo, useEffect, useRef, useContext, useReducer } from 'react';
   export { fakeBrowser } from 'wxt/testing';
+  export { A2aAgentManager } from '../components/A2aAgentManager';
   export { ChatInput } from '../components/ChatInput';
   export { ChatInterface } from '../components/ChatInterface';
+  export { CodeBlock } from '../components/CodeBlock';
   export { McpServerManager } from '../components/McpServerManager';
   export { MessageBubble } from '../components/MessageBubble';
   export { ServerStatus } from '../components/ServerStatus';
+  export { useA2aAgents } from '../hooks/useA2aAgents';
   export { useChat } from '../hooks/useChat';
   export { useMcpServers } from '../hooks/useMcpServers';
   export { useServerHealth } from '../hooks/useServerHealth';

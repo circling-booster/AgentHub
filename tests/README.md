@@ -58,14 +58,26 @@ tests/
 │       ├── test_dynamic_toolset.py     # DynamicToolset 테스트
 │       └── test_orchestrator_adapter.py # ADK Orchestrator 테스트 (LLM 마커 포함)
 │
-├── e2e/                           # E2E 테스트 (12 tests, 2 skipped)
-│   ├── conftest.py               # E2E 공통 fixture
-│   └── test_extension_server.py  # Extension API 시퀀스 시뮬레이션
-│       ├── TestFullChatFlow      # Health → 토큰 교환 → 대화 → SSE 채팅
-│       ├── TestMcpManagementFlow # 서버 등록 → 조회 → 삭제
-│       └── TestTokenRequired     # 토큰 없이 API 호출 시 403
+├── e2e/                           # E2E 테스트 (12 tests + 7 Playwright)
+│   ├── conftest.py               # E2E 공통 fixture (Playwright fixtures 포함)
+│   ├── test_extension_server.py  # Extension API 시퀀스 시뮬레이션 (TestClient)
+│   │   ├── TestFullChatFlow      # Health → 토큰 교환 → 대화 → SSE 채팅
+│   │   ├── TestMcpManagementFlow # 서버 등록 → 조회 → 삭제
+│   │   └── TestTokenRequired     # 토큰 없이 API 호출 시 403
+│   └── test_playwright_extension.py  # Full Browser E2E (Playwright)
+│       ├── test_extension_loads_and_connects      # Extension 로드 + 연결
+│       ├── test_token_exchange_on_startup         # Token Handshake
+│       ├── test_chat_sends_and_receives           # 채팅 스트리밍 (@llm)
+│       ├── test_mcp_server_registration_and_tools # MCP 서버 등록 (@local_mcp)
+│       ├── test_a2a_agent_registration            # A2A 에이전트 등록 (@local_a2a)
+│       ├── test_conversation_persists_across_tabs # 대화 유지 (@llm)
+│       └── test_code_block_rendering              # 코드 하이라이팅 (@llm)
 │
-└── conftest.py                    # 루트 pytest fixtures (.env 로드, --run-llm 옵션)
+├── fixtures/                     # 테스트용 fixture 에이전트
+│   └── a2a_agents/               # A2A 에이전트 fixtures
+│       └── echo_agent.py         # Echo A2A agent (127.0.0.1:9001)
+│
+└── conftest.py                    # 루트 pytest fixtures (.env 로드, --run-llm 옵션, A2A fixture)
 ```
 
 ## Test Strategy
@@ -102,9 +114,11 @@ tests/
 
 | 마커 | 설명 | 기본 동작 |
 |------|------|----------|
-| `@pytest.mark.llm` | LLM API 호출 필요 (비용 발생) | **기본 제외** (`addopts = "-m 'not llm'"`) |
+| `@pytest.mark.llm` | LLM API 호출 필요 (비용 발생) | **기본 제외** (`addopts = "-m 'not llm and not e2e_playwright'"`) |
 | `@pytest.mark.local_mcp` | 로컬 MCP 서버 필요 (127.0.0.1:9000) | 기본 제외 |
+| `@pytest.mark.local_a2a` | 로컬 A2A 에이전트 필요 (127.0.0.1:9001) | 기본 제외 |
 | `@pytest.mark.mcp` | MCP 서버 필요 (`--run-mcp` 옵션) | 기본 제외 |
+| `@pytest.mark.e2e_playwright` | Full Browser E2E (Playwright, headed 모드) | **기본 제외** |
 
 ### 커스텀 옵션
 
@@ -212,8 +226,14 @@ pytest --cov=src --cov-report=html
 # 커버리지 검증 (80% 미만 시 실패)
 pytest --cov=src --cov-fail-under=80
 
-# E2E 테스트
-pytest tests/e2e/ -v
+# E2E 테스트 (TestClient 기반)
+pytest tests/e2e/test_extension_server.py -v
+
+# Playwright E2E 테스트 (headed 모드, Extension 빌드 필요)
+pytest tests/e2e/test_playwright_extension.py -m e2e_playwright --headed
+
+# Playwright E2E 특정 시나리오
+pytest tests/e2e/test_playwright_extension.py::test_extension_loads_and_connects -m e2e_playwright --headed
 
 # 특정 테스트 실행
 pytest tests/unit/domain/services/test_conversation_service.py -v
@@ -470,19 +490,20 @@ pytest -n auto
 
 - **Unit Tests:** 155 passed
 - **Integration Tests:** 91 passed (+4 LLM deselected)
-- **E2E Tests:** 10 passed, 2 skipped (MCP 서버 필요)
-- **Total:** 260 passed, 2 skipped, 4 deselected
-- **Coverage:** 88%
+- **E2E Tests (TestClient):** 10 passed, 2 skipped (MCP 서버 필요)
+- **E2E Tests (Playwright):** 7 scenarios (기본 제외, `@e2e_playwright`)
+- **Total:** 260 passed, 2 skipped, 4 deselected, 7 Playwright (excluded)
+- **Coverage:** 90.63%
 
 ### Extension Tests (TypeScript / Vitest)
 
-- **Library Tests:** 51 passed (messaging, api, sse, background-handlers)
-- **Hook Tests:** 22 passed (useChat, useMcpServers, useServerHealth)
-- **Component Tests:** 34 passed (ChatInterface, ChatInput, MessageBubble, McpServerManager, ServerStatus, App)
+- **Library Tests:** 67 passed (api, sse, messaging, background-handlers, markdown)
+- **Hook Tests:** 34 passed (useChat, useMcpServers, useA2aAgents, useServerHealth)
+- **Component Tests:** 58 passed (ChatInterface, ChatInput, MessageBubble, McpServerManager, A2aAgentManager, CodeBlock, ServerStatus, App)
 - **Entrypoint Tests:** 22 passed (background, offscreen)
-- **Total:** 129 passed
+- **Total:** 180 passed
 
-### Grand Total: 389+ tests
+### Grand Total: 447+ tests (excluding Playwright)
 
 ## Advanced Testing Tools (Optional)
 

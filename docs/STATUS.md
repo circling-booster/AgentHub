@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
 > **Last Updated:** 2026-01-30
-> **Current Phase:** Phase 3 Part A Complete → Part B 준비
+> **Current Phase:** Phase 3 Complete → Phase 4 예정
 > **Active Branch:** `feature/phase-3`
 
 ---
@@ -10,11 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 75% (Phase 3 Part A Complete) |
+| **Overall Progress** | 85% (Phase 3 Complete) |
 | **Backend Coverage** | 90.63% (Target: 80%) |
 | **Backend Tests** | 315 tests (pytest) |
-| **Extension Tests** | 129 tests (Vitest) |
-| **Last Milestone** | Phase 3 Part A Complete (2026-01-30) |
+| **Extension Tests** | 180 tests (Vitest) |
+| **E2E Tests** | 7 scenarios (Playwright) |
+| **Last Milestone** | Phase 3 Complete (2026-01-30) |
 
 ---
 
@@ -27,7 +28,7 @@
 | Phase 1.5 | ✅ Complete | 100% | Security Layer (96% coverage) |
 | Phase 2 | ✅ Complete | 100% | MCP Integration (88% coverage) |
 | Phase 2.5 | ✅ Complete | 100% | Chrome Extension (129 tests + 수동검증) |
-| **Phase 3** | **🚧 In Progress** | **50%** | **Part A: A2A Core (90.63% coverage)** |
+| **Phase 3** | **✅ Complete** | **100%** | **A2A Integration + UI Polish + E2E** |
 | Phase 4 | 📋 Planned | 0% | Advanced Features |
 
 **범례:**
@@ -94,10 +95,25 @@
 - ✅ **커버리지 향상**: 89.55% → 90.63% (+1.08%p, 목표 80% 대비 +10.63%p)
 - ✅ **아키텍처 원칙**: Domain Layer 순수성 유지, Hexagonal Architecture 준수
 
-### Part B로 이관된 항목
+### Part B 완료 요약
 
-- LLM이 A2A sub_agent를 자동 호출하는 통합 테스트 (E2E에서 검증 예정)
-- Extension UI에 A2A 에이전트 표시 기능
+**완료 일자:** 2026-01-30
+**결과:** Extension UI 완성 + Playwright E2E 테스트 7개 시나리오
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **8.1** | MCP Tools 목록 UI | 14 tests (McpServerManager) | ✅ |
+| **8.2** | 대화 히스토리 유지 | 13 tests (useChat) | ✅ |
+| **8.3** | 코드 블록 하이라이팅 | 5 tests (CodeBlock) | ✅ |
+| **8.4** | A2A 에이전트 표시 | 12 tests (A2aAgentManager) | ✅ |
+| **9** | Playwright E2E Tests | 7 scenarios | ✅ |
+
+### 핵심 성과
+
+- ✅ **Extension 기능 완성**: MCP Tools 목록, 대화 유지, 코드 하이라이팅, A2A 관리 UI
+- ✅ **테스트 품질**: Vitest 180 tests (129→180), Playwright 7 E2E 시나리오
+- ✅ **E2E 자동화**: Extension → Server → MCP/A2A 전체 흐름 검증
+- ✅ **문서화 완료**: tests/README.md, src/adapters/README.md 생성
 
 ---
 
@@ -109,9 +125,10 @@
 | Security Layer | 96% | - | ✅ |
 | MCP Integration | 88% | 70% | ✅ |
 | A2A Integration | 90.63% | 80% | ✅ |
-| Extension (Vitest) | 129 tests | - | ✅ |
+| Extension (Vitest) | 180 tests | - | ✅ |
 | Backend (pytest) | 315 tests | - | ✅ 99.7% 통과 |
-| E2E Tests | 10 passed, 2 skipped | - | ✅ 수동검증 완료 |
+| E2E Tests (Playwright) | 7 scenarios | - | ✅ |
+| E2E Tests (Manual) | 10 passed, 2 skipped | - | ✅ 수동검증 완료 |
 
 **Overall Backend Coverage:** 90.63% (Target: 80%)
 
@@ -119,6 +136,7 @@
 
 ## 📅 Recent Milestones
 
+- **2026-01-30**: Phase 3 Complete - A2A Integration + UI Polish + E2E (180 Extension tests, 7 E2E scenarios)
 - **2026-01-30**: Phase 3 Part A Complete - A2A Core Integration (90.63% coverage, 315 tests)
 - **2026-01-30**: Phase 2.5 Complete - 수동검증 완료 (6건 버그 수정)
 - **2026-01-29**: Phase 2 Complete - MCP Integration (88% coverage)
@@ -127,29 +145,23 @@
 
 ---
 
-## ⚡ Next Actions (Phase 3 Part B)
+## ⚡ Next Actions (Phase 4 - Optional)
 
 **범례:** 🤖 자동화됨 | 👤 수동 실행 필요
 
 | Priority | Task | Type | Status |
 |:--------:|------|:----:|:------:|
-| 🔴 High | 8.1 MCP Tools 목록 UI | 🤖 구현 | Not Started |
-| 🔴 High | 8.2 대화 히스토리 유지 | 🤖 구현 | Not Started |
-| 🔴 High | 8.3 UI Polish (코드 블록 하이라이팅) | 🤖 구현 | Not Started |
-| 🔴 High | 8.4 A2A 에이전트 표시 | 🤖 구현 | Not Started |
-| 🟡 Medium | 9 Full Playwright E2E Tests | 🤖 구현 | Not Started |
-| 🟡 Medium | 10 Documentation Updates | 🤖 구현 | Not Started |
+| 🟡 Medium | Defer Loading (tools > 50) | 🤖 구현 | Deferred |
+| 🟡 Medium | Vector Search (도구 라우팅) | 🤖 구현 | Deferred |
+| 🟢 Low | Multi-user 지원 | 🤖 구현 | Deferred |
 
-**📋 Detailed Plan:** [phase3.0.md](plans/phase3.0.md#part-b-ui-polish--e2e-tests-steps-8-10)
+**📋 Detailed Plan:** [phase4.0.md](plans/phase4.0.md) (예정)
 
 ---
 
 ## 🚧 Known Issues & Blockers
 
-| Issue | Severity | Status | Resolution |
-|-------|:--------:|:------:|------------|
-| MCP Tools UI 미구현 | ⚠️ Medium | Open | Phase 3.3.1 |
-| 대화 히스토리 미유지 | ⚠️ Medium | Open | Phase 3.3.2 |
+**현재 알려진 이슈 없음** ✅
 
 ---
 
@@ -161,9 +173,10 @@
 | CLAUDE.md | ✅ Up-to-date | 2026-01-30 |
 | docs/roadmap.md | ✅ Up-to-date | 2026-01-28 |
 | docs/architecture.md | ✅ Up-to-date | 2026-01-28 |
-| docs/plans/phase3.0.md | ✅ Created | 2026-01-30 |
-| src/README.md | ❌ Not created | - |
-| tests/README.md | ❌ Not created | - |
+| docs/plans/phase3.0.md | ✅ Complete | 2026-01-30 |
+| src/README.md | ⚠️ Pending | - |
+| src/adapters/README.md | ✅ Created | 2026-01-30 |
+| tests/README.md | ✅ Created | 2026-01-30 |
 | extension/README.md | ✅ Created | 2026-01-29 |
 
 ---

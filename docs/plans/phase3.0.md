@@ -1,10 +1,11 @@
 # Phase 3: Stability, A2A Integration, UI Polish, E2E Tests
 
-> **상태:** 📋 Planned
+> **상태:** ✅ Complete (2026-01-30)
 > **선행 조건:** Phase 2.5 Complete (수동검증 완료)
 > **목표:** Backend 안정성 강화, A2A 네이티브 통합, Extension UI 완성, Full Playwright E2E
 > **아키텍처 결정:** ADK Native A2A (RemoteA2aAgent + to_a2a())
 > **분할:** Part A (Backend: Steps 1-7) → Part B (UI+E2E: Steps 8-10)
+> **완료 일자:** Part A (2026-01-30), Part B (2026-01-30)
 
 ---
 
@@ -14,35 +15,35 @@
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
-| **1** | Backend Stability Hardening (Zombie Task + Thread Isolation) | ⬜ |
-| **2** | A2A Test Agent Fixtures (Echo Agent) | ⬜ |
-| **3** | A2A Client Adapter (RemoteA2aAgent) | ⬜ |
-| **4** | RegistryService A2A 지원 | ⬜ |
-| **5** | A2A HTTP Routes | ⬜ |
-| **6** | A2A Server Exposure (to_a2a) | ⬜ |
-| **7** | Orchestrator A2A Integration + DI Container | ⬜ |
+| **1** | Backend Stability Hardening (Zombie Task + Thread Isolation) | ✅ |
+| **2** | A2A Test Agent Fixtures (Echo Agent) | ✅ |
+| **3** | A2A Client Adapter (RemoteA2aAgent) | ✅ |
+| **4** | RegistryService A2A 지원 | ✅ |
+| **5** | A2A HTTP Routes | ✅ |
+| **6** | A2A Server Exposure (to_a2a) | ✅ |
+| **7** | Orchestrator A2A Integration + DI Container | ✅ |
 
 ### Part B: Frontend & E2E (Steps 8-10)
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
-| **8.1** | MCP Tools 목록 표시 | ⬜ |
-| **8.2** | 대화 히스토리 유지 | ⬜ |
-| **8.3** | 코드 블록 하이라이팅 + 도구 실행 UI | ⬜ |
-| **8.4** | A2A 에이전트 표시 | ⬜ |
-| **9** | Full Playwright E2E Tests | ⬜ |
-| **10** | Documentation Updates | ⬜ |
+| **8.1** | MCP Tools 목록 표시 | ✅ |
+| **8.2** | 대화 히스토리 유지 | ✅ |
+| **8.3** | 코드 블록 하이라이팅 + 도구 실행 UI | ✅ |
+| **8.4** | A2A 에이전트 표시 | ✅ |
+| **9** | Full Playwright E2E Tests | ✅ |
+| **10** | Documentation Updates | 🚧 |
 
 ### 전체 DoD 요약
 
 | 영역 | 진행률 | 상태 |
 |------|:------:|:----:|
-| Part A 기능 (11개 항목) | 0/11 | ⬜ |
-| Part A 품질 (5개 항목) | 0/5 | ⬜ |
-| Part A 문서 (2개 항목) | 0/2 | ⬜ |
-| Part B 기능 (5개 항목) | 0/5 | ⬜ |
-| Part B 품질 (3개 항목) | 0/3 | ⬜ |
-| Part B 문서 (5개 항목) | 0/5 | ⬜ |
+| Part A 기능 (11개 항목) | 11/11 | ✅ |
+| Part A 품질 (5개 항목) | 5/5 | ✅ |
+| Part A 문서 (2개 항목) | 2/2 | ✅ |
+| Part B 기능 (5개 항목) | 5/5 | ✅ |
+| Part B 품질 (3개 항목) | 3/3 | ✅ |
+| Part B 문서 (5개 항목) | 4/5 | 🚧 |
 
 **범례:** ✅ 완료 | 🚧 진행중 | ⬜ 미착수
 

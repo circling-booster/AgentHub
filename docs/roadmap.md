@@ -31,8 +31,8 @@
 | Phase 1 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
 | Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
 | Phase 2 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 (수동 검증 대기) |
-| Phase 3 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
+| Phase 3 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
 | Phase 4 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
 
 **플랜 문서 구성:**
@@ -652,8 +652,8 @@ This roadmap provides the **overall Phase plan and architecture**. For **current
 | Phase 1.0 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
 | Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
 | Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 (수동 검증 대기) |
-| Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
+| Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
 | Phase 4.0 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
 
 ---

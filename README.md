@@ -149,8 +149,21 @@ cd extension && npm run build
 - "Add Server" 버튼 → MCP 서버 URL 입력 (예: `http://127.0.0.1:9000/mcp`)
 - 등록 성공 시 서버 목록에 표시
 - 등록된 MCP 서버의 도구는 LLM이 자동으로 사용
+- 서버 확장 버튼 클릭 → 사용 가능한 도구 목록 표시
 
 **참고:** MCP 테스트 서버 실행 방법은 [extension/README.md](extension/README.md) 참조
+
+#### 5. A2A 에이전트 등록 (Phase 3)
+
+- Sidepanel 하단 "A2A Agents" 탭 클릭
+- "Add Agent" 버튼 → A2A 에이전트 URL 입력 (예: `http://127.0.0.1:9001`)
+- 등록 성공 시 Agent Card와 함께 에이전트 목록에 표시
+- 등록된 A2A 에이전트는 LLM이 sub-agent로 자동 호출
+
+**A2A란?**
+- Agent-to-Agent 프로토콜: 에이전트 간 통신 표준
+- AgentHub는 A2A Client (원격 에이전트 호출) + A2A Server (자신을 노출) 모두 지원
+- 로컬 테스트: `tests/fixtures/a2a_agents/echo_agent.py` (conftest에서 자동 시작)
 
 ---
 
