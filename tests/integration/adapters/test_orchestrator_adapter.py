@@ -111,3 +111,88 @@ class TestAdkOrchestratorAdapterCleanup:
         # Then: Agent null, DynamicToolset 정리됨
         assert orchestrator._agent is None
         assert orchestrator._initialized is False
+
+
+class TestAdkOrchestratorAdapterA2aIntegration:
+    """A2A Sub-Agent 통합 테스트 (TDD Step 7)"""
+
+    async def test_add_a2a_sub_agent(self, orchestrator, a2a_echo_agent: str):
+        """
+        Given: Orchestrator가 초기화됨
+        When: A2A 에이전트를 sub_agent로 추가
+        Then: RemoteA2aAgent가 sub_agents에 추가되고 Agent 재구성됨
+        """
+        # Given: 초기화
+        await orchestrator.initialize()
+        initial_agent = orchestrator._agent
+
+        # When: A2A sub_agent 추가
+        endpoint_id = "test-a2a-echo"
+        agent_card_url = f"{a2a_echo_agent}/.well-known/agent.json"
+
+        await orchestrator.add_a2a_agent(endpoint_id, agent_card_url)
+
+        # Then: sub_agents에 추가됨
+        assert endpoint_id in orchestrator._sub_agents
+        assert len(orchestrator._sub_agents) == 1
+
+        # Agent가 재구성됨 (새로운 인스턴스)
+        assert orchestrator._agent is not initial_agent
+        assert orchestrator._agent is not None
+
+    async def test_remove_a2a_sub_agent(self, orchestrator, a2a_echo_agent: str):
+        """
+        Given: A2A sub_agent가 추가됨
+        When: sub_agent 제거
+        Then: sub_agents에서 제거되고 Agent 재구성됨
+        """
+        # Given: A2A sub_agent 추가
+        await orchestrator.initialize()
+        endpoint_id = "test-a2a-echo"
+        agent_card_url = f"{a2a_echo_agent}/.well-known/agent.json"
+        await orchestrator.add_a2a_agent(endpoint_id, agent_card_url)
+        assert endpoint_id in orchestrator._sub_agents
+
+        # When: sub_agent 제거
+        result = await orchestrator.remove_a2a_agent(endpoint_id)
+
+        # Then: 제거 성공
+        assert result is True
+        assert endpoint_id not in orchestrator._sub_agents
+        assert len(orchestrator._sub_agents) == 0
+
+    async def test_remove_nonexistent_a2a_agent(self, orchestrator):
+        """
+        Given: 존재하지 않는 A2A agent ID
+        When: 제거 시도
+        Then: False 반환
+        """
+        # Given: 초기화
+        await orchestrator.initialize()
+
+        # When: 존재하지 않는 agent 제거
+        result = await orchestrator.remove_a2a_agent("nonexistent-id")
+
+        # Then: False
+        assert result is False
+
+    async def test_orchestrator_preserves_session_after_rebuild(
+        self, orchestrator, a2a_echo_agent: str
+    ):
+        """
+        Given: 대화 세션이 존재함
+        When: A2A agent 추가로 Agent 재구성
+        Then: 세션 서비스가 유지됨 (대화 컨텍스트 보존)
+        """
+        # Given: 초기화 및 세션 생성
+        await orchestrator.initialize()
+        initial_session_service = orchestrator._session_service
+
+        # When: A2A agent 추가 (Agent 재구성)
+        endpoint_id = "test-echo"
+        agent_card_url = f"{a2a_echo_agent}/.well-known/agent.json"
+        await orchestrator.add_a2a_agent(endpoint_id, agent_card_url)
+
+        # Then: 동일한 session_service 유지
+        assert orchestrator._session_service is initial_session_service
+        assert orchestrator._session_service is not None
