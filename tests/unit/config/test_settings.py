@@ -26,7 +26,7 @@ class TestNestedModels:
     def test_llm_settings_defaults(self):
         """LLMSettings 기본값"""
         settings = LLMSettings()
-        assert settings.default_model == "anthropic/claude-sonnet-4-20250514"
+        assert settings.default_model == "openai/gpt-4o-mini"
         assert settings.timeout == 120
 
     def test_storage_settings_defaults(self):

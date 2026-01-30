@@ -8,12 +8,12 @@
 
 ## Development Status
 
-**Current Phase:** Phase 2.5 (Chrome Extension) - 95% Complete
+**Current Phase:** Phase 2.5 Complete → Phase 3 준비
 
 **Quick Status:**
-- ✅ Phase 0-2: Complete (Domain Core, Security, MCP Integration)
-- 🚧 Phase 2.5: In Progress (Extension 수동 검증 대기)
-- 📋 Phase 3-4: Planned (A2A Integration, Advanced Features)
+- ✅ Phase 0-2.5: Complete (Domain Core, Security, MCP Integration, Chrome Extension)
+- 📋 Phase 3: Planned (Stability + UI Polish + A2A Basic Integration)
+- 📋 Phase 4: Planned (Advanced Features)
 
 **📊 [→ View Detailed Status Dashboard](docs/STATUS.md)**
 
@@ -113,6 +113,44 @@ uvicorn src.main:app --host localhost --port 8000
 # Extension 개발 모드 (별도 터미널)
 cd extension && npm run dev
 ```
+
+### 사용 방법
+
+#### 1. Chrome Extension 로드
+
+```bash
+# Extension 빌드 (프로덕션)
+cd extension && npm run build
+
+# Chrome 브라우저에서:
+# 1. chrome://extensions/ 접속
+# 2. 우측 상단 "개발자 모드" 활성화
+# 3. "압축해제된 확장 프로그램을 로드합니다." 클릭
+# 4. extension/.output/chrome-mv3 폴더 선택
+```
+
+개발 모드(`npm run dev`)에서는 코드 변경 시 자동 리로드됩니다.
+
+#### 2. 서버 연결 확인
+
+- Extension 설치 후 자동으로 `localhost:8000`과 Token Handshake 수행
+- 우측 상단 Extension 아이콘 - "Connected" 초록색 표시 확인
+- 브라우저 재시작 시 자동으로 토큰 재교환 (서버 재시작 전까지 동일 토큰 유지)
+
+#### 3. Sidepanel 사용
+
+- Extension 아이콘 클릭 → "Open Sidepanel" 버튼
+- 또는 브라우저 우측 사이드바에서 AgentHub 아이콘 클릭
+- 채팅창에 메시지 입력 → LLM 응답 스트리밍 수신
+
+#### 4. MCP 서버 등록
+
+- Sidepanel 하단 "MCP Servers" 탭 클릭
+- "Add Server" 버튼 → MCP 서버 URL 입력 (예: `http://127.0.0.1:9000/mcp`)
+- 등록 성공 시 서버 목록에 표시
+- 등록된 MCP 서버의 도구는 LLM이 자동으로 사용
+
+**참고:** MCP 테스트 서버 실행 방법은 [extension/README.md](extension/README.md) 참조
 
 ---
 
