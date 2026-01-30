@@ -377,10 +377,10 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] Extension 설치 시 서버와 자동 토큰 교환 성공 (수동 검증 필요)
+* [x] Extension 설치 시 서버와 자동 토큰 교환 성공 (수동 검증 필요)
 * [ ] Sidepanel에서 "Hello" 입력 시 Claude 응답 (수동 검증 필요)
 * [ ] MCP 도구 호출 결과가 UI에 표시 (수동 검증 필요)
-* [ ] 브라우저 종료 후 재시작 시 토큰 재발급 정상 동작 (수동 검증 필요)
+* [x] 브라우저 종료 후 재시작 시 토큰 재발급 정상 동작 (수동 검증 필요)
 * [x] `extension/README.md` 생성
 * [x] 루트 `README.md`에 Extension 사용법 추가
 * [x] Vitest 전체 통과 (129 tests)
