@@ -33,7 +33,7 @@
 | 8 | MCP Apps Metadata | B |
 | 9 | PluginPort Interface | C |
 | 10 | PluginToolset (ADK BaseToolset) | C |
-| 11 | Echo + Chat Test Plugins | C |
+| 11 | Echo + LangChain Tool Plugins | C |
 | 12 | Plugin Management API + Extension UI | C |
 | 13 | MCP Sampling | D |
 | 14 | MCP Elicitation | D |
@@ -70,7 +70,7 @@ Part D (Sampling + Elicitation + Vector) ─── Part B Step 5 이후
 - [ ] MCP Prompts API + Extension UI 동작
 - [ ] MCP Apps 메타데이터 표시
 - [ ] PluginPort + PluginToolset 동작
-- [ ] Echo + LangChain 테스트 플러그인 동작
+- [ ] Echo + LangChain Tool 플러그인 동작 (개별 Tool만, ADR-9)
 - [ ] Plugin Management API + Extension UI 동작
 - [ ] MCP Sampling handler 동작
 - [ ] MCP Elicitation 동적 폼 렌더링
@@ -98,7 +98,7 @@ Part D (Sampling + Elicitation + Vector) ─── Part B Step 5 이후
 | Synapse가 MCP Apps 미지원 | 🟡 | 외부 테스트 서버 찾거나 간단 구현 |
 | ChromaDB 의존성 크기 | 🟡 | 선택적 의존성 (`pip install agenthub[vector]`) |
 | Elicitation 동적 폼 복잡도 | 🟡 | JSON Schema 서브셋만 지원 (string, number, boolean, enum) |
-| LangChain 버전 변동 | 🟢 | 테스트 플러그인에만 한정 |
+| LangChain 버전 변동 | 🟢 | 개별 Tool 래핑에만 한정 (LangGraph는 A2A, ADR-9) |
 
 ---
 

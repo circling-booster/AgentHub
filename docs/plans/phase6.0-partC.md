@@ -15,7 +15,7 @@
 |:----:|------|:----:|
 | **9** | PluginPort Interface | ⬜ |
 | **10** | PluginToolset (ADK BaseToolset) | ⬜ |
-| **11** | Echo + Chat Test Plugins | ⬜ |
+| **11** | Echo + LangChain Tool Plugins | ⬜ |
 | **12** | Plugin Management API + Extension UI | ⬜ |
 
 ---
@@ -24,10 +24,17 @@
 
 **채택 결정 (ADR-7):** PluginPort를 별도 Domain Port로 정의. 독립 인프라 (DynamicToolset과 비공유).
 
+**범위 명확화 (ADR-9):**
+- Plugin = **프로세스 내 개별 도구 확장** (LangChain Tool, REST wrapper, 사용자 정의 함수)
+- Plugin ≠ **외부 에이전트** (LangGraph, CrewAI 등 → A2A 프로토콜로 통합)
+- 참조: [ADR-0009](../../decisions/0009-langgraph-a2a-not-plugin.md)
+
 ```
-Plugin (LangChain/REST) → PluginPort → PluginToolset(BaseToolset) → ADK Agent
-                                                                      ↑
-MCP Server → ToolsetPort → DynamicToolset ─────────────────────────────┘
+Plugin (LangChain Tool/REST) → PluginPort → PluginToolset(BaseToolset) → ADK Agent
+                                                                           ↑
+MCP Server → ToolsetPort → DynamicToolset ─────────────────────────────────┘
+                                                                           ↑
+A2A Agent (LangGraph 등) → RemoteA2aAgent ─────────────────────── sub_agents
 ```
 
 **Phase 8 호환성:** `AGENTHUB_TOOLS` 컨벤션으로 동적 로딩 준비.
@@ -161,16 +168,18 @@ self._agent = LlmAgent(
 
 ---
 
-## Step 11: Echo + Chat Test Plugins
+## Step 11: Echo + LangChain Tool Plugins
+
+> **범위 (ADR-9):** LangChain **개별 Tool** 래핑만. LangGraph Agent는 A2A로 통합 (Phase 3 완료).
 
 **수정 파일:**
 
 | 파일 | 작업 | 변경 내용 |
 |------|:----:|----------|
 | `src/adapters/outbound/plugins/echo_plugin.py` | NEW | Echo Plugin |
-| `src/adapters/outbound/plugins/langchain_plugin.py` | NEW | LangChain Chat Plugin |
+| `src/adapters/outbound/plugins/langchain_tool_plugin.py` | NEW | LangChain 개별 Tool Plugin |
 | `tests/unit/adapters/test_echo_plugin.py` | NEW | Echo Plugin 테스트 |
-| `tests/unit/adapters/test_langchain_plugin.py` | NEW | LangChain Plugin 테스트 |
+| `tests/unit/adapters/test_langchain_tool_plugin.py` | NEW | LangChain Tool Plugin 테스트 |
 
 **Echo Plugin:**
 ```python
@@ -180,10 +189,15 @@ class EchoPlugin(BasePluginAdapter):
         return [EchoTool()]  # "echo" 도구: 입력 그대로 반환
 ```
 
-**LangChain Plugin (Phase 8 호환):**
+**LangChain Tool Plugin (Phase 8 호환):**
 ```python
-class LangChainPlugin(BasePluginAdapter):
-    """LangChain 기반 Plugin (AGENTHUB_TOOLS 컨벤션)"""
+class LangChainToolPlugin(BasePluginAdapter):
+    """
+    LangChain 개별 Tool 래핑 Plugin (AGENTHUB_TOOLS 컨벤션)
+
+    대상: WikipediaQueryRun, RequestsGet 등 개별 Tool
+    비대상: LangGraph Agent (→ A2A 프로토콜로 통합, ADR-9 참조)
+    """
 
     def __init__(self, config: PluginConfig):
         # config.config["tools"] = list of LangChain Tool definitions
@@ -203,8 +217,9 @@ class LangChainPlugin(BasePluginAdapter):
 
 **DoD:**
 - [ ] Echo Plugin: echo 도구 동작
-- [ ] LangChain Plugin: LangChain Tool 래핑 동작
+- [ ] LangChain Tool Plugin: LangChain 개별 Tool 래핑 동작 (WikipediaQueryRun 등)
 - [ ] `AGENTHUB_TOOLS` 컨벤션 준수 (Phase 8 호환)
+- [ ] LangGraph Agent는 Plugin 대상에서 제외 (A2A 사용, ADR-9)
 
 ---
 
@@ -243,7 +258,7 @@ class LangChainPlugin(BasePluginAdapter):
 ### 기능
 - [ ] PluginPort 인터페이스 정의
 - [ ] PluginToolset 독립 동작 (cache, retry, CB)
-- [ ] Echo + LangChain 테스트 플러그인
+- [ ] Echo + LangChain Tool 플러그인 (개별 Tool만, ADR-9)
 - [ ] Plugin CRUD API + Extension UI
 
 ### 품질

@@ -1,8 +1,8 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-01-31 (Phase 5-7 Plans Created)
-> **Current Phase:** Phase 4 Complete → Phase 5 예정
-> **Active Branch:** `feature/phase-4`
+> **Last Updated:** 2026-02-01 (Phase 5 Part A Step 1-2 Complete)
+> **Current Phase:** Phase 5 Part A In Progress (A2A Verification)
+> **Active Branch:** `feature/phase-5`
 
 ---
 
@@ -12,10 +12,10 @@
 |--------|--------|
 | **Overall Progress** | 95% (Phase 4 Part A-D Complete) |
 | **Backend Coverage** | 91% (Target: 90%) |
-| **Backend Tests** | 389 passed / 391 collected (pytest) |
+| **Backend Tests** | 393 passed / 395 collected (pytest) |
 | **Extension Tests** | 197 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 4 Part C Complete (2026-01-31) |
+| **Last Milestone** | Phase 5 Part A Step 1-2 Complete (2026-02-01) |
 
 ---
 
@@ -33,7 +33,8 @@
 | **Phase 4 Part B** | **✅ Complete** | **100%** | **Observability (ErrorCode, LLM Logging, Tool Tracing, Structured Logging)** |
 | **Phase 4 Part C** | **✅ Complete** | **100%** | **Dynamic Intelligence (Context-Aware Prompts, Tool Retry)** |
 | **Phase 4 Part D** | **✅ Complete** | **100%** | **Reliability & Scale (A2A Health, Defer Loading)** |
-| Phase 5 | 📋 Planned | 0% | Verification + Core Connectivity (A2A, MCP Auth, Content Script) |
+| **Phase 5 Part A** | **🚧 In Progress** | **50%** | **A2A Verification (Step 1-2 Complete, Step 3-4 진행중)** |
+| Phase 5 Part B-D | 📋 Planned | 0% | MCP Auth, Content Script, Test Infra |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
 
@@ -288,6 +289,8 @@
 ## 📅 Recent Milestones
 
 - **2026-01-31**: Phase 5-7 Plans Created - Priority-based restructuring (15 plan files, ADR-5~8)
+- **2026-02-01**: ADR-9 - LangGraph=A2A, Plugin=개별 도구만 (Phase 6C/8 범위 명확화)
+- **2026-02-01**: Phase 5 Part A Step 1-2 Complete - A2A Wiring 진단 통과 (4 tests), Echo Agent 강화
 - **2026-02-01**: Phase 4 Part A-D Complete - Critical Fixes + Observability + Dynamic Intelligence + Reliability (91% coverage, 389 tests)
 - **2026-01-31**: Phase 4 Part D Complete - Reliability & Scale (A2A Health, Defer Loading)
 - **2026-01-31**: Phase 4 Part C Complete - Dynamic Intelligence (Context-Aware Prompts, Tool Retry)
