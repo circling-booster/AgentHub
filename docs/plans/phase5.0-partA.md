@@ -12,12 +12,16 @@
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
-| **1** | A2A Wiring Diagnostic | ⬜ |
-| **2** | Enhanced Echo Agent | ⬜ |
-| **3** | LangGraph Chat Agent | ⬜ |
-| **4** | A2A Full Flow Integration Test | ⬜ |
+| **1** | A2A Wiring Diagnostic | ✅ |
+| **2** | Enhanced Echo Agent | ✅ |
+| **3** | Math Agent (ADK LlmAgent, ADR-9) | ✅ |
+| **4** | A2A Full Flow Integration Test | ✅ |
 
 **범례:** ✅ 완료 | 🚧 진행중 | ⬜ 미착수
+
+**완료 일자:** 2026-02-01
+**테스트:** 11 신규 (Step 1: 4, Step 3: 4, Step 4: 3)
+**커버리지:** 91% (목표 90% 초과)
 
 ---
 
@@ -305,4 +309,39 @@ docs(phase5): Part A complete - A2A Verification
 
 ---
 
+## Deferred Features (Phase 6+)
+
+### Multi-step A2A Delegation Test (Advanced Orchestration)
+
+**목표:** LLM이 복합 과업을 분해하여 여러 A2A 에이전트에 순차/병렬 위임
+
+**시나리오 예시:**
+```python
+async def test_llm_multi_agent_task_decomposition():
+    """
+    Given: 항공사 에이전트 + 환율 에이전트 등록
+    When: "최저가 비행기를 찾아서 현재 환율로 조회해줘"
+    Then:
+      - 항공사 에이전트 호출 (agent_transfer 이벤트)
+      - 환율 에이전트 호출 (agent_transfer 이벤트)
+      - 2개 이상 agent_transfer 이벤트 발생
+      - 최종 응답에 항공편 + 환율 정보 모두 포함
+    """
+```
+
+**연기 이유:**
+- Phase 5 Part A는 "단일 에이전트 위임" 검증에 집중
+- Multi-step delegation은 더 복잡한 orchestration 패턴 필요
+- 적절한 테스트 에이전트 (항공사, 환율 등) 구현 필요
+
+**구현 시점:** Phase 6 이후 (A2A Advanced 기능으로 분류)
+
+**참고:**
+- ADK는 LLM-Driven Orchestration 지원 (LlmAgent + sub_agents)
+- Sequential/Parallel Agent 패턴 활용 가능
+- 웹 검색: [Multi-Agent Systems in ADK](https://google.github.io/adk-docs/agents/multi-agents/)
+
+---
+
 *Part A 계획 작성일: 2026-01-31*
+*Part A 완료일: 2026-02-01*

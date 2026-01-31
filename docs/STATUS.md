@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-02-01 (Phase 5 Part A Step 1-2 Complete)
-> **Current Phase:** Phase 5 Part A In Progress (A2A Verification)
+> **Last Updated:** 2026-02-01 (Phase 5 Part A Complete)
+> **Current Phase:** Phase 5 Part A Complete (A2A Verification)
 > **Active Branch:** `feature/phase-5`
 
 ---
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 95% (Phase 4 Part A-D Complete) |
+| **Overall Progress** | 96% (Phase 5 Part A Complete) |
 | **Backend Coverage** | 91% (Target: 90%) |
-| **Backend Tests** | 393 passed / 395 collected (pytest) |
+| **Backend Tests** | 400 passed / 402 collected (pytest) |
 | **Extension Tests** | 197 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 5 Part A Step 1-2 Complete (2026-02-01) |
+| **Last Milestone** | Phase 5 Part A Complete (2026-02-01) |
 
 ---
 
@@ -33,7 +33,7 @@
 | **Phase 4 Part B** | **✅ Complete** | **100%** | **Observability (ErrorCode, LLM Logging, Tool Tracing, Structured Logging)** |
 | **Phase 4 Part C** | **✅ Complete** | **100%** | **Dynamic Intelligence (Context-Aware Prompts, Tool Retry)** |
 | **Phase 4 Part D** | **✅ Complete** | **100%** | **Reliability & Scale (A2A Health, Defer Loading)** |
-| **Phase 5 Part A** | **🚧 In Progress** | **50%** | **A2A Verification (Step 1-2 Complete, Step 3-4 진행중)** |
+| **Phase 5 Part A** | **✅ Complete** | **100%** | **A2A Verification (Wiring, Echo, Math Agent, Full Flow)** |
 | Phase 5 Part B-D | 📋 Planned | 0% | MCP Auth, Content Script, Test Infra |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
@@ -268,6 +268,52 @@
 
 ---
 
+## 🎯 Phase 5 Part A 완료 요약
+
+**완료 일자:** 2026-02-01
+**결과:** A2A Verification 완료 (Wiring, Echo, Math Agent, Full Flow)
+
+### 완료된 Steps (1-4)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **1** | A2A Wiring Diagnostic | 4개 integration tests | ✅ |
+| **2** | Enhanced Echo Agent | conftest fixture 강화 | ✅ |
+| **3** | Math Agent (ADK LlmAgent) | 4개 integration tests | ✅ |
+| **4** | A2A Full Flow Integration Test | 3개 시나리오 tests | ✅ |
+
+### 핵심 성과
+
+- ✅ **A2A Wiring 진단**: LLM이 A2A 에이전트를 인식하는지 검증 (4 diagnostic tests)
+- ✅ **Echo Agent 강화**: Agent Card description 개선, 명확한 위임 기준 제공
+- ✅ **Math Agent 구현**: ADK LlmAgent 기반 수학 전문 에이전트 (openai/gpt-4o-mini)
+- ✅ **Full Flow 검증**: Echo + Math 동시 등록, 3개 시나리오 (echo, math, no-match)
+- ✅ **Orchestrator Bug Fix**: RemoteA2aAgent re-parenting 에러 수정 (Step 3)
+- ✅ **테스트 품질**: 11 tests (Step 1: 4 + Step 3: 4 + Step 4: 3)
+- ✅ **커버리지 유지**: 91% (목표 90% 초과)
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+- ✅ **ADR-9 반영**: LangGraph 대신 ADK LlmAgent 사용 (Plugin = 개별 도구만)
+
+### 구현 파일
+
+- `tests/fixtures/a2a_agents/math_agent.py`: ADK LlmAgent 기반 Math Agent
+- `tests/conftest.py`: `a2a_math_agent` fixture 추가 (동적 포트)
+- `src/adapters/outbound/adk/orchestrator_adapter.py`: RemoteA2aAgent re-parenting 버그 수정
+
+### 테스트 파일
+
+- `tests/integration/adapters/test_a2a_wiring_diagnostic.py`: 4 tests
+- `tests/integration/adapters/test_a2a_math_agent.py`: 4 tests
+- `tests/integration/adapters/test_a2a_full_flow.py`: 3 tests
+
+### Deferred Features (Phase 6+)
+
+- **Multi-step A2A Delegation**: LLM이 복합 과업을 분해하여 여러 에이전트에 순차/병렬 위임
+- **연기 이유**: Phase 5 Part A는 단일 에이전트 위임 검증에 집중
+- **구현 시점**: Phase 6 이후 (A2A Advanced 기능)
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -278,7 +324,7 @@
 | A2A Integration | 90.18% | 80% | ✅ |
 | Phase 4 Part A | 90.18% | 90% | ✅ |
 | Extension (Vitest) | 197 tests | - | ✅ |
-| Backend (pytest) | 342 passed / 355 total | - | ✅ |
+| Backend (pytest) | 400 passed / 402 total | - | ✅ |
 | E2E Tests (Playwright) | 7 scenarios | - | ✅ |
 | E2E Tests (Manual) | 10 passed, 2 skipped | - | ✅ 수동검증 완료 |
 
@@ -288,9 +334,9 @@
 
 ## 📅 Recent Milestones
 
+- **2026-02-01**: Phase 5 Part A Complete - A2A Verification (Wiring, Math Agent, Full Flow, 11 tests, 91% coverage)
 - **2026-01-31**: Phase 5-7 Plans Created - Priority-based restructuring (15 plan files, ADR-5~8)
 - **2026-02-01**: ADR-9 - LangGraph=A2A, Plugin=개별 도구만 (Phase 6C/8 범위 명확화)
-- **2026-02-01**: Phase 5 Part A Step 1-2 Complete - A2A Wiring 진단 통과 (4 tests), Echo Agent 강화
 - **2026-02-01**: Phase 4 Part A-D Complete - Critical Fixes + Observability + Dynamic Intelligence + Reliability (91% coverage, 389 tests)
 - **2026-01-31**: Phase 4 Part D Complete - Reliability & Scale (A2A Health, Defer Loading)
 - **2026-01-31**: Phase 4 Part C Complete - Dynamic Intelligence (Context-Aware Prompts, Tool Retry)

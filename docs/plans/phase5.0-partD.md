@@ -93,6 +93,7 @@ def mcp_test_port():
 ## 커밋 정책
 
 ```
+# 마지막에 커밋
 feat(phase5): Step 11 - Server startup validation tests
 feat(phase5): Step 12 - Dynamic test port configuration
 docs(phase5): Part D complete - Test Infrastructure

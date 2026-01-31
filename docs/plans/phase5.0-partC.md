@@ -154,7 +154,10 @@ async def process_message(self, message: str, conversation_id: str,
 ## 커밋 정책
 
 ```
-feat(phase5): Step 9 - Content script implementation
+# 중간 커밋
+feat(phase5): Step 9-10 - Content script implementation
+
+# 마지막 커밋
 feat(phase5): Step 10 - Page context toggle and injection
 docs(phase5): Part C complete - Content Script
 ```
