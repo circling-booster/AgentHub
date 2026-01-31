@@ -55,6 +55,27 @@ class OrchestratorPort(ABC):
         pass
 
     @abstractmethod
+    async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:
+        """
+        A2A 에이전트를 LLM sub_agents에 추가
+
+        Args:
+            endpoint_id: 엔드포인트 ID
+            url: A2A 에이전트 URL
+        """
+        pass
+
+    @abstractmethod
+    async def remove_a2a_agent(self, endpoint_id: str) -> None:
+        """
+        A2A 에이전트를 LLM sub_agents에서 제거
+
+        Args:
+            endpoint_id: 엔드포인트 ID
+        """
+        pass
+
+    @abstractmethod
     async def close(self) -> None:
         """
         리소스 정리

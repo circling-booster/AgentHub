@@ -122,6 +122,11 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
    - Streamable HTTP preferred (2025 recommendation)
    - SSE fallback (legacy server compatibility)
 
+7. **Protocol Standards Compliance** ⭐
+   - **MCP Core Features**: MUST follow official MCP specification (Streamable HTTP, Resources when ADK supports)
+   - **A2A Protocol**: MUST implement based on A2A 0.3 specification (gRPC transport, Security Cards when ADK supports)
+   - **Custom Extensions**: MUST isolate in Plugin System to prevent vendor lock-in and ensure protocol upgradability
+
 ---
 
 ## 🚫 Critical Don'ts
@@ -193,4 +198,4 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 
 ---
 
-*Last Optimized: 2026-01-30*
+*Last Optimized: 2026-01-31*

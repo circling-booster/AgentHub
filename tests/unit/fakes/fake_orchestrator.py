@@ -34,6 +34,8 @@ class FakeOrchestrator(OrchestratorPort):
         self.initialized = False
         self.closed = False
         self.processed_messages: list[tuple[str, str]] = []  # (message, conv_id)
+        self.added_a2a_agents: list[tuple[str, str]] = []  # (endpoint_id, url)
+        self.removed_a2a_agents: list[str] = []  # endpoint_id
 
     async def initialize(self) -> None:
         """초기화"""
@@ -70,9 +72,30 @@ class FakeOrchestrator(OrchestratorPort):
         self.should_fail = should_fail
         self.error_message = message
 
+    async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:
+        """
+        A2A 에이전트를 LLM sub_agents에 추가
+
+        Args:
+            endpoint_id: 엔드포인트 ID
+            url: A2A 에이전트 URL
+        """
+        self.added_a2a_agents.append((endpoint_id, url))
+
+    async def remove_a2a_agent(self, endpoint_id: str) -> None:
+        """
+        A2A 에이전트를 LLM sub_agents에서 제거
+
+        Args:
+            endpoint_id: 엔드포인트 ID
+        """
+        self.removed_a2a_agents.append(endpoint_id)
+
     def reset(self) -> None:
         """상태 초기화"""
         self.initialized = False
         self.closed = False
         self.processed_messages.clear()
+        self.added_a2a_agents.clear()
+        self.removed_a2a_agents.clear()
         self.should_fail = False

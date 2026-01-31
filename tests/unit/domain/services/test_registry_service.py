@@ -9,6 +9,7 @@ from src.domain.exceptions import EndpointConnectionError, EndpointNotFoundError
 from src.domain.services.registry_service import RegistryService
 from tests.unit.fakes import FakeEndpointStorage, FakeToolset
 from tests.unit.fakes.fake_a2a_client import FakeA2aClient
+from tests.unit.fakes.fake_orchestrator import FakeOrchestrator
 
 
 class TestRegistryService:
@@ -309,3 +310,108 @@ class TestRegistryServiceA2A:
                 url="http://localhost:9001",
                 endpoint_type=EndpointType.A2A,
             )
+
+    @pytest.mark.asyncio
+    async def test_register_a2a_calls_orchestrator_add_agent(self, storage, toolset, a2a_client):
+        """
+        Given: orchestrator가 주입된 RegistryService
+        When: A2A 엔드포인트 등록 시
+        Then: orchestrator.add_a2a_agent()가 호출됨
+        """
+        # Given
+        orchestrator = FakeOrchestrator()
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+        # When
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # Then
+        assert len(orchestrator.added_a2a_agents) == 1
+        assert orchestrator.added_a2a_agents[0] == (endpoint.id, "http://localhost:9001")
+
+    @pytest.mark.asyncio
+    async def test_unregister_a2a_calls_orchestrator_remove_agent(
+        self, storage, toolset, a2a_client
+    ):
+        """
+        Given: orchestrator가 주입된 RegistryService + 등록된 A2A 엔드포인트
+        When: A2A 엔드포인트 삭제 시
+        Then: orchestrator.remove_a2a_agent()가 호출됨
+        """
+        # Given
+        orchestrator = FakeOrchestrator()
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # When
+        await service.unregister_endpoint(endpoint.id)
+
+        # Then
+        assert len(orchestrator.removed_a2a_agents) == 1
+        assert orchestrator.removed_a2a_agents[0] == endpoint.id
+
+    @pytest.mark.asyncio
+    async def test_register_a2a_without_orchestrator_graceful(self, storage, toolset, a2a_client):
+        """
+        Given: orchestrator=None인 RegistryService
+        When: A2A 엔드포인트 등록 시
+        Then: 에러 없이 정상 등록 (graceful skip)
+        """
+        # Given
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=None,
+        )
+
+        # When
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # Then
+        assert endpoint.type == EndpointType.A2A
+        assert endpoint.agent_card is not None
+
+    @pytest.mark.asyncio
+    async def test_register_mcp_ignores_orchestrator(self, storage, toolset, a2a_client):
+        """
+        Given: orchestrator가 주입된 RegistryService
+        When: MCP 엔드포인트 등록 시
+        Then: orchestrator.add_a2a_agent()가 호출되지 않음 (regression 방지)
+        """
+        # Given
+        orchestrator = FakeOrchestrator()
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+        # When
+        await service.register_endpoint(
+            url="https://mcp.example.com/server",
+            endpoint_type=EndpointType.MCP,
+        )
+
+        # Then
+        assert len(orchestrator.added_a2a_agents) == 0

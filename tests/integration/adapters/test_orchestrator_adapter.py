@@ -128,9 +128,8 @@ class TestAdkOrchestratorAdapterA2aIntegration:
 
         # When: A2A sub_agent 추가
         endpoint_id = "test-a2a-echo"
-        agent_card_url = f"{a2a_echo_agent}/.well-known/agent.json"
-
-        await orchestrator.add_a2a_agent(endpoint_id, agent_card_url)
+        # Port 인터페이스는 base URL을 받아서 Agent Card URL로 변환
+        await orchestrator.add_a2a_agent(endpoint_id, a2a_echo_agent)
 
         # Then: sub_agents에 추가됨
         assert endpoint_id in orchestrator._sub_agents
@@ -149,15 +148,13 @@ class TestAdkOrchestratorAdapterA2aIntegration:
         # Given: A2A sub_agent 추가
         await orchestrator.initialize()
         endpoint_id = "test-a2a-echo"
-        agent_card_url = f"{a2a_echo_agent}/.well-known/agent.json"
-        await orchestrator.add_a2a_agent(endpoint_id, agent_card_url)
+        await orchestrator.add_a2a_agent(endpoint_id, a2a_echo_agent)
         assert endpoint_id in orchestrator._sub_agents
 
         # When: sub_agent 제거
-        result = await orchestrator.remove_a2a_agent(endpoint_id)
+        await orchestrator.remove_a2a_agent(endpoint_id)
 
         # Then: 제거 성공
-        assert result is True
         assert endpoint_id not in orchestrator._sub_agents
         assert len(orchestrator._sub_agents) == 0
 
@@ -165,16 +162,16 @@ class TestAdkOrchestratorAdapterA2aIntegration:
         """
         Given: 존재하지 않는 A2A agent ID
         When: 제거 시도
-        Then: False 반환
+        Then: 에러 없이 정상 동작 (graceful skip)
         """
         # Given: 초기화
         await orchestrator.initialize()
 
-        # When: 존재하지 않는 agent 제거
-        result = await orchestrator.remove_a2a_agent("nonexistent-id")
+        # When: 존재하지 않는 agent 제거 (에러 없음)
+        await orchestrator.remove_a2a_agent("nonexistent-id")
 
-        # Then: False
-        assert result is False
+        # Then: sub_agents 비어있음
+        assert len(orchestrator._sub_agents) == 0
 
     async def test_orchestrator_preserves_session_after_rebuild(
         self, orchestrator, a2a_echo_agent: str

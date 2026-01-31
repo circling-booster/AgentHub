@@ -33,7 +33,8 @@
 | Phase 2 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
 | Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
 | Phase 3 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
-| Phase 4 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
+| Phase 4 | [phase4.0.md](plans/phase4.0.md) (Master + [Part A](plans/phase4.0-partA.md) ~ [Part E](plans/phase4.0-partE.md)) | 📋 예정 (Part E 💡 초안) |
+| Phase 5 | 예정 | 📋 예정 |
 
 **플랜 문서 구성:**
 - 구현 전략 및 기술적 고려사항
@@ -80,8 +81,15 @@ gantt
     A2A Basic Integration         :p3c, after p3a, 4d
     E2E Tests                     :p3d, after p3c, 3d
 
-    section Phase 4: Scale (Optional)
-    Defer Loading & Tool Search   :p4a, after p3d, 7d
+    section Phase 4: Critical Fixes + Observability + Reliability
+    Part A: Critical Fixes        :crit, p4a, after p3d, 5d
+    Part B: Observability          :p4b, after p4a, 4d
+    Part C: Dynamic Intelligence   :p4c, after p4a, 3d
+    Part D: Reliability & Scale    :p4d, after p4c, 4d
+    Part E: Production Hardening   :p4e, after p4d, 10d
+
+    section Phase 5: Advanced (Future)
+    MCP Advanced + Vector Search  :p5a, after p4e, 7d
 ```
 
 ---
@@ -446,39 +454,123 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] 긴 응답 생성 중 탭 닫기 시 서버 로그에 "Task Cancelled"
-* [ ] 무거운 도구 실행 중에도 `/health` 즉시 응답
-* [ ] A2A Agent Card 교환 성공
-* [ ] E2E 시나리오 통과
-* [ ] `src/README.md`에 A2A 아키텍처 추가
-* [ ] `src/adapters/README.md`에 A2A 어댑터 추가
-* [ ] `tests/README.md`에 E2E 테스트 섹션 추가
+* [x] 긴 응답 생성 중 탭 닫기 시 서버 로그에 "Task Cancelled"
+* [x] 무거운 도구 실행 중에도 `/health` 즉시 응답
+* [x] A2A Agent Card 교환 성공
+* [x] E2E 시나리오 통과 (7개 Playwright 시나리오)
+* [x] `src/README.md`에 A2A 아키텍처 추가
+* [x] `src/adapters/README.md`에 A2A 어댑터 추가
+* [x] `tests/README.md`에 E2E 테스트 섹션 추가
 
 ---
 
-### Phase 4: Advanced Features (Optional)
+### Phase 4: Critical Fixes, Observability, Dynamic Intelligence, Reliability
 
-**📋 상세 플랜:** [phase4.0.md](plans/phase4.0.md) *(예정)*
+**📋 상세 플랜:** [phase4.0.md](plans/phase4.0.md) (Master) + Part A-D 개별 파일
 
-**목표:** 대규모 도구 지원. 시장 상황에 따라 변동 가능.
+**목표:** A2A Wiring 버그 수정, 관찰성 확보, 동적 시스템 프롬프트, 안정성 강화
 
-#### 4.1 Scalable Tool Management
+#### 4.A Critical Fixes (Steps 1-4) — [phase4.0-partA.md](plans/phase4.0-partA.md)
 
-* Defer Loading: 도구 50개 초과 시 메타데이터만 로드
-* Vector Search: 도구 설명 임베딩 기반 시맨틱 라우팅
+* A2A 에이전트 LLM 연결 수정 (RegistryService → OrchestratorPort 주입)
+* SSE 이벤트 확장 (StreamChunk 도메인 엔티티)
+* 타입별 에러 전파
+* 앱 시작 시 엔드포인트 자동 복원
 
-#### 4.2 Documentation Update
+#### 4.B Observability (Steps 5-7) — [phase4.0-partB.md](plans/phase4.0-partB.md)
 
-**Phase 4 완료 시 업데이트:**
-- `src/adapters/README.md`: Advanced Features 추가
-  - Tool Search, Defer Loading, Vector Search 설명
-  - Context Explosion 완화 전략 상세
+* LiteLLM CustomLogger 콜백 로깅
+* Tool Call Tracing (SQLite 저장)
+* 구조화된 로깅 개선 (JSON 포맷 옵션)
 
-**✅ DoD:**
+#### 4.C Dynamic Intelligence (Steps 8-9) — [phase4.0-partC.md](plans/phase4.0-partC.md)
 
-* [ ] Tool Search 기능 동작
-* [ ] 50개 이상 도구에서 성능 개선 확인
-* [ ] `src/adapters/README.md` 업데이트
+* 컨텍스트 인식 동적 시스템 프롬프트
+* 도구 실행 재시도 로직 (Exponential Backoff)
+
+#### 4.D Reliability & Scale (Steps 10-11) — [phase4.0-partD.md](plans/phase4.0-partD.md)
+
+* A2A 에이전트 Health 모니터링
+* Defer Loading (대규모 도구 지원, MAX_ACTIVE_TOOLS 100)
+
+#### 4.E Production Hardening (Steps 12-16) — [phase4.0-partE.md](plans/phase4.0-partE.md) ⭐ 초안
+
+* MCP Gateway Pattern (Circuit Breaker + Rate Limiting + Fallback)
+* Cost Tracking & Budgeting (LiteLLM Callbacks 기반 비용 추적)
+* Semantic Tool Routing (Embedding 기반 도구 추천)
+* Chaos Engineering Tests (MCP 서버 다운, LLM Rate Limit 시나리오)
+* Plugin System (Mock 구현 - 독자 확장 격리 인터페이스)
+
+**보류: Event-Driven Architecture (Job Queue)**
+- 현재 단일 사용자 로컬 앱에서 불필요 (Offscreen Document로 충분)
+- Multi-User 구현 시 재검토
+- 상세: [phase4.0-partE.md](plans/phase4.0-partE.md#보류-항목-event-driven-architecture-job-queue)
+
+**실행 순서:**
+- **권장:** 순차 진행 (A → B → C → D → E)
+- **병렬화 옵션:** Part A 완료 후 Part B, C, D 병렬 가능 (팀 환경 또는 속도 우선 시)
+  - Part B Steps 5, 7 (독립)
+  - Part C Steps 8, 9 (Step 1 의존)
+  - Part D Steps 10, 11 (Step 10은 Step 1 의존)
+  - Part B Step 6은 Part A Step 2 (StreamChunk) 완료 후
+- **상세:** [phase4.0.md#전체-실행-순서-및-의존성](plans/phase4.0.md#전체-실행-순서-및-의존성)
+
+**품질 검증:**
+- 각 Part 완료 시: TDD 테스트, 코드 리뷰, 문서 업데이트
+- Part A: StreamChunk 헥사고날 검증, ADK Event API 웹 검색
+- Part E: Chaos 시나리오 3개 통과, Plugin 인터페이스 정의
+
+**✅ DoD (Part A-D):**
+
+* [ ] A2A 에이전트 등록 → LLM sub_agents 연결 (Bug #1 수정)
+* [ ] SSE 이벤트: tool_call, tool_result, agent_transfer (Bug #2 수정)
+* [ ] 동적 시스템 프롬프트 (Bug #3 수정)
+* [ ] LLM/Tool 호출 로깅 및 추적
+* [ ] 엔드포인트 자동 복원
+* [ ] Defer Loading (도구 > 30 메타데이터만 로드)
+* [ ] Backend coverage >= 90%
+* [ ] 전체 문서 업데이트 완료
+
+**✅ DoD (Part E - 초안):**
+
+* [ ] MCP Gateway 구현 (Circuit Breaker, Rate Limiting, Fallback)
+* [ ] Cost Tracker 구현 및 예산 집행
+* [ ] Semantic Tool Router 구현
+* [ ] Chaos Engineering 시나리오 3개 통과
+* [ ] Plugin System 인터페이스 정의 (Mock)
+* [ ] Event-Driven 보류 사유 문서화
+
+---
+
+### Phase 5: Advanced Features (Future)
+
+**📋 상세 플랜:** 예정 (Phase 4 완료 후)
+
+**목표:** ADK 공식 지원 대기 기능 + 확장성 강화. 외부 의존성에 따라 변동.
+
+#### 5.1 MCP Advanced Features
+
+* Resources: MCP 리소스 읽기/구독 (ADK MCPResourceSet 지원 대기 — Issue #1779)
+* Prompts: MCP 프롬프트 템플릿 (ADK MCPPromptSet 지원 대기 — Discussion #3097)
+* Sampling: MCP 서버 주도 LLM 호출 (ADK 지원 대기)
+
+#### 5.2 Vector Search (Semantic Tool Routing)
+
+* 도구 설명 임베딩 생성
+* 시맨틱 검색으로 도구 선택 (tools > 50)
+* Phase 4 Step 11 (Defer Loading) 기반
+
+#### 5.3 Multi-User Support
+
+* DEFAULT_USER_ID → 인증된 사용자 세션
+* 사용자별 대화/엔드포인트 격리
+
+#### 5.4 Advanced Reliability
+
+* SSE Connection Pooling / Backpressure
+* LLM 호출 중 취소 (ADK Runner 취소 API 대기)
+
+**✅ DoD:** Phase 4 완료 후 외부 의존성 충족 시 정의
 
 ---
 
@@ -510,6 +602,7 @@ app.add_middleware(
 | 2 | Integration | MCP Adapter, API | TDD 테스트 작성 | 70% |
 | 2.5 | Integration | Extension ↔ Server | - | - |
 | 3 | E2E | Full Stack | 코드 품질 검토 | Critical Path |
+| 4 | Unit + Integration | StreamChunk, Observability, Reliability | TDD + 웹 검색 | 90% |
 
 ### 헥사고날 아키텍처 테스트 장점
 
@@ -540,6 +633,7 @@ app.add_middleware(
 - Phase 2: TDD 테스트 작성 필요, 보안 검토 필요
 - Phase 2.5: 보안 검토 필요, 코드 품질 검토 필요
 - Phase 3: 코드 품질 최종 검토 필요, 테스트 시나리오 설계 필요
+- Phase 4: StreamChunk 도메인 검증, ADK Event API 웹 검색, Observability 코드 검토
 
 ### 5.3 Hooks 정책
 
@@ -654,7 +748,13 @@ This roadmap provides the **overall Phase plan and architecture**. For **current
 | Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
 | Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
 | Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
-| Phase 4.0 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
+| Phase 4.0 (Master) | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
+| Phase 4.0 Part A | [phase4.0-partA.md](plans/phase4.0-partA.md) | 📋 예정 |
+| Phase 4.0 Part B | [phase4.0-partB.md](plans/phase4.0-partB.md) | 📋 예정 |
+| Phase 4.0 Part C | [phase4.0-partC.md](plans/phase4.0-partC.md) | 📋 예정 |
+| Phase 4.0 Part D | [phase4.0-partD.md](plans/phase4.0-partD.md) | 📋 예정 |
+| Phase 4.0 Part E | [phase4.0-partE.md](plans/phase4.0-partE.md) | 📋 예정 |
+| Phase 5.0 | 예정 | 📋 예정 |
 
 ---
 

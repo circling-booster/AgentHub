@@ -1,6 +1,6 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-01-30
+> **Last Updated:** 2026-01-31
 > **Current Phase:** Phase 3 Complete → Phase 4 예정
 > **Active Branch:** `feature/phase-3`
 
@@ -29,7 +29,8 @@
 | Phase 2 | ✅ Complete | 100% | MCP Integration (88% coverage) |
 | Phase 2.5 | ✅ Complete | 100% | Chrome Extension (129 tests + 수동검증) |
 | **Phase 3** | **✅ Complete** | **100%** | **A2A Integration + UI Polish + E2E** |
-| Phase 4 | 📋 Planned | 0% | Advanced Features |
+| Phase 4 | 📋 Planned | 0% | Critical Fixes, Observability, Intelligence, Reliability |
+| Phase 5 | 📋 Planned | 0% | MCP Advanced, Vector Search, Multi-user |
 
 **범례:**
 ✅ Complete | 🚧 In Progress | 📋 Planned | ⏸️ Paused | ❌ Blocked
@@ -145,17 +146,29 @@
 
 ---
 
-## ⚡ Next Actions (Phase 4 - Optional)
+## ⚡ Next Actions (Phase 4)
 
-**범례:** 🤖 자동화됨 | 👤 수동 실행 필요
+### Phase 4 구조 (Part A-E)
 
-| Priority | Task | Type | Status |
-|:--------:|------|:----:|:------:|
-| 🟡 Medium | Defer Loading (tools > 50) | 🤖 구현 | Deferred |
-| 🟡 Medium | Vector Search (도구 라우팅) | 🤖 구현 | Deferred |
-| 🟢 Low | Multi-user 지원 | 🤖 구현 | Deferred |
+| Part | Steps | 초점 | 상태 |
+|:----:|:-----:|------|:----:|
+| A | 1-4 | Critical Fixes (A2A Wiring, StreamChunk, Error Typing, Auto-Restore) | 📋 |
+| B | 5-7 | Observability (LiteLLM Callbacks, Tool Tracing, Structured Logging) | 📋 |
+| C | 8-9 | Dynamic Intelligence (System Prompt, Tool Retry) | 📋 |
+| D | 10-11 | Reliability & Scale (A2A Health, Defer Loading) | 📋 |
+| E | 12-16 | Production Hardening (Gateway, Cost Tracking, Semantic Routing, Chaos Tests, Plugin) | 💡 초안 |
 
-**📋 Detailed Plan:** [phase4.0.md](plans/phase4.0.md) (예정)
+### 핵심 버그 (Part A에서 수정)
+
+| Bug | 심각도 | 설명 |
+|-----|:------:|------|
+| A2A Wiring | 🔴 Critical | `POST /api/a2a/agents` → Agent Card만 저장, LLM 미연결 |
+| SSE Events | 🔴 High | "text" 타입만 전송, tool_call/tool_result 누락 |
+| System Prompt | 🟡 Medium | 등록된 도구/에이전트 목록 미포함 |
+
+**📋 Detailed Plans:**
+- [phase4.0.md](plans/phase4.0.md) (Master Plan)
+- [phase4.0-partA.md](plans/phase4.0-partA.md) | [partB](plans/phase4.0-partB.md) | [partC](plans/phase4.0-partC.md) | [partD](plans/phase4.0-partD.md) | [partE](plans/phase4.0-partE.md) 💡
 
 ---
 
@@ -165,15 +178,43 @@
 
 ---
 
+## ⏸️ Deferred Features
+
+### Event-Driven Architecture (Job Queue) — 보류 중
+
+**보류 사유:**
+- AgentHub는 **단일 사용자** 로컬 앱 (Multi-Tenancy 미지원)
+- 대부분 작업이 **30초 이내** 완료 (Offscreen Document로 충분, 최대 5분 지원)
+- Job Queue 도입 시 **복잡도 증가** (Redis, Celery, Worker 프로세스 관리)
+
+**재검토 시점:**
+- Multi-User Support 구현 시 (Phase 5+)
+- 장시간 작업 (1분 이상) 비율이 20% 초과 시
+- 백그라운드 작업 요구사항 발생 시
+
+**현재 대안:**
+- Offscreen Document (최대 5분 작업 지원)
+- 5분 초과 시: Job ID 반환 + 폴링 API (`GET /api/jobs/{id}/status`)
+
+**장단점:**
+- ✅ 장점: 비동기 작업 처리, 확장성, 재시도 메커니즘
+- ❌ 단점: 복잡도 증가, 디버깅 어려움, 인프라 비용
+
+**상세:** [phase4.0-partE.md](plans/phase4.0-partE.md#보류-항목-event-driven-architecture-job-queue)
+
+---
+
 ## 📚 Documentation Status
 
 | Document | Status | Last Updated |
 |----------|:------:|:------------:|
 | README.md | ✅ Up-to-date | 2026-01-28 |
-| CLAUDE.md | ✅ Up-to-date | 2026-01-30 |
-| docs/roadmap.md | ✅ Up-to-date | 2026-01-28 |
+| CLAUDE.md | ✅ Up-to-date | 2026-01-31 |
+| docs/roadmap.md | ✅ Up-to-date | 2026-01-31 |
 | docs/architecture.md | ✅ Up-to-date | 2026-01-28 |
 | docs/plans/phase3.0.md | ✅ Complete | 2026-01-30 |
+| docs/plans/phase4.0.md | ✅ Updated | 2026-01-31 |
+| docs/plans/phase4.0-partE.md | 💡 Draft | 2026-01-31 |
 | src/README.md | ⚠️ Pending | - |
 | src/adapters/README.md | ✅ Created | 2026-01-30 |
 | tests/README.md | ✅ Created | 2026-01-30 |
@@ -185,6 +226,7 @@
 
 - [Overall Roadmap](roadmap.md)
 - [Phase 3 Plan](plans/phase3.0.md)
+- [Phase 4 Plan](plans/phase4.0.md)
 - [Architecture Overview](guides/architecture.md)
 - [Implementation Guide](guides/implementation-guide.md)
 - [All Guides](guides/)

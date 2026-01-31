@@ -8,6 +8,7 @@ from src.domain.entities.enums import EndpointType
 from src.domain.entities.tool import Tool
 from src.domain.exceptions import DuplicateEndpointError, EndpointNotFoundError
 from src.domain.ports.outbound.a2a_port import A2aPort
+from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
 
@@ -24,6 +25,7 @@ class RegistryService:
         _storage: 엔드포인트 저장소 포트
         _toolset: 도구셋 포트 (MCP용)
         _a2a_client: A2A 클라이언트 포트 (A2A용, 선택)
+        _orchestrator: 오케스트레이터 포트 (선택, A2A LLM 연결용)
     """
 
     def __init__(
@@ -31,16 +33,19 @@ class RegistryService:
         storage: EndpointStoragePort,
         toolset: ToolsetPort,
         a2a_client: A2aPort | None = None,
+        orchestrator: OrchestratorPort | None = None,
     ) -> None:
         """
         Args:
             storage: 엔드포인트 저장소 포트
             toolset: 도구셋 포트 (MCP용)
             a2a_client: A2A 클라이언트 포트 (선택, None이면 A2A 미지원)
+            orchestrator: 오케스트레이터 포트 (선택, A2A LLM 연결용)
         """
         self._storage = storage
         self._toolset = toolset
         self._a2a_client = a2a_client
+        self._orchestrator = orchestrator
 
     async def register_endpoint(
         self,
@@ -106,6 +111,10 @@ class RegistryService:
             agent_card = await self._a2a_client.register_agent(endpoint)
             endpoint.agent_card = agent_card
 
+            # LLM에 A2A 에이전트 연결 (orchestrator가 있는 경우만)
+            if self._orchestrator:
+                await self._orchestrator.add_a2a_agent(endpoint.id, url)
+
         # 저장
         await self._storage.save_endpoint(endpoint)
 
@@ -127,8 +136,12 @@ class RegistryService:
             return False
 
         # 타입별 해제 처리
-        if endpoint.type == EndpointType.A2A and self._a2a_client:
-            await self._a2a_client.unregister_agent(endpoint_id)
+        if endpoint.type == EndpointType.A2A:
+            if self._a2a_client:
+                await self._a2a_client.unregister_agent(endpoint_id)
+            # LLM에서 A2A 에이전트 연결 해제 (orchestrator가 있는 경우만)
+            if self._orchestrator:
+                await self._orchestrator.remove_a2a_agent(endpoint_id)
         elif endpoint.type == EndpointType.MCP:
             await self._toolset.remove_mcp_server(endpoint_id)
 

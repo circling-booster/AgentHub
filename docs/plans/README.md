@@ -11,8 +11,19 @@
 | Phase 1.0 | [phase1.0.md](phase1.0.md) | ✅ Complete | Domain Core (TDD) |
 | Phase 1.5 | [phase1.5.md](phase1.5.md) | ✅ Complete | Security Layer (Token Handshake) |
 | Phase 2.0 | [phase2.0.md](phase2.0.md) | ✅ Complete | MCP Integration (DynamicToolset) |
-| Phase 2.5 | [phase2.5.md](phase2.5.md) | 🚧 In Progress | Chrome Extension (WXT + Offscreen) |
-| Phase 3.0 | [phase3.0.md](phase3.0.md) | 📋 Planned | A2A Integration + E2E Tests |
+| Phase 2.5 | [phase2.5.md](phase2.5.md) | ✅ Complete | Chrome Extension (WXT + Offscreen) |
+| Phase 3.0 | [phase3.0.md](phase3.0.md) | ✅ Complete | A2A Integration + E2E Tests |
+| **Phase 4.0** | [phase4.0.md](phase4.0.md) | 📋 Planned | Critical Fixes, Observability, Intelligence, Reliability |
+| Phase 5.0 | *(예정)* | 📋 Planned | MCP Advanced, Vector Search, Multi-user |
+
+### Phase 4 Part 파일
+
+| Part | 문서 | Steps | 초점 |
+|:----:|------|:-----:|------|
+| A | [phase4.0-partA.md](phase4.0-partA.md) | 1-4 | Critical Fixes |
+| B | [phase4.0-partB.md](phase4.0-partB.md) | 5-7 | Observability |
+| C | [phase4.0-partC.md](phase4.0-partC.md) | 8-9 | Dynamic Intelligence |
+| D | [phase4.0-partD.md](phase4.0-partD.md) | 10-11 | Reliability & Scale |
 
 ---
 
@@ -28,4 +39,4 @@
 
 ---
 
-*문서 업데이트: 2026-01-30*
+*문서 업데이트: 2026-01-31*

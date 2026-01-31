@@ -75,4 +75,5 @@ class Container(containers.DeclarativeContainer):
         toolset=dynamic_toolset,
         storage=endpoint_storage,
         a2a_client=a2a_client_adapter,
+        orchestrator=orchestrator_adapter,
     )

@@ -177,17 +177,19 @@ class AdkOrchestratorAdapter(OrchestratorPort):
                     if part.text:
                         yield part.text
 
-    async def add_a2a_agent(self, endpoint_id: str, agent_card_url: str) -> None:
+    async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:
         """
         A2A 에이전트를 sub_agent로 추가
 
         Args:
             endpoint_id: Endpoint ID (sub_agents dict의 key)
-            agent_card_url: Agent Card URL (예: http://.../.well-known/agent.json)
+            url: A2A 에이전트 URL (Agent Card URL로 변환됨)
 
         Raises:
             RuntimeError: Orchestrator가 초기화되지 않음
         """
+        # Agent Card URL 추출 (A2A 표준: {url}/.well-known/agent.json)
+        agent_card_url = url if url.endswith("agent.json") else f"{url}/.well-known/agent.json"
         if not self._initialized:
             raise RuntimeError("Orchestrator must be initialized before adding A2A agents")
 
@@ -210,15 +212,12 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         logger.info(f"A2A agent added: {endpoint_id} ({agent_card_url})")
 
-    async def remove_a2a_agent(self, endpoint_id: str) -> bool:
+    async def remove_a2a_agent(self, endpoint_id: str) -> None:
         """
         A2A sub_agent 제거
 
         Args:
             endpoint_id: Endpoint ID
-
-        Returns:
-            bool: 제거 성공 여부
 
         Raises:
             RuntimeError: Orchestrator가 초기화되지 않음
@@ -228,7 +227,7 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         # sub_agents에서 제거
         if endpoint_id not in self._sub_agents:
-            return False
+            return
 
         del self._sub_agents[endpoint_id]
 
@@ -236,7 +235,6 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         await self._rebuild_agent()
 
         logger.info(f"A2A agent removed: {endpoint_id}")
-        return True
 
     async def close(self) -> None:
         """리소스 정리"""
