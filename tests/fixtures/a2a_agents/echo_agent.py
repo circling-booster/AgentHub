@@ -36,7 +36,14 @@ class EchoAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="echo_agent",
-            description="A simple echo agent that returns user input for testing A2A integration",
+            description=(
+                "Echo agent that repeats and mirrors user input. "
+                "Use this agent when the user explicitly asks to echo, "
+                "repeat, mirror, or copy back their message. "
+                "This agent simply returns the exact text provided by the user "
+                "without any processing or modification. "
+                "Ideal for testing A2A delegation and verification."
+            ),
         )
 
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
