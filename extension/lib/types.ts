@@ -19,14 +19,35 @@ export interface StreamEventDone {
   type: 'done';
 }
 
+export interface StreamEventToolCall {
+  type: 'tool_call';
+  tool_name: string;
+  tool_arguments: Record<string, unknown>;
+}
+
+export interface StreamEventToolResult {
+  type: 'tool_result';
+  tool_name: string;
+  result: string;
+}
+
+export interface StreamEventAgentTransfer {
+  type: 'agent_transfer';
+  agent_name: string;
+}
+
 export interface StreamEventError {
   type: 'error';
-  message: string;
+  content: string;
+  error_code?: string;
 }
 
 export type StreamEvent =
   | StreamEventConversationCreated
   | StreamEventText
+  | StreamEventToolCall
+  | StreamEventToolResult
+  | StreamEventAgentTransfer
   | StreamEventDone
   | StreamEventError;
 
@@ -60,12 +81,21 @@ export interface HealthStatus {
   timestamp?: string;
 }
 
+/** Tool call information */
+export interface ToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+  result?: string;
+}
+
 /** Chat message for UI state */
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   createdAt: Date;
+  toolCalls?: ToolCall[];
+  agentTransfer?: string;
 }
 
 /** A2A Agent (matches server A2aAgentResponse schema) */
