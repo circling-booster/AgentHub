@@ -17,5 +17,13 @@ health_check:
   timeout_seconds: 5
 
 mcp:
-  max_active_tools: 30
+  max_active_tools: 100  # Step 11: increased from 30 to support defer loading
+  defer_loading_threshold: 30  # Step 11: trigger defer loading above this count
   cache_ttl_seconds: 300
+  max_retries: 2
+  retry_backoff_seconds: 1.0
+
+observability:
+  log_llm_requests: true
+  max_log_chars: 500
+  log_format: "text"  # "text" or "json"

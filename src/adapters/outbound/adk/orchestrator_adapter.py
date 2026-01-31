@@ -6,6 +6,7 @@ TDD Phase: GREEN - Runner 패턴 적용 + A2A Sub-Agent 통합
 import logging
 from collections.abc import AsyncIterator
 
+import litellm
 from google.adk.agents import LlmAgent
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from google.adk.models.lite_llm import LiteLlm
@@ -14,6 +15,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
+from src.adapters.outbound.adk.litellm_callbacks import AgentHubLogger
 from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 
@@ -44,16 +46,19 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         model: str,
         dynamic_toolset: DynamicToolset,
         instruction: str = "You are a helpful assistant with access to various tools.",
+        enable_llm_logging: bool = True,
     ):
         """
         Args:
             model: LiteLLM 모델 문자열 (예: "openai/gpt-4o-mini")
             dynamic_toolset: DynamicToolset 인스턴스
             instruction: 시스템 프롬프트
+            enable_llm_logging: LLM 호출 로깅 활성화 여부 (Step 5: Part B)
         """
         self._model_name = model
         self._dynamic_toolset = dynamic_toolset
         self._instruction = instruction
+        self._enable_llm_logging = enable_llm_logging
         self._agent: LlmAgent | None = None
         self._runner: Runner | None = None
         self._session_service: InMemorySessionService | None = None
@@ -78,6 +83,11 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         if self._initialized:
             return
 
+        # Step 5: LiteLLM callbacks 등록 (설정에 따라 활성화)
+        if self._enable_llm_logging:
+            litellm.callbacks = [AgentHubLogger()]
+            logger.info("LiteLLM callbacks registered: AgentHubLogger")
+
         # 도구 로딩 완료 대기 (비동기)
         await self._dynamic_toolset.get_tools()
 
@@ -96,15 +106,26 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         A2A sub-agent 추가/제거 시 호출됩니다.
         SessionService는 유지하여 대화 컨텍스트를 보존합니다.
+
+        동적 시스템 프롬프트:
+        - 등록된 MCP 도구 목록 포함
+        - 등록된 A2A 에이전트 정보 포함
         """
+        # 동적 instruction 생성
+        dynamic_instruction = self._build_dynamic_instruction()
+
         # Agent 생성 (sub_agents 포함)
         self._agent = LlmAgent(
             model=LiteLlm(model=self._model_name),
             name="agenthub_agent",
-            instruction=self._instruction,
+            instruction=dynamic_instruction,
             tools=[self._dynamic_toolset],
             sub_agents=list(self._sub_agents.values()),  # A2A sub-agents
         )
+
+        # 도구 및 에이전트 수 계산
+        mcp_info = self._dynamic_toolset.get_registered_info()
+        total_tools = sum(len(info["tools"]) for info in mcp_info.values())
 
         # Runner 재생성 (기존 session_service 유지)
         self._runner = Runner(
@@ -113,7 +134,63 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             session_service=self._session_service,
         )
 
-        logger.info(f"Agent rebuilt with {len(self._sub_agents)} A2A sub-agents")
+        logger.info(
+            f"Agent rebuilt: {total_tools} MCP tools, {len(self._sub_agents)} A2A sub-agents",
+            extra={
+                "mcp_endpoints": len(mcp_info),
+                "total_mcp_tools": total_tools,
+                "a2a_agents": len(self._sub_agents),
+            },
+        )
+
+    def _build_dynamic_instruction(self) -> str:
+        """
+        컨텍스트 인식 동적 시스템 프롬프트 생성
+
+        Returns:
+            등록된 도구/에이전트 정보를 포함한 instruction
+        """
+        # 기본 instruction
+        instruction_parts = [
+            "You are AgentHub, an intelligent assistant with access to external tools and agents.",
+            "",
+        ]
+
+        # MCP 도구 섹션
+        mcp_info = self._dynamic_toolset.get_registered_info()
+        if mcp_info:
+            instruction_parts.append("## Available MCP Tools:")
+            for _endpoint_id, info in mcp_info.items():
+                server_name = info["name"]
+                tools = info["tools"]
+                if tools:
+                    tools_str = ", ".join(tools)
+                    instruction_parts.append(f'- Server "{server_name}": {tools_str}')
+                else:
+                    instruction_parts.append(f'- Server "{server_name}": (no tools available)')
+            instruction_parts.append("")
+
+        # A2A 에이전트 섹션
+        if self._sub_agents:
+            instruction_parts.append("## Available A2A Agents:")
+            for _endpoint_id, agent in self._sub_agents.items():
+                agent_name = agent.name
+                agent_desc = agent.description or "Remote A2A agent"
+                instruction_parts.append(f'- Agent "{agent_name}": {agent_desc}')
+            instruction_parts.append("")
+
+        # 사용 가이드라인
+        instruction_parts.extend(
+            [
+                "## Usage Guidelines:",
+                "- Use MCP tools for specific actions (data queries, file operations, API calls)",
+                "- Delegate to A2A agents when the task matches their specialization",
+                "- You can use multiple tools in sequence to complete complex tasks",
+                "- Always report which tools/agents you used in your response",
+            ]
+        )
+
+        return "\n".join(instruction_parts)
 
     async def process_message(
         self,

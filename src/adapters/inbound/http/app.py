@@ -30,12 +30,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     - MCP 연결 정리
     """
     # Startup
+    container = app.container
+    settings = container.settings()
+
+    # Step 7: 로깅 설정 초기화 (최우선)
+    from src.config.logging_config import setup_logging
+
+    setup_logging(settings)
     logger.info("AgentHub API starting up")
 
-    container = app.container
-
     # LiteLLM이 os.environ에서 API 키를 읽으므로, Settings에서 로드한 키를 환경변수에 반영
-    settings = container.settings()
     _export_api_keys(settings)
 
     # SQLite 스토리지 초기화

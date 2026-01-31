@@ -7,7 +7,7 @@ import pytest
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointStatus, EndpointType
 from src.domain.services.health_monitor_service import HealthMonitorService
-from tests.unit.fakes import FakeEndpointStorage, FakeToolset
+from tests.unit.fakes import FakeA2aClient, FakeEndpointStorage, FakeToolset
 
 
 class TestHealthMonitorService:
@@ -22,11 +22,24 @@ class TestHealthMonitorService:
         return FakeToolset()
 
     @pytest.fixture
+    def a2a_client(self):
+        return FakeA2aClient()
+
+    @pytest.fixture
     def service(self, storage, toolset):
         return HealthMonitorService(
             storage=storage,
             toolset=toolset,
             check_interval_seconds=1,  # 빠른 테스트를 위해 짧게
+        )
+
+    @pytest.fixture
+    def service_with_a2a(self, storage, toolset, a2a_client):
+        return HealthMonitorService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            check_interval_seconds=1,
         )
 
     @pytest.mark.asyncio
@@ -169,3 +182,119 @@ class TestHealthMonitorService:
         # Then
         assert "ep-1" in results
         assert "ep-2" not in results  # 비활성화된 엔드포인트는 제외
+
+
+class TestHealthMonitorServiceA2aSupport:
+    """HealthMonitorService A2A 지원 테스트"""
+
+    @pytest.fixture
+    def storage(self):
+        return FakeEndpointStorage()
+
+    @pytest.fixture
+    def toolset(self):
+        return FakeToolset()
+
+    @pytest.fixture
+    def a2a_client(self):
+        return FakeA2aClient()
+
+    @pytest.fixture
+    def service_with_a2a(self, storage, toolset, a2a_client):
+        return HealthMonitorService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            check_interval_seconds=1,
+        )
+
+    @pytest.mark.asyncio
+    async def test_check_a2a_agent_healthy(self, service_with_a2a, storage, a2a_client):
+        """
+        RED: A2A 에이전트 health check - 정상
+
+        Given: A2A 에이전트가 등록됨
+        When: check_endpoint() 호출
+        Then: True 반환 및 CONNECTED 상태로 갱신
+        """
+        # Given
+        endpoint = Endpoint(
+            id="a2a-1",
+            url="https://agent.com/a2a",
+            type=EndpointType.A2A,
+            status=EndpointStatus.UNKNOWN,
+        )
+        storage.endpoints["a2a-1"] = endpoint
+        # A2A 에이전트 등록
+        await a2a_client.register_agent(endpoint)
+
+        # When
+        result = await service_with_a2a.check_endpoint("a2a-1")
+
+        # Then
+        assert result is True
+        assert storage.endpoints["a2a-1"].status == EndpointStatus.CONNECTED
+
+    @pytest.mark.asyncio
+    async def test_check_a2a_agent_unhealthy(self, service_with_a2a, storage, a2a_client):
+        """
+        RED: A2A 에이전트 health check - 비정상
+
+        Given: A2A 에이전트가 미등록됨
+        When: check_endpoint() 호출
+        Then: False 반환 및 ERROR 상태로 갱신
+        """
+        # Given
+        endpoint = Endpoint(
+            id="a2a-1",
+            url="https://agent.com/a2a",
+            type=EndpointType.A2A,
+            status=EndpointStatus.CONNECTED,
+        )
+        storage.endpoints["a2a-1"] = endpoint
+        # A2A 에이전트 미등록 상태
+
+        # When
+        result = await service_with_a2a.check_endpoint("a2a-1")
+
+        # Then
+        assert result is False
+        assert storage.endpoints["a2a-1"].status == EndpointStatus.ERROR
+
+    @pytest.mark.asyncio
+    async def test_check_all_endpoints_with_mixed_types(
+        self, service_with_a2a, storage, toolset, a2a_client
+    ):
+        """
+        RED: MCP와 A2A 엔드포인트 혼합 health check
+
+        Given: MCP 서버 1개, A2A 에이전트 1개
+        When: check_all_endpoints() 호출
+        Then: 각각의 포트로 health check 수행
+        """
+        # Given: MCP 엔드포인트
+        mcp_ep = Endpoint(
+            id="mcp-1",
+            url="https://server.com/mcp",
+            type=EndpointType.MCP,
+        )
+        storage.endpoints["mcp-1"] = mcp_ep
+        toolset.health_status = {"mcp-1": True}
+
+        # Given: A2A 엔드포인트
+        a2a_ep = Endpoint(
+            id="a2a-1",
+            url="https://agent.com/a2a",
+            type=EndpointType.A2A,
+        )
+        storage.endpoints["a2a-1"] = a2a_ep
+        await a2a_client.register_agent(a2a_ep)
+
+        # When
+        results = await service_with_a2a.check_all_endpoints()
+
+        # Then
+        assert results["mcp-1"] is True
+        assert results["a2a-1"] is True
+        assert storage.endpoints["mcp-1"].status == EndpointStatus.CONNECTED
+        assert storage.endpoints["a2a-1"].status == EndpointStatus.CONNECTED

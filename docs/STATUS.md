@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-01-31
-> **Current Phase:** Phase 4 Part A Complete → Part B 예정
+> **Last Updated:** 2026-01-31 (Part C Complete)
+> **Current Phase:** Phase 4 Part C Complete → Part B/D 병렬 진행 예정
 > **Active Branch:** `feature/phase-4`
 
 ---
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 87% (Phase 4 Part A Complete) |
-| **Backend Coverage** | 90.18% (Target: 80%) |
-| **Backend Tests** | 355 collected / 342 passed (pytest) |
+| **Overall Progress** | 89% (Phase 4 Part A+C Complete) |
+| **Backend Coverage** | 87% (Target: 90%) |
+| **Backend Tests** | 378 collected / 362 passed (pytest) |
 | **Extension Tests** | 197 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 4 Part A Complete (2026-01-31) |
+| **Last Milestone** | Phase 4 Part C Complete (2026-01-31) |
 
 ---
 
@@ -30,7 +30,8 @@
 | Phase 2.5 | ✅ Complete | 100% | Chrome Extension (129 tests + 수동검증) |
 | Phase 3 | ✅ Complete | 100% | A2A Integration + UI Polish + E2E |
 | **Phase 4 Part A** | **✅ Complete** | **100%** | **Critical Fixes (StreamChunk, A2A Wiring, Error Typing, Auto-Restore)** |
-| Phase 4 Part B-E | 📋 Planned | 0% | Observability, Intelligence, Reliability, Production |
+| **Phase 4 Part C** | **✅ Complete** | **100%** | **Dynamic Intelligence (Context-Aware Prompts, Tool Retry)** |
+| Phase 4 Part B, D-E | 📋 Planned | 0% | Observability, Reliability, Production |
 | Phase 5 | 📋 Planned | 0% | MCP Advanced, Vector Search, Multi-user |
 
 **범례:**
@@ -145,6 +146,50 @@
 
 ---
 
+## 🎯 Phase 4 Part C 완료 요약
+
+**완료 일자:** 2026-01-31
+**결과:** Dynamic Intelligence 구현 완료 (Context-Aware System Prompt + Tool Retry Logic)
+
+### 완료된 Steps (8-9)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **8** | Context-Aware System Prompt | 4개 unit + 1개 integration | ✅ |
+| **9** | Tool Execution Retry Logic | 6개 unit tests | ✅ |
+
+### 핵심 성과
+
+- ✅ **동적 시스템 프롬프트**: 등록된 MCP 도구 목록 및 A2A 에이전트 정보를 instruction에 자동 포함
+  - `DynamicToolset.get_registered_info()` 메서드로 엔드포인트별 도구 정보 제공
+  - `_rebuild_agent()`에서 동적 instruction 생성 (MCP Tools + A2A Agents 섹션)
+  - 도구/에이전트 추가/제거 시 instruction 자동 갱신
+- ✅ **도구 실행 재시도 로직**: Exponential backoff로 일시적 에러 자동 재시도
+  - 일시적 에러 (ConnectionError, TimeoutError) 최대 N회 재시도
+  - 재시도 간격: 1s, 2s, 4s (exponential backoff)
+  - 영구 에러 (ValueError, RuntimeError) 즉시 실패
+  - 설정 가능: `mcp.max_retries`, `mcp.retry_backoff_seconds` (default.yaml)
+- ✅ **테스트 품질**: 229 unit/integration tests passed (Unit: 219, Integration: 10)
+  - 신규 테스트 10개 (test_dynamic_toolset_info.py: 4, test_tool_retry.py: 6)
+  - Regression 0 (기존 테스트 전체 통과)
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+### 구현 파일
+
+- `src/adapters/outbound/adk/dynamic_toolset.py`: `get_registered_info()`, 재시도 로직
+- `src/adapters/outbound/adk/orchestrator_adapter.py`: `_build_dynamic_instruction()`
+- `src/config/settings.py`: `McpSettings` (max_retries, retry_backoff_seconds)
+- `configs/default.yaml`: 재시도 기본값 (max_retries=2, backoff=1.0)
+
+### 테스트 파일
+
+- `tests/unit/adapters/test_dynamic_toolset_info.py`: 도구 정보 조회 테스트
+- `tests/unit/adapters/test_tool_retry.py`: 재시도 로직 테스트
+- `tests/integration/adapters/test_orchestrator_adapter.py`: 동적 instruction 통합 테스트
+- `tests/integration/adapters/test_dynamic_toolset.py`: 캐싱 테스트 수정
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -165,6 +210,7 @@
 
 ## 📅 Recent Milestones
 
+- **2026-01-31**: Phase 4 Part C Complete - Dynamic Intelligence (Context-Aware Prompts, Tool Retry)
 - **2026-01-31**: Phase 4 Part A Complete - Critical Fixes (StreamChunk, A2A Wiring, Error Typing, Auto-Restore)
 - **2026-01-30**: Phase 3 Complete - A2A Integration + UI Polish + E2E (180 Extension tests, 7 E2E scenarios)
 - **2026-01-30**: Phase 3 Part A Complete - A2A Core Integration (90.63% coverage, 315 tests)
@@ -181,9 +227,9 @@
 | Part | Steps | 초점 | 상태 |
 |:----:|:-----:|------|:----:|
 | **A** | **1-4** | **Critical Fixes (A2A Wiring, StreamChunk, Error Typing, Auto-Restore)** | **✅ 완료** |
-| B | 5-7 | Observability (LiteLLM Callbacks, Tool Tracing, Structured Logging) | 📋 |
-| C | 8-9 | Dynamic Intelligence (System Prompt, Tool Retry) | 📋 |
-| D | 10-11 | Reliability & Scale (A2A Health, Defer Loading) | 📋 |
+| B | 0, 5-7 | Observability (Error Code Constants, LiteLLM Callbacks, Tool Tracing, Structured Logging) | 📋 예정 |
+| C | 8-9 | Dynamic Intelligence (System Prompt, Tool Retry) | 📋 예정 |
+| D | 10-11 | Reliability & Scale (A2A Health, Defer Loading) | 📋 예정 |
 | E | 12-16 | Production Hardening (Gateway, Cost Tracking, Semantic Routing, Chaos Tests, Plugin) | 💡 초안 |
 
 ### Part A 완료 (2026-01-31) ✅
@@ -197,9 +243,23 @@
 | Extension ToolCallIndicator 컴포넌트 | ✅ |
 | Backend 90.18% coverage, Extension 197 tests | ✅ |
 
+### Part B 예정 (Observability) 📋
+
+| Step | 내용 | 예상 작업시간 |
+|:----:|------|:------------:|
+| **0** | 에러 코드 상수화 (Backend + Extension 타입 일치) | 1-2시간 |
+| **5** | LiteLLM CustomLogger 콜백 로깅 (모델, 토큰, 지연시간) | 3-4시간 |
+| **6** | Tool Call Tracing (SQLite 저장 + API 조회) | 4-5시간 |
+| **7** | 구조화된 로깅 개선 (JSON 포맷 옵션) | 2-3시간 |
+
+**병렬화 옵션:**
+- Part B, C, D 병렬 진행 가능
+- Part B Step 0: Part A Step 3 완료 후 즉시 시작 가능 ✅
+- Part B Step 6: Part A Step 2 (StreamChunk) 완료 후 가능 ✅
+
 **📋 Detailed Plans:**
 - [phase4.0.md](plans/phase4.0.md) (Master Plan)
-- [phase4.0-partA.md](plans/phase4.0-partA.md) | [partB](plans/phase4.0-partB.md) | [partC](plans/phase4.0-partC.md) | [partD](plans/phase4.0-partD.md) | [partE](plans/phase4.0-partE.md) 💡
+- [phase4.0-partA.md](plans/phase4.0-partA.md) ✅ | [partB](plans/phase4.0-partB.md) 📋 | [partC](plans/phase4.0-partC.md) | [partD](plans/phase4.0-partD.md) | [partE](plans/phase4.0-partE.md) 💡
 
 ---
 

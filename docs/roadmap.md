@@ -477,8 +477,9 @@ app.add_middleware(
 * 타입별 에러 전파
 * 앱 시작 시 엔드포인트 자동 복원
 
-#### 4.B Observability (Steps 5-7) — [phase4.0-partB.md](plans/phase4.0-partB.md)
+#### 4.B Observability (Steps 0, 5-7) — [phase4.0-partB.md](plans/phase4.0-partB.md)
 
+* **Step 0 (Pre-Step):** 에러 코드 상수화 (타입 안전성 강화, Backend ↔ Extension 일치)
 * LiteLLM CustomLogger 콜백 로깅
 * Tool Call Tracing (SQLite 저장)
 * 구조화된 로깅 개선 (JSON 포맷 옵션)
@@ -509,6 +510,7 @@ app.add_middleware(
 **실행 순서:**
 - **권장:** 순차 진행 (A → B → C → D → E)
 - **병렬화 옵션:** Part A 완료 후 Part B, C, D 병렬 가능 (팀 환경 또는 속도 우선 시)
+  - Part B Step 0 (에러 코드 상수화): Part A Step 3 의존, 독립 실행 가능
   - Part B Steps 5, 7 (독립)
   - Part C Steps 8, 9 (Step 1 의존)
   - Part D Steps 10, 11 (Step 10은 Step 1 의존)
@@ -564,6 +566,11 @@ app.add_middleware(
 
 * DEFAULT_USER_ID → 인증된 사용자 세션
 * 사용자별 대화/엔드포인트 격리
+* **i18n 인프라:** 사용자별 언어 설정 (ko/en), Extension UI 다국어 지원
+  * 사용자 프로필 DB에 `language` 필드 추가
+  * Extension: react-i18next 또는 유사 라이브러리
+  * Backend API: `GET/PUT /api/users/{id}/preferences`
+  * 에러 메시지, UI 텍스트 다국어 리소스 파일
 
 #### 5.4 Advanced Reliability
 

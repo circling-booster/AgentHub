@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../lib/types';
 import { MessageType } from '../lib/messaging';
 import type { ExtensionMessage } from '../lib/messaging';
+import { ErrorCode } from '../lib/constants';
 
 interface ChatState {
   messages: ChatMessage[];
@@ -38,7 +39,8 @@ interface StoredChatState {
 const STORAGE_KEY = 'chatState';
 
 /**
- * 에러 코드를 사용자 친화적 메시지로 변환 (Step 3: Typed Error Propagation)
+ * 에러 코드를 사용자 친화적 메시지로 변환
+ * Step 0: ErrorCode enum 사용 (타입 안전성 강화)
  */
 function mapErrorCodeToMessage(errorCode: string | undefined, originalMessage: string): string {
   if (!errorCode) {
@@ -46,15 +48,23 @@ function mapErrorCodeToMessage(errorCode: string | undefined, originalMessage: s
   }
 
   switch (errorCode) {
-    case 'LlmRateLimitError':
+    case ErrorCode.LLM_RATE_LIMIT:
       return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
-    case 'LlmAuthenticationError':
+    case ErrorCode.LLM_AUTHENTICATION:
       return 'API 인증 오류가 발생했습니다. 설정을 확인해주세요.';
-    case 'EndpointConnectionError':
+    case ErrorCode.ENDPOINT_CONNECTION:
       return '서버 연결에 실패했습니다. 네트워크를 확인해주세요.';
-    case 'EndpointTimeoutError':
+    case ErrorCode.ENDPOINT_TIMEOUT:
       return '서버 응답 시간이 초과되었습니다. 다시 시도해주세요.';
-    case 'UnknownError':
+    case ErrorCode.ENDPOINT_NOT_FOUND:
+      return '서버를 찾을 수 없습니다. URL을 확인해주세요.';
+    case ErrorCode.TOOL_NOT_FOUND:
+      return '도구를 찾을 수 없습니다.';
+    case ErrorCode.CONVERSATION_NOT_FOUND:
+      return '대화를 찾을 수 없습니다.';
+    case ErrorCode.INVALID_URL:
+      return '잘못된 URL입니다.';
+    case ErrorCode.UNKNOWN:
       return `오류가 발생했습니다: ${originalMessage}`;
     default:
       return originalMessage;

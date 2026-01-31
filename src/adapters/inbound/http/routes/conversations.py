@@ -4,13 +4,14 @@
 """
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.adapters.inbound.http.schemas.conversations import (
     ConversationResponse,
     CreateConversationRequest,
 )
 from src.config.container import Container
+from src.domain.ports.outbound.storage_port import ConversationStoragePort
 from src.domain.services.conversation_service import ConversationService
 
 router = APIRouter(prefix="/api/conversations", tags=["Conversations"])
@@ -46,4 +47,34 @@ async def list_conversations(
             created_at=conv.created_at.isoformat(),
         )
         for conv in conversations
+    ]
+
+
+@router.get("/{conversation_id}/tool-calls")
+@inject
+async def get_tool_calls(
+    conversation_id: str,
+    storage: ConversationStoragePort = Depends(Provide[Container.conversation_storage]),
+):
+    """대화의 도구 호출 이력 조회"""
+    # 대화 존재 여부 확인
+    conversation = await storage.get_conversation(conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # ToolCall 조회
+    tool_calls = await storage.get_tool_calls(conversation_id)
+
+    # Pydantic 모델로 변환
+    return [
+        {
+            "id": tc.id,
+            "tool_name": tc.tool_name,
+            "arguments": tc.arguments,
+            "result": tc.result,
+            "error": tc.error,
+            "duration_ms": tc.duration_ms,
+            "created_at": tc.created_at.isoformat(),
+        }
+        for tc in tool_calls
     ]

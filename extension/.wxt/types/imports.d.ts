@@ -11,6 +11,7 @@ declare global {
   const McpServerManager: typeof import('C:/Users/sungb/Documents/GitHub/AgentHub/extension/components/McpServerManager').McpServerManager
   const MessageBubble: typeof import('C:/Users/sungb/Documents/GitHub/AgentHub/extension/components/MessageBubble').MessageBubble
   const ServerStatus: typeof import('C:/Users/sungb/Documents/GitHub/AgentHub/extension/components/ServerStatus').ServerStatus
+  const ToolCallIndicator: typeof import('C:/Users/sungb/Documents/GitHub/AgentHub/extension/components/ToolCallIndicator').ToolCallIndicator
   const browser: typeof import('wxt/browser').browser
   const createIframeUi: typeof import('wxt/utils/content-script-ui/iframe').createIframeUi
   const createIntegratedUi: typeof import('wxt/utils/content-script-ui/integrated').createIntegratedUi

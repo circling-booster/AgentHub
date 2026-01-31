@@ -57,7 +57,7 @@ def test_config():
 @pytest.fixture
 def sample_mcp_url():
     """테스트용 MCP 서버 URL"""
-    return "https://example-server.modelcontextprotocol.io/mcp"
+    return "http://127.0.0.1:9000/mcp"
 
 
 @pytest.fixture

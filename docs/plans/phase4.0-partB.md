@@ -11,6 +11,7 @@
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
+| **0** | Error Code Constants (Pre-Step) | ⬜ |
 | **5** | LiteLLM Callback Logging | ⬜ |
 | **6** | Tool Call Tracing (DB) | ⬜ |
 | **7** | Structured Logging Improvements | ⬜ |
@@ -30,9 +31,84 @@
 
 | Step | 검증 항목 | 방법 |
 |:----:|----------|------|
+| 0 시작 | Part A Step 3 완료 여부 | docs/STATUS.md 확인 |
 | 5 시작 | LiteLLM CustomLogger API 시그니처 | Web search |
 | 6 시작 | tool_calls 테이블 스키마 확인 | implementation-guide.md 참조 |
 | 7 완료 | 로깅 출력 포맷 확인 | Manual inspection |
+
+---
+
+## Step 0: Error Code Constants (Pre-Step)
+
+**목적:** Part A Step 3에서 구현한 Typed Error Propagation의 타입 안전성 강화. 문자열 하드코딩 제거 및 Backend ↔ Extension 코드 일치 보장.
+
+**신규/수정 파일:**
+
+| 파일 | 작업 | 변경 내용 |
+|------|:----:|----------|
+| `src/domain/constants.py` | **NEW** | `ErrorCode` 클래스 정의 (문자열 상수) |
+| `src/domain/exceptions.py` | MODIFY | `DomainException.__init__()`: code 기본값을 `ErrorCode` 상수 사용 |
+| `extension/lib/constants.ts` | **NEW** | `ErrorCode` enum 정의 (Backend와 동일한 값) |
+| `extension/hooks/useChat.ts` | MODIFY | `mapErrorCodeToMessage()`: enum 사용 |
+| `tests/unit/domain/test_error_constants.py` | **NEW** | ErrorCode 상수 검증 |
+
+**핵심 설계:**
+```python
+# src/domain/constants.py
+class ErrorCode:
+    """에러 코드 상수 (Backend ↔ Extension 공유)"""
+    LLM_RATE_LIMIT = "LlmRateLimitError"
+    LLM_AUTHENTICATION = "LlmAuthenticationError"
+    ENDPOINT_CONNECTION = "EndpointConnectionError"
+    ENDPOINT_TIMEOUT = "EndpointTimeoutError"
+    TOOL_NOT_FOUND = "ToolNotFoundError"
+    CONVERSATION_NOT_FOUND = "ConversationNotFoundError"
+    INVALID_URL = "InvalidUrlError"
+    UNKNOWN = "UnknownError"
+```
+
+```python
+# src/domain/exceptions.py 수정
+from domain.constants import ErrorCode
+
+class LlmRateLimitError(DomainException):
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.LLM_RATE_LIMIT)
+```
+
+```typescript
+// extension/lib/constants.ts
+export enum ErrorCode {
+  LLM_RATE_LIMIT = "LlmRateLimitError",
+  LLM_AUTHENTICATION = "LlmAuthenticationError",
+  ENDPOINT_CONNECTION = "EndpointConnectionError",
+  ENDPOINT_TIMEOUT = "EndpointTimeoutError",
+  TOOL_NOT_FOUND = "ToolNotFoundError",
+  CONVERSATION_NOT_FOUND = "ConversationNotFoundError",
+  INVALID_URL = "InvalidUrlError",
+  UNKNOWN = "UnknownError",
+}
+```
+
+**TDD 순서:**
+1. RED: `test_error_code_constants_exist`
+2. RED: `test_exception_uses_error_code_constant`
+3. RED: `test_backend_extension_error_codes_match`
+4. GREEN: ErrorCode 클래스 구현, 예외 클래스 수정
+
+**DoD:**
+- [ ] `src/domain/constants.py` 생성 (ErrorCode 클래스)
+- [ ] 모든 DomainException 서브클래스가 ErrorCode 상수 사용
+- [ ] `extension/lib/constants.ts` 생성 (Backend와 동일한 값)
+- [ ] `useChat.ts`의 `mapErrorCodeToMessage()`가 enum 사용
+- [ ] 신규 테스트 3개 이상
+- [ ] 기존 에러 전파 테스트 전체 통과 (regression 0)
+
+**의존성:** Part A Step 3 (Typed Error Propagation) 완료 필요
+
+**병렬화:** Part C, D와 독립적. Part B Step 5-7과도 독립적이나 Step 7(구조화된 로깅)과 시너지 있음.
+
+**예상 작업시간:** 1-2시간
 
 ---
 
@@ -173,6 +249,7 @@ class ConversationStoragePort(ABC):
 ## 커밋 정책
 
 ```
+refactor(phase4): Step 0 - Error code constants (Backend + Extension)
 feat(phase4): Step 5 - LiteLLM callback logging (model, tokens, latency)
 feat(phase4): Step 6 - Tool call tracing with SQLite storage
 feat(phase4): Step 7 - Structured logging with JSON format option
@@ -185,6 +262,7 @@ docs(phase4): Part B documentation updates
 
 ### 기능
 
+- [ ] 에러 코드 상수화 (Backend + Extension 타입 일치)
 - [ ] LLM 호출 성공/실패 시 상세 로깅
 - [ ] 도구 호출 SQLite 저장 및 API 조회
 - [ ] 구조화된 로깅 (JSON 포맷 옵션)
