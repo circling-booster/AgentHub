@@ -415,3 +415,126 @@ class TestRegistryServiceA2A:
 
         # Then
         assert len(orchestrator.added_a2a_agents) == 0
+
+
+class TestRegistryServiceRestore:
+    """RegistryService 엔드포인트 복원 테스트"""
+
+    @pytest.fixture
+    def storage(self):
+        return FakeEndpointStorage()
+
+    @pytest.fixture
+    def toolset(self):
+        return FakeToolset()
+
+    @pytest.fixture
+    def a2a_client(self):
+        return FakeA2aClient()
+
+    @pytest.fixture
+    def orchestrator(self):
+        return FakeOrchestrator()
+
+    @pytest.fixture
+    def service(self, storage, toolset, a2a_client, orchestrator):
+        return RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+    @pytest.mark.asyncio
+    async def test_restore_mcp_endpoints_reconnects(self, service, storage, toolset):
+        """
+        Given: 저장소에 MCP 엔드포인트 존재
+        When: restore_endpoints() 호출
+        Then: DynamicToolset에 재연결됨
+        """
+        # Given: 저장소에 MCP 엔드포인트 저장
+        mcp_endpoint = Endpoint(
+            url="https://mcp.example.com/server",
+            type=EndpointType.MCP,
+            name="Test MCP",
+        )
+        await storage.save_endpoint(mcp_endpoint)
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 재연결 성공
+        assert mcp_endpoint.url in result["restored"]
+        assert len(result["failed"]) == 0
+        assert mcp_endpoint.id in toolset.added_servers
+
+    @pytest.mark.asyncio
+    async def test_restore_a2a_endpoints_rewires(self, service, storage, a2a_client, orchestrator):
+        """
+        Given: 저장소에 A2A 엔드포인트 존재
+        When: restore_endpoints() 호출
+        Then: A2A 클라이언트 + Orchestrator에 재등록됨
+        """
+        # Given: 저장소에 A2A 엔드포인트 저장
+        a2a_endpoint = Endpoint(
+            url="http://localhost:9001",
+            type=EndpointType.A2A,
+            name="Test A2A",
+        )
+        await storage.save_endpoint(a2a_endpoint)
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 재등록 성공
+        assert a2a_endpoint.url in result["restored"]
+        assert len(result["failed"]) == 0
+        assert a2a_endpoint.id in a2a_client._agents
+        assert len(orchestrator.added_a2a_agents) == 1
+        assert orchestrator.added_a2a_agents[0] == (
+            a2a_endpoint.id,
+            "http://localhost:9001",
+        )
+
+    @pytest.mark.asyncio
+    async def test_restore_failed_endpoint_skipped(self, storage, a2a_client, orchestrator):
+        """
+        Given: 연결 실패하는 MCP 엔드포인트
+        When: restore_endpoints() 호출
+        Then: failed 목록에 포함되고 graceful 처리
+        """
+        # Given: 연결 실패하는 Toolset
+        failing_toolset = FakeToolset(should_fail_connection=True)
+        service = RegistryService(
+            storage=storage,
+            toolset=failing_toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+        mcp_endpoint = Endpoint(
+            url="https://bad-server.com/mcp",
+            type=EndpointType.MCP,
+        )
+        await storage.save_endpoint(mcp_endpoint)
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 실패 처리 (에러 없음)
+        assert mcp_endpoint.url in result["failed"]
+        assert len(result["restored"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_restore_empty_storage(self, service):
+        """
+        Given: 저장소가 비어있음
+        When: restore_endpoints() 호출
+        Then: 빈 결과 반환
+        """
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 빈 결과
+        assert len(result["restored"]) == 0
+        assert len(result["failed"]) == 0

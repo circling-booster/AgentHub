@@ -3,6 +3,8 @@
 순수 Python으로 작성됩니다. 외부 라이브러리에 의존하지 않습니다.
 """
 
+import logging
+
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointType
 from src.domain.entities.tool import Tool
@@ -11,6 +13,8 @@ from src.domain.ports.outbound.a2a_port import A2aPort
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
+
+logger = logging.getLogger(__name__)
 
 
 class RegistryService:
@@ -251,3 +255,45 @@ class RegistryService:
         endpoint.disable()
         await self._storage.save_endpoint(endpoint)
         return True
+
+    async def restore_endpoints(self) -> dict[str, list[str]]:
+        """
+        서버 시작 시 저장된 엔드포인트 복원
+
+        저장소에 있는 모든 엔드포인트를 재연결합니다.
+        실패한 엔드포인트는 건너뛰고 계속 진행합니다.
+
+        Returns:
+            {"restored": [...], "failed": [...]} 딕셔너리
+        """
+        endpoints = await self._storage.list_endpoints()
+        restored: list[str] = []
+        failed: list[str] = []
+
+        for endpoint in endpoints:
+            try:
+                if endpoint.type == EndpointType.MCP:
+                    # MCP 서버 재연결
+                    await self._toolset.add_mcp_server(endpoint)
+                    restored.append(endpoint.url)
+
+                elif endpoint.type == EndpointType.A2A:
+                    # A2A 에이전트 재등록
+                    if self._a2a_client and self._orchestrator:
+                        agent_card = await self._a2a_client.register_agent(endpoint)
+                        endpoint.agent_card = agent_card
+                        await self._orchestrator.add_a2a_agent(endpoint.id, endpoint.url)
+                        restored.append(endpoint.url)
+                    else:
+                        logger.warning(
+                            f"A2A endpoint {endpoint.url} skipped: "
+                            "a2a_client or orchestrator not configured"
+                        )
+                        failed.append(endpoint.url)
+
+            except Exception as e:
+                logger.warning(f"Failed to restore endpoint {endpoint.url}: {e}")
+                failed.append(endpoint.url)
+
+        logger.info(f"Endpoints restored: {len(restored)}, failed: {len(failed)}")
+        return {"restored": restored, "failed": failed}

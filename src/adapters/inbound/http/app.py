@@ -48,6 +48,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await orchestrator.initialize()
     logger.info("Orchestrator initialized")
 
+    # 저장된 엔드포인트 복원
+    registry = container.registry_service()
+    restore_result = await registry.restore_endpoints()
+    logger.info(
+        f"Endpoints restored: {len(restore_result['restored'])} succeeded, "
+        f"{len(restore_result['failed'])} failed"
+    )
+
     yield
 
     # Shutdown
