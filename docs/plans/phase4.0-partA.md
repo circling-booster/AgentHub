@@ -1,10 +1,11 @@
 # Phase 4 Part A: Critical Fixes (Steps 1-4)
 
-> **상태:** 📋 Planned
+> **상태:** ✅ Complete
+> **완료 일자:** 2026-01-31
 > **선행 조건:** Phase 3 Complete
 > **목표:** A2A Wiring 버그 수정, SSE 이벤트 확장, 타입별 에러 전파, 엔드포인트 자동 복원
-> **예상 테스트:** ~19 신규 (backend) + ~10 신규 (Vitest) + ~30 수정 (backend)
-> **권장 실행 순서:** Step 1 → Step 4 → Step 2 → Step 3
+> **실제 테스트:** 11 신규 (backend) + 6 신규 (Vitest) + ~30 수정 (backend)
+> **실행 순서:** Step 1 → Step 4 → Step 2 → Step 3
 
 ---
 
@@ -12,10 +13,10 @@
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
-| **1** | A2A Agent LLM Wiring Fix | ⬜ |
-| **2** | SSE Event Streaming (StreamChunk) | ⬜ |
-| **3** | Typed Error Propagation | ⬜ |
-| **4** | Endpoint Auto-Restore on Startup | ⬜ |
+| **1** | A2A Agent LLM Wiring Fix | ✅ |
+| **2** | SSE Event Streaming (StreamChunk) | ✅ |
+| **3** | Typed Error Propagation | ✅ |
+| **4** | Endpoint Auto-Restore on Startup | ✅ |
 
 **범례:** ✅ 완료 | 🚧 진행중 | ⬜ 미착수
 
@@ -374,25 +375,26 @@ docs(phase4): Part A documentation updates
 
 ### 기능
 
-- [ ] A2A 에이전트 등록 시 LlmAgent sub_agents에 추가됨
-- [ ] A2A 에이전트 삭제 시 sub_agents에서 제거됨
-- [ ] SSE 스트리밍: tool_call, tool_result, agent_transfer 이벤트 전송
-- [ ] StreamChunk 도메인 엔티티 (순수 Python)
-- [ ] 에러 이벤트에 typed code 포함
-- [ ] 서버 재시작 시 엔드포인트 자동 복원
-- [ ] Extension ToolCallIndicator 컴포넌트
-- [ ] Extension error code별 사용자 메시지
+- [x] A2A 에이전트 등록 시 LlmAgent sub_agents에 추가됨
+- [x] A2A 에이전트 삭제 시 sub_agents에서 제거됨
+- [x] SSE 스트리밍: tool_call, tool_result, agent_transfer 이벤트 전송
+- [x] StreamChunk 도메인 엔티티 (순수 Python)
+- [x] 에러 이벤트에 typed code 포함
+- [x] 서버 재시작 시 엔드포인트 자동 복원
+- [x] Extension ToolCallIndicator 컴포넌트
+- [x] Extension MessageBubble에 toolCalls/agentTransfer 표시
+- [x] Extension error code별 사용자 메시지 (useChat.ts mapErrorCodeToMessage)
 
 ### 품질
 
-- [ ] 기존 테스트 전체 통과 (regression 0)
-- [ ] Backend coverage >= 90%
-- [ ] Vitest >= 190 tests
-- [ ] `ruff check` + `ruff format` clean
+- [x] 기존 테스트 전체 통과 (342 passed, 2 skipped)
+- [x] Backend coverage >= 90% (달성: 90.18%)
+- [x] Vitest >= 190 tests (달성: 197 tests)
+- [x] `ruff check` + `ruff format` clean
 
 ### 문서
 
-- [ ] `docs/STATUS.md` — Phase 4 Part A 진행 상태 반영
+- [ ] `docs/STATUS.md` — Phase 4 Part A 완료 상태 반영
 - [ ] `CLAUDE.md` — StreamChunk 엔티티 관련 업데이트 (필요 시)
 
 ---

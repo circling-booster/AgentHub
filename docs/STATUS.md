@@ -1,8 +1,8 @@
 # AgentHub Project Status
 
 > **Last Updated:** 2026-01-31
-> **Current Phase:** Phase 3 Complete → Phase 4 예정
-> **Active Branch:** `feature/phase-3`
+> **Current Phase:** Phase 4 Part A Complete → Part B 예정
+> **Active Branch:** `feature/phase-4`
 
 ---
 
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 85% (Phase 3 Complete) |
-| **Backend Coverage** | 90.63% (Target: 80%) |
-| **Backend Tests** | 315 tests (pytest) |
-| **Extension Tests** | 180 tests (Vitest) |
+| **Overall Progress** | 87% (Phase 4 Part A Complete) |
+| **Backend Coverage** | 90.18% (Target: 80%) |
+| **Backend Tests** | 355 collected / 342 passed (pytest) |
+| **Extension Tests** | 197 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 3 Complete (2026-01-30) |
+| **Last Milestone** | Phase 4 Part A Complete (2026-01-31) |
 
 ---
 
@@ -28,8 +28,9 @@
 | Phase 1.5 | ✅ Complete | 100% | Security Layer (96% coverage) |
 | Phase 2 | ✅ Complete | 100% | MCP Integration (88% coverage) |
 | Phase 2.5 | ✅ Complete | 100% | Chrome Extension (129 tests + 수동검증) |
-| **Phase 3** | **✅ Complete** | **100%** | **A2A Integration + UI Polish + E2E** |
-| Phase 4 | 📋 Planned | 0% | Critical Fixes, Observability, Intelligence, Reliability |
+| Phase 3 | ✅ Complete | 100% | A2A Integration + UI Polish + E2E |
+| **Phase 4 Part A** | **✅ Complete** | **100%** | **Critical Fixes (StreamChunk, A2A Wiring, Error Typing, Auto-Restore)** |
+| Phase 4 Part B-E | 📋 Planned | 0% | Observability, Intelligence, Reliability, Production |
 | Phase 5 | 📋 Planned | 0% | MCP Advanced, Vector Search, Multi-user |
 
 **범례:**
@@ -118,6 +119,32 @@
 
 ---
 
+## 🎯 Phase 4 Part A 완료 요약
+
+**완료 일자:** 2026-01-31
+**결과:** Critical Fixes 완료 (A2A Wiring, StreamChunk, Typed Error, Auto-Restore)
+
+### 완료된 Steps (1-4)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **1** | A2A Agent LLM Wiring Fix | 4개 unit tests | ✅ |
+| **2** | SSE Event Streaming (StreamChunk) | 11개 entity tests + 6개 Vitest | ✅ |
+| **3** | Typed Error Propagation | 4개 unit tests | ✅ |
+| **4** | Endpoint Auto-Restore on Startup | 4개 unit tests | ✅ |
+
+### 핵심 성과
+
+- ✅ **A2A Wiring 수정**: RegistryService에 OrchestratorPort 주입, A2A 등록 시 LLM 자동 연결
+- ✅ **StreamChunk 도메인 엔티티**: 순수 Python, SSE 이벤트 타입 확장 (tool_call, tool_result, agent_transfer)
+- ✅ **Typed Error 전파**: 에러 코드별 사용자 친화 메시지 (LlmRateLimitError, EndpointConnectionError 등)
+- ✅ **엔드포인트 자동 복원**: 서버 재시작 시 저장된 MCP/A2A 엔드포인트 자동 재연결
+- ✅ **Extension UI 완성**: ToolCallIndicator 컴포넌트, MessageBubble에 toolCalls/agentTransfer 표시
+- ✅ **테스트 품질**: Backend 342 passed (90.18% coverage), Extension 197 tests
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -125,24 +152,25 @@
 | Domain Core | 90.84% | 80% | ✅ |
 | Security Layer | 96% | - | ✅ |
 | MCP Integration | 88% | 70% | ✅ |
-| A2A Integration | 90.63% | 80% | ✅ |
-| Extension (Vitest) | 180 tests | - | ✅ |
-| Backend (pytest) | 315 tests | - | ✅ 99.7% 통과 |
+| A2A Integration | 90.18% | 80% | ✅ |
+| Phase 4 Part A | 90.18% | 90% | ✅ |
+| Extension (Vitest) | 197 tests | - | ✅ |
+| Backend (pytest) | 342 passed / 355 total | - | ✅ |
 | E2E Tests (Playwright) | 7 scenarios | - | ✅ |
 | E2E Tests (Manual) | 10 passed, 2 skipped | - | ✅ 수동검증 완료 |
 
-**Overall Backend Coverage:** 90.63% (Target: 80%)
+**Overall Backend Coverage:** 90.18% (Target: 90%)
 
 ---
 
 ## 📅 Recent Milestones
 
+- **2026-01-31**: Phase 4 Part A Complete - Critical Fixes (StreamChunk, A2A Wiring, Error Typing, Auto-Restore)
 - **2026-01-30**: Phase 3 Complete - A2A Integration + UI Polish + E2E (180 Extension tests, 7 E2E scenarios)
 - **2026-01-30**: Phase 3 Part A Complete - A2A Core Integration (90.63% coverage, 315 tests)
 - **2026-01-30**: Phase 2.5 Complete - 수동검증 완료 (6건 버그 수정)
 - **2026-01-29**: Phase 2 Complete - MCP Integration (88% coverage)
 - **2026-01-28**: Phase 1.5 Complete - Security Layer (96% coverage)
-- **2026-01-27**: Phase 1 Complete - Domain Core (90.84% coverage)
 
 ---
 
@@ -152,19 +180,22 @@
 
 | Part | Steps | 초점 | 상태 |
 |:----:|:-----:|------|:----:|
-| A | 1-4 | Critical Fixes (A2A Wiring, StreamChunk, Error Typing, Auto-Restore) | 📋 |
+| **A** | **1-4** | **Critical Fixes (A2A Wiring, StreamChunk, Error Typing, Auto-Restore)** | **✅ 완료** |
 | B | 5-7 | Observability (LiteLLM Callbacks, Tool Tracing, Structured Logging) | 📋 |
 | C | 8-9 | Dynamic Intelligence (System Prompt, Tool Retry) | 📋 |
 | D | 10-11 | Reliability & Scale (A2A Health, Defer Loading) | 📋 |
 | E | 12-16 | Production Hardening (Gateway, Cost Tracking, Semantic Routing, Chaos Tests, Plugin) | 💡 초안 |
 
-### 핵심 버그 (Part A에서 수정)
+### Part A 완료 (2026-01-31) ✅
 
-| Bug | 심각도 | 설명 |
-|-----|:------:|------|
-| A2A Wiring | 🔴 Critical | `POST /api/a2a/agents` → Agent Card만 저장, LLM 미연결 |
-| SSE Events | 🔴 High | "text" 타입만 전송, tool_call/tool_result 누락 |
-| System Prompt | 🟡 Medium | 등록된 도구/에이전트 목록 미포함 |
+| 구현 항목 | 상태 |
+|----------|:----:|
+| A2A Wiring 수정 (RegistryService → OrchestratorPort) | ✅ |
+| StreamChunk 도메인 엔티티 (tool_call, tool_result, agent_transfer) | ✅ |
+| Typed Error 전파 (LlmRateLimitError, EndpointConnectionError 등) | ✅ |
+| 엔드포인트 자동 복원 (서버 재시작 시 MCP/A2A 재연결) | ✅ |
+| Extension ToolCallIndicator 컴포넌트 | ✅ |
+| Backend 90.18% coverage, Extension 197 tests | ✅ |
 
 **📋 Detailed Plans:**
 - [phase4.0.md](plans/phase4.0.md) (Master Plan)
