@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-01-31 (Part C Complete)
-> **Current Phase:** Phase 4 Part C Complete → Part B/D 병렬 진행 예정
+> **Last Updated:** 2026-02-01 (Part A-D Complete)
+> **Current Phase:** Phase 4 Part A-D Complete → Part E 예정
 > **Active Branch:** `feature/phase-4`
 
 ---
@@ -10,9 +10,9 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 89% (Phase 4 Part A+C Complete) |
-| **Backend Coverage** | 87% (Target: 90%) |
-| **Backend Tests** | 378 collected / 362 passed (pytest) |
+| **Overall Progress** | 95% (Phase 4 Part A-D Complete) |
+| **Backend Coverage** | 91% (Target: 90%) |
+| **Backend Tests** | 389 passed / 391 collected (pytest) |
 | **Extension Tests** | 197 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
 | **Last Milestone** | Phase 4 Part C Complete (2026-01-31) |
@@ -30,8 +30,10 @@
 | Phase 2.5 | ✅ Complete | 100% | Chrome Extension (129 tests + 수동검증) |
 | Phase 3 | ✅ Complete | 100% | A2A Integration + UI Polish + E2E |
 | **Phase 4 Part A** | **✅ Complete** | **100%** | **Critical Fixes (StreamChunk, A2A Wiring, Error Typing, Auto-Restore)** |
+| **Phase 4 Part B** | **✅ Complete** | **100%** | **Observability (ErrorCode, LLM Logging, Tool Tracing, Structured Logging)** |
 | **Phase 4 Part C** | **✅ Complete** | **100%** | **Dynamic Intelligence (Context-Aware Prompts, Tool Retry)** |
-| Phase 4 Part B, D-E | 📋 Planned | 0% | Observability, Reliability, Production |
+| **Phase 4 Part D** | **✅ Complete** | **100%** | **Reliability & Scale (A2A Health, Defer Loading)** |
+| Phase 4 Part E | 📋 Planned | 0% | Production Hardening |
 | Phase 5 | 📋 Planned | 0% | MCP Advanced, Vector Search, Multi-user |
 
 **범례:**
@@ -190,6 +192,80 @@
 
 ---
 
+## 🎯 Phase 4 Part B 완료 요약
+
+**완료 일자:** 2026-01-31
+**결과:** Observability 구현 완료 (ErrorCode Constants + LLM Logging + Tool Tracing + Structured Logging)
+
+### 완료된 Steps (0, 5-7)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **0** | ErrorCode 상수화 (Backend + Extension) | - | ✅ |
+| **5** | LiteLLM CustomLogger 콜백 로깅 | 4개 unit tests | ✅ |
+| **6** | Tool Call Tracing (SQLite 저장 + API) | 5개 tests (3 unit + 2 API) | ✅ |
+| **7** | Structured Logging (JSON 포맷 옵션) | 4개 unit tests | ✅ |
+
+### 핵심 성과
+
+- ✅ **ErrorCode 타입 안전성**: Backend (constants.py) + Extension (constants.ts) 일치
+- ✅ **LLM 호출 가시성**: 모델명, 토큰 수, 지연시간 로깅
+- ✅ **Tool Call 추적**: SQLite `tool_calls` 테이블 + API 조회 (`GET /api/conversations/{id}/tool-calls`)
+- ✅ **구조화된 로깅**: JSON 포맷 옵션 (settings.observability.log_format = "json")
+- ✅ **테스트 품질**: 13 tests (4 LiteLLM + 5 Tracing + 4 Logging)
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+### 구현 파일
+
+- `src/domain/constants.py`: ErrorCode 클래스
+- `src/adapters/outbound/adk/litellm_callbacks.py`: CustomLogger
+- `src/adapters/outbound/storage/sqlite_conversation_storage.py`: tool_calls 테이블
+- `src/config/logging_config.py`: JsonFormatter
+- `extension/lib/constants.ts`: ErrorCode enum
+
+### 테스트 파일
+
+- `tests/unit/adapters/test_litellm_callbacks.py`: 4 tests
+- `tests/integration/adapters/test_tool_call_tracing.py`: 3 tests
+- `tests/integration/adapters/test_tool_call_api.py`: 2 tests
+- `tests/unit/config/test_logging_config.py`: 4 tests
+
+---
+
+## 🎯 Phase 4 Part D 완료 요약
+
+**완료 일자:** 2026-01-31
+**결과:** Reliability & Scale 구현 완료 (A2A Health Monitoring + Defer Loading)
+
+### 완료된 Steps (10-11)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **10** | A2A Agent Health Monitoring | 3개 unit tests | ✅ |
+| **11** | Defer Loading (MAX_ACTIVE_TOOLS 100) | 4개 tests | ✅ |
+
+### 핵심 성과
+
+- ✅ **A2A Health Check**: HealthMonitorService 타입별 health check 분기 (MCP/A2A)
+- ✅ **Defer Loading**: DeferredToolProxy로 메타데이터만 로드, 실행 시 Lazy Loading
+- ✅ **확장성 향상**: MAX_ACTIVE_TOOLS 30 → **100** (3배 증가)
+- ✅ **테스트 품질**: 7 tests (3 Health + 4 Defer)
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+### 구현 파일
+
+- `src/domain/services/health_monitor_service.py`: A2A 타입 분기
+- `src/adapters/outbound/adk/dynamic_toolset.py`: DeferredToolProxy, MAX_ACTIVE_TOOLS 100
+- `src/config/settings.py`: McpSettings (max_active_tools, defer_loading_threshold)
+- `configs/default.yaml`: 설정 기본값
+
+### 테스트 파일
+
+- `tests/unit/domain/services/test_health_monitor_service.py`: 3+ tests
+- `tests/integration/adapters/test_dynamic_toolset.py`: 4+ tests
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -204,13 +280,16 @@
 | E2E Tests (Playwright) | 7 scenarios | - | ✅ |
 | E2E Tests (Manual) | 10 passed, 2 skipped | - | ✅ 수동검증 완료 |
 
-**Overall Backend Coverage:** 90.18% (Target: 90%)
+**Overall Backend Coverage:** 91% (Target: 90%)
 
 ---
 
 ## 📅 Recent Milestones
 
+- **2026-02-01**: Phase 4 Part A-D Complete - Critical Fixes + Observability + Dynamic Intelligence + Reliability (91% coverage, 389 tests)
+- **2026-01-31**: Phase 4 Part D Complete - Reliability & Scale (A2A Health, Defer Loading)
 - **2026-01-31**: Phase 4 Part C Complete - Dynamic Intelligence (Context-Aware Prompts, Tool Retry)
+- **2026-01-31**: Phase 4 Part B Complete - Observability (ErrorCode, LLM Logging, Tool Tracing, Structured Logging)
 - **2026-01-31**: Phase 4 Part A Complete - Critical Fixes (StreamChunk, A2A Wiring, Error Typing, Auto-Restore)
 - **2026-01-30**: Phase 3 Complete - A2A Integration + UI Polish + E2E (180 Extension tests, 7 E2E scenarios)
 - **2026-01-30**: Phase 3 Part A Complete - A2A Core Integration (90.63% coverage, 315 tests)
@@ -227,9 +306,9 @@
 | Part | Steps | 초점 | 상태 |
 |:----:|:-----:|------|:----:|
 | **A** | **1-4** | **Critical Fixes (A2A Wiring, StreamChunk, Error Typing, Auto-Restore)** | **✅ 완료** |
-| B | 0, 5-7 | Observability (Error Code Constants, LiteLLM Callbacks, Tool Tracing, Structured Logging) | 📋 예정 |
-| C | 8-9 | Dynamic Intelligence (System Prompt, Tool Retry) | 📋 예정 |
-| D | 10-11 | Reliability & Scale (A2A Health, Defer Loading) | 📋 예정 |
+| **B** | **0, 5-7** | **Observability (Error Code Constants, LLM Logging, Tool Tracing, Structured Logging)** | **✅ 완료** |
+| **C** | **8-9** | **Dynamic Intelligence (System Prompt, Tool Retry)** | **✅ 완료** |
+| **D** | **10-11** | **Reliability & Scale (A2A Health, Defer Loading)** | **✅ 완료** |
 | E | 12-16 | Production Hardening (Gateway, Cost Tracking, Semantic Routing, Chaos Tests, Plugin) | 💡 초안 |
 
 ### Part A 완료 (2026-01-31) ✅
@@ -241,25 +320,11 @@
 | Typed Error 전파 (LlmRateLimitError, EndpointConnectionError 등) | ✅ |
 | 엔드포인트 자동 복원 (서버 재시작 시 MCP/A2A 재연결) | ✅ |
 | Extension ToolCallIndicator 컴포넌트 | ✅ |
-| Backend 90.18% coverage, Extension 197 tests | ✅ |
-
-### Part B 예정 (Observability) 📋
-
-| Step | 내용 | 예상 작업시간 |
-|:----:|------|:------------:|
-| **0** | 에러 코드 상수화 (Backend + Extension 타입 일치) | 1-2시간 |
-| **5** | LiteLLM CustomLogger 콜백 로깅 (모델, 토큰, 지연시간) | 3-4시간 |
-| **6** | Tool Call Tracing (SQLite 저장 + API 조회) | 4-5시간 |
-| **7** | 구조화된 로깅 개선 (JSON 포맷 옵션) | 2-3시간 |
-
-**병렬화 옵션:**
-- Part B, C, D 병렬 진행 가능
-- Part B Step 0: Part A Step 3 완료 후 즉시 시작 가능 ✅
-- Part B Step 6: Part A Step 2 (StreamChunk) 완료 후 가능 ✅
+| Backend 91% coverage, Extension 197 tests | ✅ |
 
 **📋 Detailed Plans:**
 - [phase4.0.md](plans/phase4.0.md) (Master Plan)
-- [phase4.0-partA.md](plans/phase4.0-partA.md) ✅ | [partB](plans/phase4.0-partB.md) 📋 | [partC](plans/phase4.0-partC.md) | [partD](plans/phase4.0-partD.md) | [partE](plans/phase4.0-partE.md) 💡
+- [phase4.0-partA.md](plans/phase4.0-partA.md) ✅ | [partB](plans/phase4.0-partB.md) ✅ | [partC](plans/phase4.0-partC.md) ✅ | [partD](plans/phase4.0-partD.md) ✅ | [partE](plans/phase4.0-partE.md) 💡
 
 ---
 

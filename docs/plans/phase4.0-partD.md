@@ -1,6 +1,7 @@
 # Phase 4 Part D: Reliability & Scale (Steps 10-11)
 
-> **상태:** 📋 Planned
+> **상태:** ✅ Complete
+> **완료 일자:** 2026-01-31
 > **선행 조건:** Part A Complete
 > **목표:** A2A Health 모니터링, 대규모 도구 Defer Loading
 > **예상 테스트:** ~7 신규 (backend)
@@ -12,8 +13,8 @@
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
-| **10** | A2A Agent Health Monitoring | ⬜ |
-| **11** | Defer Loading (Large-Scale Tools) | ⬜ |
+| **10** | A2A Agent Health Monitoring | ✅ |
+| **11** | Defer Loading (Large-Scale Tools) | ✅ |
 
 **범례:** ✅ 완료 | 🚧 진행중 | ⬜ 미착수
 

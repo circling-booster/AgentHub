@@ -1,6 +1,7 @@
 # Phase 4 Part C: Dynamic Intelligence (Steps 8-9)
 
-> **상태:** 📋 Planned
+> **상태:** ✅ Complete
+> **완료 일자:** 2026-01-31
 > **선행 조건:** Part A Complete (A2A wiring, StreamChunk)
 > **목표:** 컨텍스트 인식 시스템 프롬프트, 도구 실행 재시도 로직
 > **예상 테스트:** ~9 신규 (backend)
@@ -11,8 +12,8 @@
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
-| **8** | Context-Aware System Prompt | ⬜ |
-| **9** | Tool Execution Retry Logic | ⬜ |
+| **8** | Context-Aware System Prompt | ✅ |
+| **9** | Tool Execution Retry Logic | ✅ |
 
 **범례:** ✅ 완료 | 🚧 진행중 | ⬜ 미착수
 

@@ -59,7 +59,8 @@ domain/
 │   ├── tool_call.py    # ToolCall 모델
 │   ├── endpoint.py     # Endpoint 모델 (MCP/A2A)
 │   ├── message.py      # Message 모델
-│   └── conversation.py # Conversation 모델 (Aggregate Root)
+│   ├── conversation.py # Conversation 모델 (Aggregate Root)
+│   └── stream_chunk.py # StreamChunk (SSE 이벤트) - Phase 4 Part A
 │
 ├── services/           # 도메인 서비스
 │   ├── __init__.py
@@ -82,6 +83,7 @@ domain/
 │       ├── toolset_port.py       # MCP 도구 관리
 │       └── a2a_port.py           # A2A 프로토콜
 │
+├── constants.py        # 도메인 상수 (ErrorCode 등) - Phase 4 Part B
 └── exceptions.py       # 도메인 예외
 ```
 
@@ -97,6 +99,7 @@ domain/
 | `Endpoint` | MCP/A2A 서버 | url, type, status, health check |
 | `Message` | 대화 메시지 | role, content, tool_calls |
 | `Conversation` | 대화 세션 | messages[], title, Aggregate Root |
+| `StreamChunk` | SSE 스트리밍 이벤트 | type (text/tool_call/tool_result/agent_transfer), frozen - Phase 4 Part A |
 
 ### Entity 패턴
 
@@ -179,6 +182,28 @@ Domain이 외부 시스템을 사용하기 위한 인터페이스.
 | `ToolsetPort` | MCP 도구 관리 | `DynamicToolset` |
 | `A2aPort` | A2A 통신 | `A2aClientAdapter` |
 
+## Constants (Phase 4 Part B)
+
+**ErrorCode 클래스** (`src/domain/constants.py`):
+
+Backend ↔ Extension 타입 안전성 보장을 위한 에러 코드 상수.
+
+```python
+class ErrorCode:
+    """에러 코드 상수 (Backend ↔ Extension 일치)"""
+    LLM_RATE_LIMIT = "LlmRateLimitError"
+    LLM_AUTHENTICATION = "LlmAuthenticationError"
+    ENDPOINT_CONNECTION = "EndpointConnectionError"
+    ENDPOINT_TIMEOUT = "EndpointTimeoutError"
+    ENDPOINT_NOT_FOUND = "EndpointNotFoundError"
+    TOOL_NOT_FOUND = "ToolNotFoundError"
+    CONVERSATION_NOT_FOUND = "ConversationNotFoundError"
+    INVALID_URL = "InvalidUrlError"
+    UNKNOWN = "UnknownError"
+```
+
+Extension 측 대응: `extension/lib/constants.ts` (ErrorCode enum)
+
 ## Exceptions
 
 ```python
@@ -194,6 +219,8 @@ DomainException (base)
 ├── LlmRateLimitError
 └── LlmAuthenticationError
 ```
+
+각 예외는 `ErrorCode` 상수를 code 필드로 사용합니다 (Phase 4 Part B).
 
 ## Testing
 
