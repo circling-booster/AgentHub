@@ -300,10 +300,11 @@ class OAuthService:
 ## 커밋 정책
 
 ```
-feat(phase5): Step 5 - AuthConfig domain entity
-feat(phase5): Step 6 - Authenticated MCP connection
-feat(phase5): Step 7 - MCP registration API with auth
-feat(phase5): Step 8 - OAuth 2.1 hybrid flow
+# 중간 커밋 (Step 5-6 완료 후)
+feat(phase5): Step 5-6 - MCP authentication (AuthConfig + Authenticated connection)
+
+# 마지막 커밋 (Step 7-8 완료 후)
+feat(phase5): Step 7-8 - MCP auth API + OAuth 2.1 flow
 docs(phase5): Part B complete - MCP Authentication
 ```
 

@@ -75,6 +75,15 @@ def sample_endpoint_data():
 # ============================================================
 
 
+def _get_free_port() -> int:
+    """Get a free port for dynamic allocation"""
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        return s.getsockname()[1]
+
+
 def _wait_for_health(url: str, timeout: int = 10) -> bool:
     """
     Wait for A2A server to be ready by checking agent card endpoint.
@@ -153,3 +162,56 @@ def a2a_echo_agent():
         proc.wait()
 
     print("\n✓ A2A Echo Agent stopped")
+
+
+@pytest.fixture(scope="session")
+def a2a_math_agent():
+    """
+    A2A Math Agent subprocess fixture (dynamic port).
+
+    Automatically starts the math agent server before tests
+    and terminates it after the session ends.
+
+    Returns:
+        Base URL of the math agent (http://127.0.0.1:{port})
+    """
+    math_script = Path(__file__).parent / "fixtures" / "a2a_agents" / "math_agent.py"
+
+    if not math_script.exists():
+        pytest.skip(f"Math agent script not found: {math_script}")
+
+    port = _get_free_port()
+    base_url = f"http://127.0.0.1:{port}"
+
+    # Start math agent subprocess
+    proc = subprocess.Popen(
+        [sys.executable, str(math_script), str(port)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    # Wait for health check (LLM agent may take longer to start)
+    if not _wait_for_health(base_url, timeout=30):
+        proc.terminate()
+        stdout, stderr = proc.communicate(timeout=5)
+        error_msg = f"Math agent failed to start on port {port}\n"
+        if stderr:
+            error_msg += f"STDERR:\n{stderr}\n"
+        if stdout:
+            error_msg += f"STDOUT:\n{stdout}\n"
+        pytest.fail(error_msg)
+
+    print(f"\n✓ A2A Math Agent started: {base_url}")
+
+    yield base_url
+
+    # Cleanup
+    proc.terminate()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+
+    print("\n✓ A2A Math Agent stopped")

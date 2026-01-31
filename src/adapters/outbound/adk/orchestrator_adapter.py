@@ -63,6 +63,7 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         self._runner: Runner | None = None
         self._session_service: InMemorySessionService | None = None
         self._sub_agents: dict[str, RemoteA2aAgent] = {}  # A2A sub-agents
+        self._a2a_urls: dict[str, str] = {}  # endpoint_id -> url (for rebuilding)
         self._initialized = False
 
     async def initialize(self) -> None:
@@ -110,7 +111,33 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         동적 시스템 프롬프트:
         - 등록된 MCP 도구 목록 포함
         - 등록된 A2A 에이전트 정보 포함
+
+        Bug Fix (Phase 5 Step 3):
+        - RemoteA2aAgent 인스턴스를 매번 새로 생성하여 re-parenting 에러 방지
+        - ADK는 Agent를 한 번 parent에 할당하면 재할당 불가
         """
+        # RemoteA2aAgent 인스턴스 재생성 (re-parenting 에러 방지)
+        new_sub_agents: dict[str, RemoteA2aAgent] = {}
+        for endpoint_id, url in self._a2a_urls.items():
+            # Agent Card URL 추출
+            agent_card_url = url if url.endswith("agent.json") else f"{url}/.well-known/agent.json"
+
+            # Agent name 정규화 (하이픈을 언더스코어로 변경)
+            agent_name = f"a2a_{endpoint_id}".replace("-", "_")
+
+            try:
+                new_sub_agents[endpoint_id] = RemoteA2aAgent(
+                    name=agent_name,
+                    description=f"Remote A2A agent: {endpoint_id}",
+                    agent_card=agent_card_url,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to recreate RemoteA2aAgent for {endpoint_id}: {e}")
+                continue
+
+        # sub_agents 갱신
+        self._sub_agents = new_sub_agents
+
         # 동적 instruction 생성
         dynamic_instruction = self._build_dynamic_instruction()
 
@@ -303,6 +330,9 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         # sub_agents에 추가
         self._sub_agents[endpoint_id] = remote_agent
 
+        # URL 저장 (재구성 시 사용)
+        self._a2a_urls[endpoint_id] = url
+
         # Agent 재구성 (sub_agents 업데이트)
         await self._rebuild_agent()
 
@@ -326,6 +356,7 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             return
 
         del self._sub_agents[endpoint_id]
+        self._a2a_urls.pop(endpoint_id, None)  # URL도 제거
 
         # Agent 재구성 (sub_agents 업데이트)
         await self._rebuild_agent()
