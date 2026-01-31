@@ -3,7 +3,7 @@
 순수 Python으로 작성됩니다. 외부 라이브러리에 의존하지 않습니다.
 """
 
-from domain.constants import ErrorCode
+from src.domain.constants import ErrorCode
 
 
 class DomainException(Exception):

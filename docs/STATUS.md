@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-02-01 (Part A-D Complete)
-> **Current Phase:** Phase 4 Part A-D Complete → Part E 예정
+> **Last Updated:** 2026-01-31 (Phase 5-7 Plans Created)
+> **Current Phase:** Phase 4 Complete → Phase 5 예정
 > **Active Branch:** `feature/phase-4`
 
 ---
@@ -33,8 +33,9 @@
 | **Phase 4 Part B** | **✅ Complete** | **100%** | **Observability (ErrorCode, LLM Logging, Tool Tracing, Structured Logging)** |
 | **Phase 4 Part C** | **✅ Complete** | **100%** | **Dynamic Intelligence (Context-Aware Prompts, Tool Retry)** |
 | **Phase 4 Part D** | **✅ Complete** | **100%** | **Reliability & Scale (A2A Health, Defer Loading)** |
-| Phase 4 Part E | 📋 Planned | 0% | Production Hardening |
-| Phase 5 | 📋 Planned | 0% | MCP Advanced, Vector Search, Multi-user |
+| Phase 5 | 📋 Planned | 0% | Verification + Core Connectivity (A2A, MCP Auth, Content Script) |
+| Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
+| Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
 
 **범례:**
 ✅ Complete | 🚧 In Progress | 📋 Planned | ⏸️ Paused | ❌ Blocked
@@ -286,6 +287,7 @@
 
 ## 📅 Recent Milestones
 
+- **2026-01-31**: Phase 5-7 Plans Created - Priority-based restructuring (15 plan files, ADR-5~8)
 - **2026-02-01**: Phase 4 Part A-D Complete - Critical Fixes + Observability + Dynamic Intelligence + Reliability (91% coverage, 389 tests)
 - **2026-01-31**: Phase 4 Part D Complete - Reliability & Scale (A2A Health, Defer Loading)
 - **2026-01-31**: Phase 4 Part C Complete - Dynamic Intelligence (Context-Aware Prompts, Tool Retry)
@@ -299,32 +301,34 @@
 
 ---
 
-## ⚡ Next Actions (Phase 4)
+## ⚡ Next Actions (Phase 5)
 
-### Phase 4 구조 (Part A-E)
+### Phase 5: Verification + Core Connectivity
 
 | Part | Steps | 초점 | 상태 |
 |:----:|:-----:|------|:----:|
-| **A** | **1-4** | **Critical Fixes (A2A Wiring, StreamChunk, Error Typing, Auto-Restore)** | **✅ 완료** |
-| **B** | **0, 5-7** | **Observability (Error Code Constants, LLM Logging, Tool Tracing, Structured Logging)** | **✅ 완료** |
-| **C** | **8-9** | **Dynamic Intelligence (System Prompt, Tool Retry)** | **✅ 완료** |
-| **D** | **10-11** | **Reliability & Scale (A2A Health, Defer Loading)** | **✅ 완료** |
-| E | 12-16 | Production Hardening (Gateway, Cost Tracking, Semantic Routing, Chaos Tests, Plugin) | 💡 초안 |
+| **A** | 1-4 | A2A Verification & Test Agents | 📋 예정 |
+| **B** | 5-8 | MCP Server Authentication (Headers + OAuth 2.1) | 📋 예정 |
+| **C** | 9-10 | Content Script (Page Context Toggle) | 📋 예정 |
+| **D** | 11-12 | Test Infrastructure Enhancement | 📋 예정 |
 
-### Part A 완료 (2026-01-31) ✅
+### 실행 우선순위
 
-| 구현 항목 | 상태 |
-|----------|:----:|
-| A2A Wiring 수정 (RegistryService → OrchestratorPort) | ✅ |
-| StreamChunk 도메인 엔티티 (tool_call, tool_result, agent_transfer) | ✅ |
-| Typed Error 전파 (LlmRateLimitError, EndpointConnectionError 등) | ✅ |
-| 엔드포인트 자동 복원 (서버 재시작 시 MCP/A2A 재연결) | ✅ |
-| Extension ToolCallIndicator 컴포넌트 | ✅ |
-| Backend 91% coverage, Extension 197 tests | ✅ |
+1. **Part A (P0):** A2A 위임 검증 — LLM이 A2A 에이전트를 인식/사용하는지 진단 및 수정
+2. **Part B (P1):** MCP 서버 인증 — API Key, Header, OAuth 2.1 지원
+3. **Part C (P2):** Content Script — 페이지 컨텍스트 토글
+4. **Part D (Support):** 테스트 인프라 강화
 
 **📋 Detailed Plans:**
-- [phase4.0.md](plans/phase4.0.md) (Master Plan)
-- [phase4.0-partA.md](plans/phase4.0-partA.md) ✅ | [partB](plans/phase4.0-partB.md) ✅ | [partC](plans/phase4.0-partC.md) ✅ | [partD](plans/phase4.0-partD.md) ✅ | [partE](plans/phase4.0-partE.md) 💡
+- [phase5.0.md](plans/phase5.0.md) (Master Plan)
+- [phase5.0-partA.md](plans/phase5.0-partA.md) | [partB](plans/phase5.0-partB.md) | [partC](plans/phase5.0-partC.md) | [partD](plans/phase5.0-partD.md)
+
+### Phase 6-7 Overview
+
+| Phase | Focus | Plans |
+|:-----:|-------|-------|
+| **6** | MCP Advanced + Plugin + Hardening | [phase6.0.md](plans/phase6.0.md) + [Part A](plans/phase6.0-partA.md)~[D](plans/phase6.0-partD.md) |
+| **7** | Polish + stdio + MCP Standards + i18n | [phase7.0.md](plans/phase7.0.md) + [Part A](plans/phase7.0-partA.md)~[D](plans/phase7.0-partD.md) |
 
 ---
 
@@ -356,7 +360,7 @@
 - ✅ 장점: 비동기 작업 처리, 확장성, 재시도 메커니즘
 - ❌ 단점: 복잡도 증가, 디버깅 어려움, 인프라 비용
 
-**상세:** [phase4.0-partE.md](plans/phase4.0-partE.md#보류-항목-event-driven-architecture-job-queue)
+**상세:** Phase 4 Part E 내용은 Phase 5/6으로 재구성됨
 
 ---
 
@@ -370,7 +374,9 @@
 | docs/architecture.md | ✅ Up-to-date | 2026-01-28 |
 | docs/plans/phase3.0.md | ✅ Complete | 2026-01-30 |
 | docs/plans/phase4.0.md | ✅ Updated | 2026-01-31 |
-| docs/plans/phase4.0-partE.md | 💡 Draft | 2026-01-31 |
+| docs/plans/phase5.0.md | ✅ Created | 2026-01-31 |
+| docs/plans/phase6.0.md | ✅ Created | 2026-01-31 |
+| docs/plans/phase7.0.md | ✅ Created | 2026-01-31 |
 | src/README.md | ⚠️ Pending | - |
 | src/adapters/README.md | ✅ Created | 2026-01-30 |
 | tests/README.md | ✅ Created | 2026-01-30 |
@@ -381,8 +387,10 @@
 ## 🔗 Quick Links
 
 - [Overall Roadmap](roadmap.md)
-- [Phase 3 Plan](plans/phase3.0.md)
-- [Phase 4 Plan](plans/phase4.0.md)
+- [Phase 4 Plan](plans/phase4.0.md) ✅
+- [Phase 5 Plan](plans/phase5.0.md) 📋
+- [Phase 6 Plan](plans/phase6.0.md) 📋
+- [Phase 7 Plan](plans/phase7.0.md) 📋
 - [Architecture Overview](guides/architecture.md)
 - [Implementation Guide](guides/implementation-guide.md)
 - [All Guides](guides/)

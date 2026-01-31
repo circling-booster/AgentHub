@@ -33,8 +33,10 @@
 | Phase 2 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
 | Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
 | Phase 3 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
-| Phase 4 | [phase4.0.md](plans/phase4.0.md) (Master + [Part A](plans/phase4.0-partA.md) ~ [Part E](plans/phase4.0-partE.md)) | 📋 예정 (Part E 💡 초안) |
-| Phase 5 | 예정 | 📋 예정 |
+| Phase 4 | [phase4.0.md](plans/phase4.0.md) (Master + [Part A](plans/phase4.0-partA.md) ~ [Part D](plans/phase4.0-partD.md)) | ✅ 완료 (Part A-D) |
+| Phase 5 | [phase5.0.md](plans/phase5.0.md) (Master + [Part A](plans/phase5.0-partA.md) ~ [Part D](plans/phase5.0-partD.md)) | 📋 예정 |
+| Phase 6 | [phase6.0.md](plans/phase6.0.md) (Master + [Part A](plans/phase6.0-partA.md) ~ [Part D](plans/phase6.0-partD.md)) | 📋 예정 |
+| Phase 7 | [phase7.0.md](plans/phase7.0.md) (Master + [Part A](plans/phase7.0-partA.md) ~ [Part D](plans/phase7.0-partD.md)) | 📋 예정 |
 
 **플랜 문서 구성:**
 - 구현 전략 및 기술적 고려사항
@@ -82,14 +84,28 @@ gantt
     E2E Tests                     :p3d, after p3c, 3d
 
     section Phase 4: Critical Fixes + Observability + Reliability
-    Part A: Critical Fixes        :crit, p4a, after p3d, 5d
-    Part B: Observability          :p4b, after p4a, 4d
-    Part C: Dynamic Intelligence   :p4c, after p4a, 3d
-    Part D: Reliability & Scale    :p4d, after p4c, 4d
-    Part E: Production Hardening   :p4e, after p4d, 10d
+    Part A: Critical Fixes        :done, p4a, after p3d, 5d
+    Part B: Observability          :done, p4b, after p4a, 4d
+    Part C: Dynamic Intelligence   :done, p4c, after p4a, 3d
+    Part D: Reliability & Scale    :done, p4d, after p4c, 4d
 
-    section Phase 5: Advanced (Future)
-    MCP Advanced + Vector Search  :p5a, after p4e, 7d
+    section Phase 5: Verification + Core Connectivity
+    Part A: A2A Verification       :crit, p5a, after p4d, 5d
+    Part B: MCP Authentication     :p5b, after p5a, 7d
+    Part C: Content Script         :p5c, after p5a, 4d
+    Part D: Test Infrastructure    :p5d, after p5a, 3d
+
+    section Phase 6: MCP Advanced + Plugin + Hardening
+    Part A: Gateway + Cost + Chaos :p6a, after p5b, 7d
+    Part B: MCP Resources/Prompts  :p6b, after p6a, 6d
+    Part C: Plugin System          :p6c, after p6a, 7d
+    Part D: Sampling + Vector      :p6d, after p6b, 6d
+
+    section Phase 7: Polish + stdio + Standards
+    Part A: Extension UX Polish    :p7a, after p6d, 5d
+    Part B: stdio Transport        :p7b, after p6d, 7d
+    Part C: MCP Standards          :p7c, after p6b, 5d
+    Part D: i18n                   :p7d, after p7a, 4d
 ```
 
 ---
@@ -494,90 +510,69 @@ app.add_middleware(
 * A2A 에이전트 Health 모니터링
 * Defer Loading (대규모 도구 지원, MAX_ACTIVE_TOOLS 100)
 
-#### 4.E Production Hardening (Steps 12-16) — [phase4.0-partE.md](plans/phase4.0-partE.md) ⭐ 초안
-
-* MCP Gateway Pattern (Circuit Breaker + Rate Limiting + Fallback)
-* Cost Tracking & Budgeting (LiteLLM Callbacks 기반 비용 추적)
-* Semantic Tool Routing (Embedding 기반 도구 추천)
-* Chaos Engineering Tests (MCP 서버 다운, LLM Rate Limit 시나리오)
-* Plugin System (Mock 구현 - 독자 확장 격리 인터페이스)
-
-**보류: Event-Driven Architecture (Job Queue)**
-- 현재 단일 사용자 로컬 앱에서 불필요 (Offscreen Document로 충분)
-- Multi-User 구현 시 재검토
-- 상세: [phase4.0-partE.md](plans/phase4.0-partE.md#보류-항목-event-driven-architecture-job-queue)
-
-**실행 순서:**
-- **권장:** 순차 진행 (A → B → C → D → E)
-- **병렬화 옵션:** Part A 완료 후 Part B, C, D 병렬 가능 (팀 환경 또는 속도 우선 시)
-  - Part B Step 0 (에러 코드 상수화): Part A Step 3 의존, 독립 실행 가능
-  - Part B Steps 5, 7 (독립)
-  - Part C Steps 8, 9 (Step 1 의존)
-  - Part D Steps 10, 11 (Step 10은 Step 1 의존)
-  - Part B Step 6은 Part A Step 2 (StreamChunk) 완료 후
-- **상세:** [phase4.0.md#전체-실행-순서-및-의존성](plans/phase4.0.md#전체-실행-순서-및-의존성)
-
-**품질 검증:**
-- 각 Part 완료 시: TDD 테스트, 코드 리뷰, 문서 업데이트
-- Part A: StreamChunk 헥사고날 검증, ADK Event API 웹 검색
-- Part E: Chaos 시나리오 3개 통과, Plugin 인터페이스 정의
-
 **✅ DoD (Part A-D):**
 
-* [ ] A2A 에이전트 등록 → LLM sub_agents 연결 (Bug #1 수정)
-* [ ] SSE 이벤트: tool_call, tool_result, agent_transfer (Bug #2 수정)
-* [ ] 동적 시스템 프롬프트 (Bug #3 수정)
-* [ ] LLM/Tool 호출 로깅 및 추적
-* [ ] 엔드포인트 자동 복원
-* [ ] Defer Loading (도구 > 30 메타데이터만 로드)
-* [ ] Backend coverage >= 90%
-* [ ] 전체 문서 업데이트 완료
+* [x] A2A 에이전트 등록 → LLM sub_agents 연결 (Bug #1 수정)
+* [x] SSE 이벤트: tool_call, tool_result, agent_transfer (Bug #2 수정)
+* [x] 동적 시스템 프롬프트 (Bug #3 수정)
+* [x] LLM/Tool 호출 로깅 및 추적
+* [x] 엔드포인트 자동 복원
+* [x] Defer Loading (도구 > 30 메타데이터만 로드)
+* [x] Backend coverage >= 90% (달성: 91%)
+* [x] 전체 문서 업데이트 완료
 
-**✅ DoD (Part E - 초안):**
-
-* [ ] MCP Gateway 구현 (Circuit Breaker, Rate Limiting, Fallback)
-* [ ] Cost Tracker 구현 및 예산 집행
-* [ ] Semantic Tool Router 구현
-* [ ] Chaos Engineering 시나리오 3개 통과
-* [ ] Plugin System 인터페이스 정의 (Mock)
-* [ ] Event-Driven 보류 사유 문서화
+**Note:** Phase 4 Part E 내용은 Phase 5/6으로 재구성됨 (Gateway→6A, Cost→6A, Semantic Routing→6D, Chaos→6A, Plugin→6C)
 
 ---
 
-### Phase 5: Advanced Features (Future)
+### Phase 5: Verification + Core Connectivity
 
-**📋 상세 플랜:** 예정 (Phase 4 완료 후)
+**📋 상세 플랜:** [phase5.0.md](plans/phase5.0.md) (Master + [Part A](plans/phase5.0-partA.md) ~ [Part D](plans/phase5.0-partD.md))
 
-**목표:** ADK 공식 지원 대기 기능 + 확장성 강화. 외부 의존성에 따라 변동.
+**목표:** A2A 검증, MCP 인증, Content Script, 테스트 인프라
 
-#### 5.1 MCP Advanced Features
+| Part | Focus | Steps | Priority |
+|:----:|-------|:-----:|:--------:|
+| **A** | A2A Verification & Test Agents | 1-4 | P0 |
+| **B** | MCP Server Authentication (Headers + OAuth 2.1) | 5-8 | P1 |
+| **C** | Content Script (Page Context Toggle) | 9-10 | P2 |
+| **D** | Test Infrastructure Enhancement | 11-12 | Support |
 
-* Resources: MCP 리소스 읽기/구독 (ADK MCPResourceSet 지원 대기 — Issue #1779)
-* Prompts: MCP 프롬프트 템플릿 (ADK MCPPromptSet 지원 대기 — Discussion #3097)
-* Sampling: MCP 서버 주도 LLM 호출 (ADK 지원 대기)
+**✅ DoD:** [phase5.0.md](plans/phase5.0.md) 참조
 
-#### 5.2 Vector Search (Semantic Tool Routing)
+---
 
-* 도구 설명 임베딩 생성
-* 시맨틱 검색으로 도구 선택 (tools > 50)
-* Phase 4 Step 11 (Defer Loading) 기반
+### Phase 6: MCP Advanced + Plugin System + Production Hardening
 
-#### 5.3 Multi-User Support
+**📋 상세 플랜:** [phase6.0.md](plans/phase6.0.md) (Master + [Part A](plans/phase6.0-partA.md) ~ [Part D](plans/phase6.0-partD.md))
 
-* DEFAULT_USER_ID → 인증된 사용자 세션
-* 사용자별 대화/엔드포인트 격리
-* **i18n 인프라:** 사용자별 언어 설정 (ko/en), Extension UI 다국어 지원
-  * 사용자 프로필 DB에 `language` 필드 추가
-  * Extension: react-i18next 또는 유사 라이브러리
-  * Backend API: `GET/PUT /api/users/{id}/preferences`
-  * 에러 메시지, UI 텍스트 다국어 리소스 파일
+**목표:** Gateway, Cost Tracking, MCP Resources/Prompts/Apps, Plugin, Sampling/Elicitation, Vector Search
 
-#### 5.4 Advanced Reliability
+| Part | Focus | Steps | Priority |
+|:----:|-------|:-----:|:--------:|
+| **A** | MCP Gateway + Cost Tracking + Chaos Tests | 1-4 | P1 |
+| **B** | MCP Resources, Prompts, Apps | 5-8 | P3 |
+| **C** | Plugin System (Independent Port) | 9-12 | P4 |
+| **D** | MCP Sampling, Elicitation, Vector Search | 13-15 | P3 |
 
-* SSE Connection Pooling / Backpressure
-* LLM 호출 중 취소 (ADK Runner 취소 API 대기)
+**✅ DoD:** [phase6.0.md](plans/phase6.0.md) 참조
 
-**✅ DoD:** Phase 4 완료 후 외부 의존성 충족 시 정의
+---
+
+### Phase 7: Polish + stdio Transport + MCP Standards
+
+**📋 상세 플랜:** [phase7.0.md](plans/phase7.0.md) (Master + [Part A](plans/phase7.0-partA.md) ~ [Part D](plans/phase7.0-partD.md))
+
+**목표:** Extension UX, stdio subprocess, Roots/Progress/Tasks/Registry, i18n
+
+| Part | Focus | Steps | Priority |
+|:----:|-------|:-----:|:--------:|
+| **A** | Extension UX Polish (Markdown, Export/Import, Conversation, Cost UI) | 1-4 | P5 |
+| **B** | stdio Transport (Cross-platform subprocess) | 5-8 | P6 |
+| **C** | MCP Required Features (Roots, Progress, Tasks, Registry) | 9-12 | P7 |
+| **D** | i18n (Backend + Extension) | 13-14 | Low |
+
+**✅ DoD:** [phase7.0.md](plans/phase7.0.md) 참조
 
 ---
 
@@ -610,6 +605,9 @@ app.add_middleware(
 | 2.5 | Integration | Extension ↔ Server | - | - |
 | 3 | E2E | Full Stack | 코드 품질 검토 | Critical Path |
 | 4 | Unit + Integration | StreamChunk, Observability, Reliability | TDD + 웹 검색 | 90% |
+| 5 | Unit + Integration | A2A Verification, MCP Auth, Content Script | TDD + 웹 검색 | 90% |
+| 6 | Unit + Integration + Chaos | Gateway, Plugin, MCP Advanced | TDD + Chaos Tests | 90% |
+| 7 | Unit + Integration + CI | stdio, MCP Standards, i18n | TDD + 3-OS CI | 90% |
 
 ### 헥사고날 아키텍처 테스트 장점
 
@@ -641,6 +639,9 @@ app.add_middleware(
 - Phase 2.5: 보안 검토 필요, 코드 품질 검토 필요
 - Phase 3: 코드 품질 최종 검토 필요, 테스트 시나리오 설계 필요
 - Phase 4: StreamChunk 도메인 검증, ADK Event API 웹 검색, Observability 코드 검토
+- Phase 5: A2A 위임 검증, MCP Auth 웹 검색, OAuth 2.1 보안 검토
+- Phase 6: Circuit Breaker 도메인 검증, Plugin Port 헥사고날 검토, Chaos 시나리오 설계
+- Phase 7: stdio 크로스플랫폼 검증, MCP 스펙 웹 검색, i18n 번역 누락 검토
 
 ### 5.3 Hooks 정책
 
@@ -755,13 +756,20 @@ This roadmap provides the **overall Phase plan and architecture**. For **current
 | Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
 | Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
 | Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
-| Phase 4.0 (Master) | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
-| Phase 4.0 Part A | [phase4.0-partA.md](plans/phase4.0-partA.md) | 📋 예정 |
-| Phase 4.0 Part B | [phase4.0-partB.md](plans/phase4.0-partB.md) | 📋 예정 |
-| Phase 4.0 Part C | [phase4.0-partC.md](plans/phase4.0-partC.md) | 📋 예정 |
-| Phase 4.0 Part D | [phase4.0-partD.md](plans/phase4.0-partD.md) | 📋 예정 |
-| Phase 4.0 Part E | [phase4.0-partE.md](plans/phase4.0-partE.md) | 📋 예정 |
-| Phase 5.0 | 예정 | 📋 예정 |
+| Phase 4.0 (Master) | [phase4.0.md](plans/phase4.0.md) | ✅ 완료 (Part A-D) |
+| Phase 4.0 Part A | [phase4.0-partA.md](plans/phase4.0-partA.md) | ✅ 완료 |
+| Phase 4.0 Part B | [phase4.0-partB.md](plans/phase4.0-partB.md) | ✅ 완료 |
+| Phase 4.0 Part C | [phase4.0-partC.md](plans/phase4.0-partC.md) | ✅ 완료 |
+| Phase 4.0 Part D | [phase4.0-partD.md](plans/phase4.0-partD.md) | ✅ 완료 |
+| Phase 5.0 (Master) | [phase5.0.md](plans/phase5.0.md) | 📋 예정 |
+| Phase 5.0 Part A | [phase5.0-partA.md](plans/phase5.0-partA.md) | 📋 예정 |
+| Phase 5.0 Part B | [phase5.0-partB.md](plans/phase5.0-partB.md) | 📋 예정 |
+| Phase 5.0 Part C | [phase5.0-partC.md](plans/phase5.0-partC.md) | 📋 예정 |
+| Phase 5.0 Part D | [phase5.0-partD.md](plans/phase5.0-partD.md) | 📋 예정 |
+| Phase 6.0 (Master) | [phase6.0.md](plans/phase6.0.md) | 📋 예정 |
+| Phase 6.0 Part A~D | [phase6.0-partA.md](plans/phase6.0-partA.md) ~ [partD](plans/phase6.0-partD.md) | 📋 예정 |
+| Phase 7.0 (Master) | [phase7.0.md](plans/phase7.0.md) | 📋 예정 |
+| Phase 7.0 Part A~D | [phase7.0-partA.md](plans/phase7.0-partA.md) ~ [partD](plans/phase7.0-partD.md) | 📋 예정 |
 
 ---
 

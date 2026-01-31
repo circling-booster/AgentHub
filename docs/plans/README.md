@@ -13,17 +13,47 @@
 | Phase 2.0 | [phase2.0.md](phase2.0.md) | ✅ Complete | MCP Integration (DynamicToolset) |
 | Phase 2.5 | [phase2.5.md](phase2.5.md) | ✅ Complete | Chrome Extension (WXT + Offscreen) |
 | Phase 3.0 | [phase3.0.md](phase3.0.md) | ✅ Complete | A2A Integration + E2E Tests |
-| **Phase 4.0** | [phase4.0.md](phase4.0.md) | 📋 Planned | Critical Fixes, Observability, Intelligence, Reliability |
-| Phase 5.0 | *(예정)* | 📋 Planned | MCP Advanced, Vector Search, Multi-user |
+| Phase 4.0 | [phase4.0.md](phase4.0.md) | ✅ Complete (A-D) | Critical Fixes, Observability, Intelligence, Reliability |
+| **Phase 5.0** | [phase5.0.md](phase5.0.md) | 📋 Planned | Verification + Core Connectivity |
+| **Phase 6.0** | [phase6.0.md](phase6.0.md) | 📋 Planned | MCP Advanced + Plugin System + Production Hardening |
+| **Phase 7.0** | [phase7.0.md](phase7.0.md) | 📋 Planned | Polish + stdio Transport + MCP Standards |
+| Phase 8.0 | [phase8.0.md](phase8.0.md) | 💡 초안 | LangChain Dynamic Loading |
 
 ### Phase 4 Part 파일
 
+| Part | 문서 | Steps | 초점 | 상태 |
+|:----:|------|:-----:|------|:----:|
+| A | [phase4.0-partA.md](phase4.0-partA.md) | 1-4 | Critical Fixes | ✅ |
+| B | [phase4.0-partB.md](phase4.0-partB.md) | 5-7 | Observability | ✅ |
+| C | [phase4.0-partC.md](phase4.0-partC.md) | 8-9 | Dynamic Intelligence | ✅ |
+| D | [phase4.0-partD.md](phase4.0-partD.md) | 10-11 | Reliability & Scale | ✅ |
+
+### Phase 5 Part 파일
+
 | Part | 문서 | Steps | 초점 |
 |:----:|------|:-----:|------|
-| A | [phase4.0-partA.md](phase4.0-partA.md) | 1-4 | Critical Fixes |
-| B | [phase4.0-partB.md](phase4.0-partB.md) | 5-7 | Observability |
-| C | [phase4.0-partC.md](phase4.0-partC.md) | 8-9 | Dynamic Intelligence |
-| D | [phase4.0-partD.md](phase4.0-partD.md) | 10-11 | Reliability & Scale |
+| A | [phase5.0-partA.md](phase5.0-partA.md) | 1-4 | A2A Verification & Test Agents |
+| B | [phase5.0-partB.md](phase5.0-partB.md) | 5-8 | MCP Server Authentication |
+| C | [phase5.0-partC.md](phase5.0-partC.md) | 9-10 | Content Script (Page Context) |
+| D | [phase5.0-partD.md](phase5.0-partD.md) | 11-12 | Test Infrastructure Enhancement |
+
+### Phase 6 Part 파일
+
+| Part | 문서 | Steps | 초점 |
+|:----:|------|:-----:|------|
+| A | [phase6.0-partA.md](phase6.0-partA.md) | 1-4 | MCP Gateway + Cost Tracking + Chaos |
+| B | [phase6.0-partB.md](phase6.0-partB.md) | 5-8 | MCP Resources, Prompts, Apps |
+| C | [phase6.0-partC.md](phase6.0-partC.md) | 9-12 | Plugin System (Independent Port) |
+| D | [phase6.0-partD.md](phase6.0-partD.md) | 13-15 | Sampling, Elicitation, Vector Search |
+
+### Phase 7 Part 파일
+
+| Part | 문서 | Steps | 초점 |
+|:----:|------|:-----:|------|
+| A | [phase7.0-partA.md](phase7.0-partA.md) | 1-4 | Extension UX Polish |
+| B | [phase7.0-partB.md](phase7.0-partB.md) | 5-8 | stdio Transport (Cross-platform) |
+| C | [phase7.0-partC.md](phase7.0-partC.md) | 9-12 | MCP Required Features |
+| D | [phase7.0-partD.md](phase7.0-partD.md) | 13-14 | i18n (Backend + Extension) |
 
 ---
 
