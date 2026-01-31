@@ -6,6 +6,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 
+from src.domain.entities.stream_chunk import StreamChunk
+
 
 class OrchestratorPort(ABC):
     """
@@ -34,7 +36,7 @@ class OrchestratorPort(ABC):
         self,
         message: str,
         conversation_id: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[StreamChunk]:
         """
         메시지 처리 및 스트리밍 응답 반환
 
@@ -46,7 +48,7 @@ class OrchestratorPort(ABC):
             conversation_id: 대화 세션 ID
 
         Yields:
-            LLM 응답 텍스트 조각 (스트리밍)
+            StreamChunk 이벤트 (text, tool_call, tool_result, agent_transfer, error, done)
 
         Raises:
             LlmRateLimitError: API Rate Limit 초과 시

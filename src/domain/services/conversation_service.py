@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator
 
 from src.domain.entities.conversation import Conversation
 from src.domain.entities.message import Message
+from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.exceptions import ConversationNotFoundError
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 from src.domain.ports.outbound.storage_port import ConversationStoragePort
@@ -118,7 +119,7 @@ class ConversationService:
         self,
         conversation_id: str | None,
         content: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[StreamChunk]:
         """
         메시지 전송 및 스트리밍 응답
 
@@ -130,7 +131,7 @@ class ConversationService:
             content: 사용자 메시지 내용
 
         Yields:
-            LLM 응답 텍스트 조각 (스트리밍)
+            StreamChunk 이벤트
 
         Raises:
             ConversationNotFoundError: 존재하지 않는 대화 ID
@@ -151,13 +152,13 @@ class ConversationService:
         await self._storage.save_conversation(conversation)
 
         # LLM 응답 스트리밍
-        response_chunks: list[str] = []
+        response_chunks: list[StreamChunk] = []
         async for chunk in self._orchestrator.process_message(content, conversation.id):
             response_chunks.append(chunk)
             yield chunk
 
-        # 어시스턴트 응답 저장
-        full_response = "".join(response_chunks)
+        # 어시스턴트 응답 저장 (text 타입만 축적)
+        full_response = "".join(c.content for c in response_chunks if c.type == "text")
         assistant_message = Message.assistant(full_response, conversation.id)
         conversation.add_message(assistant_message)
         await self._storage.save_message(assistant_message)

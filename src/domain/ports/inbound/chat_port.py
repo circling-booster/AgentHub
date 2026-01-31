@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING
 
+from src.domain.entities.stream_chunk import StreamChunk
+
 if TYPE_CHECKING:
     from src.domain.entities.conversation import Conversation
 
@@ -27,7 +29,7 @@ class ChatPort(ABC):
         self,
         conversation_id: str | None,
         message: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[StreamChunk]:
         """
         메시지 전송 및 스트리밍 응답
 
@@ -39,7 +41,7 @@ class ChatPort(ABC):
             message: 사용자 메시지
 
         Yields:
-            AI 응답 텍스트 조각 (스트리밍)
+            StreamChunk 이벤트 (text, tool_call, tool_result, agent_transfer, error, done)
 
         Raises:
             ConversationNotFoundError: 존재하지 않는 대화 ID

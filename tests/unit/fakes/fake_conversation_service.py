@@ -5,6 +5,7 @@ OrchestratorService 테스트 시 사용하는 Fake 구현입니다.
 
 from src.domain.entities.conversation import Conversation
 from src.domain.entities.message import Message
+from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.exceptions import ConversationNotFoundError
 
 
@@ -18,15 +19,18 @@ class FakeConversationService:
 
     def __init__(
         self,
-        responses: list[str] | None = None,
+        responses: list[StreamChunk] | None = None,
     ) -> None:
         """
         Args:
-            responses: send_message 시 반환할 응답 청크 목록
+            responses: send_message 시 반환할 StreamChunk 목록
         """
         self.conversations: dict[str, Conversation] = {}
         self.messages: dict[str, list[Message]] = {}
-        self.responses = responses or ["Hello! ", "How can I help you?"]
+        self.responses: list[StreamChunk] = responses or [
+            StreamChunk.text("Hello! "),
+            StreamChunk.text("How can I help you?"),
+        ]
 
     async def create_conversation(self, title: str = "") -> Conversation:
         """새 대화 생성"""
@@ -83,8 +87,8 @@ class FakeConversationService:
         for chunk in self.responses:
             yield chunk
 
-        # 어시스턴트 메시지 저장
-        full_response = "".join(self.responses)
+        # 어시스턴트 메시지 저장 (text 타입만 축적)
+        full_response = "".join(c.content for c in self.responses if c.type == "text")
         assistant_msg = Message.assistant(full_response, conversation_id)
         self.messages[conversation_id].append(assistant_msg)
 

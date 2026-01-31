@@ -14,6 +14,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
+from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 
 logger = logging.getLogger(__name__)
@@ -118,7 +119,7 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         self,
         message: str,
         conversation_id: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[StreamChunk]:
         """
         메시지 처리 및 스트리밍 응답
 
@@ -130,7 +131,7 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             conversation_id: 대화 ID (ADK session_id로 사용)
 
         Yields:
-            텍스트 chunk (str)
+            StreamChunk 이벤트 (text, tool_call, tool_result, agent_transfer)
 
         Raises:
             RuntimeError: Orchestrator가 초기화되지 않음
@@ -171,11 +172,29 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             session_id=session_id,
             new_message=user_content,
         ):
-            # 최종 응답 이벤트에서 텍스트 추출
+            # Tool Call 이벤트
+            if event.get_function_calls():
+                for fc in event.get_function_calls():
+                    yield StreamChunk.tool_call(fc.name, dict(fc.args or {}))
+
+            # Tool Result 이벤트
+            if event.get_function_responses():
+                for fr in event.get_function_responses():
+                    yield StreamChunk.tool_result(fr.name, str(fr.response))
+
+            # Agent Transfer 이벤트
+            if (
+                hasattr(event, "actions")
+                and event.actions
+                and getattr(event.actions, "transfer_to_agent", None)
+            ):
+                yield StreamChunk.agent_transfer(event.actions.transfer_to_agent)
+
+            # 최종 응답 텍스트
             if event.is_final_response() and event.content and event.content.parts:
                 for part in event.content.parts:
                     if part.text:
-                        yield part.text
+                        yield StreamChunk.text(part.text)
 
     async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:
         """

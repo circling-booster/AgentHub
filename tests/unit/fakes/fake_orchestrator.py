@@ -5,6 +5,7 @@ OrchestratorPort의 테스트용 구현입니다.
 
 from collections.abc import AsyncIterator
 
+from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 
 
@@ -18,17 +19,20 @@ class FakeOrchestrator(OrchestratorPort):
 
     def __init__(
         self,
-        responses: list[str] | None = None,
+        responses: list[StreamChunk] | None = None,
         should_fail: bool = False,
         error_message: str = "Orchestrator error",
     ) -> None:
         """
         Args:
-            responses: 반환할 응답 청크 목록
+            responses: 반환할 StreamChunk 목록
             should_fail: True면 에러 발생
             error_message: 에러 발생 시 메시지
         """
-        self.responses = responses or ["Hello! ", "How can I help you?"]
+        self.responses: list[StreamChunk] = responses or [
+            StreamChunk.text("Hello! "),
+            StreamChunk.text("How can I help you?"),
+        ]
         self.should_fail = should_fail
         self.error_message = error_message
         self.initialized = False
@@ -45,7 +49,7 @@ class FakeOrchestrator(OrchestratorPort):
         self,
         message: str,
         conversation_id: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[StreamChunk]:
         """
         메시지 처리 및 스트리밍 응답
 
@@ -63,7 +67,7 @@ class FakeOrchestrator(OrchestratorPort):
         """리소스 정리"""
         self.closed = True
 
-    def set_responses(self, responses: list[str]) -> None:
+    def set_responses(self, responses: list[StreamChunk]) -> None:
         """응답 설정"""
         self.responses = responses
 

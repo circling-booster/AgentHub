@@ -7,6 +7,7 @@ import pytest
 
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 from src.adapters.outbound.adk.orchestrator_adapter import AdkOrchestratorAdapter
+from src.domain.entities.stream_chunk import StreamChunk
 
 
 @pytest.fixture
@@ -92,9 +93,12 @@ class TestAdkOrchestratorAdapterProcessMessage:
         ):
             chunks.append(chunk)
 
-        # Then: 텍스트 chunk 수신
+        # Then: StreamChunk 수신
         assert len(chunks) > 0
-        assert all(isinstance(c, str) for c in chunks)
+        assert all(isinstance(c, StreamChunk) for c in chunks)
+        # 최소 하나의 text 타입 chunk 존재
+        text_chunks = [c for c in chunks if c.type == "text"]
+        assert len(text_chunks) > 0
 
 
 class TestAdkOrchestratorAdapterCleanup:
