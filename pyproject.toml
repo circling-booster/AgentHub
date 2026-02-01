@@ -78,7 +78,7 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "-v --tb=short -m 'not llm and not e2e_playwright'"
+addopts = "-v --tb=short -m 'not llm and not e2e_playwright and not local_mcp and not local_a2a'"
 timeout = 120
 filterwarnings = [
     "ignore::DeprecationWarning",

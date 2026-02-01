@@ -109,6 +109,13 @@ class SqliteConversationStorage(ConversationStoragePort):
     async def _get_connection(self) -> aiosqlite.Connection:
         """싱글톤 연결 반환"""
         if self._connection is None:
+            # Ensure parent directory exists (CI 환경 대응)
+            import os
+
+            db_dir = os.path.dirname(self._db_path)
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+
             self._connection = await aiosqlite.connect(self._db_path)
             self._connection.row_factory = aiosqlite.Row
         return self._connection

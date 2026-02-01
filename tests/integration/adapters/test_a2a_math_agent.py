@@ -45,6 +45,7 @@ async def orchestrator():
 
 
 @pytest.mark.local_a2a
+@pytest.mark.llm
 class TestMathAgentServer:
     """Test math agent A2A server functionality"""
 
@@ -89,6 +90,7 @@ class TestMathAgentServer:
 
 
 @pytest.mark.local_a2a
+@pytest.mark.llm
 class TestMathDelegation:
     """Test orchestrator delegates math questions to math agent"""
 

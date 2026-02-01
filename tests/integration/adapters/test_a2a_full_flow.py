@@ -43,6 +43,7 @@ async def orchestrator():
 
 
 @pytest.mark.local_a2a
+@pytest.mark.llm
 class TestEchoDelegation:
     """Test orchestrator delegates echo requests to echo agent"""
 
@@ -83,6 +84,7 @@ class TestEchoDelegation:
 
 
 @pytest.mark.local_a2a
+@pytest.mark.llm
 class TestMathDelegation:
     """Test orchestrator delegates math questions to math agent"""
 
@@ -121,6 +123,7 @@ class TestMathDelegation:
 
 
 @pytest.mark.local_a2a
+@pytest.mark.llm
 class TestNoMatchingAgent:
     """Test orchestrator handles requests without matching agent"""
 

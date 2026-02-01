@@ -117,6 +117,7 @@ async def test_dynamic_instruction_contains_a2a_section(orchestrator, a2a_echo_a
 
 
 @pytest.mark.asyncio
+@pytest.mark.llm
 async def test_llm_delegates_to_a2a_agent(orchestrator, a2a_echo_agent):
     """
     진단 4: LLM이 실제로 A2A 에이전트에 태스크를 위임하는지 확인 (integration)

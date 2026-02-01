@@ -21,6 +21,7 @@ from src.domain.entities.enums import EndpointType
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.local_mcp
 class TestMcpAuthenticatedConnection:
     """MCP 서버 인증 연결 통합 테스트"""
 
