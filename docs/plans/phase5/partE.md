@@ -200,6 +200,7 @@ async def execute_workflow(
 4. RED: `test_create_sequential_workflow_agent` (2 tests)
 5. RED: `test_execute_sequential_workflow_streams_events` (2 tests)
 6. GREEN: OrchestratorAdapter workflow 메서드 구현
+7. REFACTOR
 
 **DoD:**
 - [ ] Workflow 도메인 엔티티 순수 Python (ADK 의존성 없음)
@@ -250,6 +251,7 @@ POST   /api/workflows/{id}/execute      # Workflow 실행 (SSE 스트리밍)
 4. GREEN: API 구현
 5. RED: WorkflowManager Vitest (4 tests)
 6. GREEN: Extension UI 구현
+7. REFACTOR
 
 **DoD:**
 - [ ] Workflow CRUD API 동작
