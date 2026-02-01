@@ -234,3 +234,31 @@ class TestEndpoint:
         assert endpoint.auth_config is not None
         assert endpoint.auth_config.auth_type == "oauth2"
         assert endpoint.auth_config.oauth2_access_token == "access-token-xyz"
+
+    def test_endpoint_fallback_url_defaults_to_none(self):
+        """
+        Given: Endpoint 생성
+        When: fallback_url을 지정하지 않으면
+        Then: None
+        """
+        # When
+        endpoint = Endpoint(url="https://example.com/mcp", type=EndpointType.MCP)
+
+        # Then
+        assert endpoint.fallback_url is None
+
+    def test_endpoint_with_fallback_url(self):
+        """
+        Given: Fallback URL 설정
+        When: Endpoint에 fallback_url 설정
+        Then: fallback_url 필드가 저장됨
+        """
+        # When
+        endpoint = Endpoint(
+            url="https://primary.example.com/mcp",
+            type=EndpointType.MCP,
+            fallback_url="https://backup.example.com/mcp",
+        )
+
+        # Then
+        assert endpoint.fallback_url == "https://backup.example.com/mcp"

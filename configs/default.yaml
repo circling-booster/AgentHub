@@ -26,4 +26,11 @@ mcp:
 observability:
   log_llm_requests: true
   max_log_chars: 500
-  log_format: "text"  # "text" or "json"
+  log_format: "text"
+
+gateway:
+  rate_limit_rps: 5.0
+  burst_size: 10
+  circuit_failure_threshold: 5
+  circuit_recovery_timeout: 60.0
+  fallback_enabled: true  # "text" or "json"

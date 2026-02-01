@@ -14,6 +14,7 @@ from src.domain.ports.outbound.a2a_port import A2aPort
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
+from src.domain.services.gateway_service import GatewayService
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class RegistryService:
         toolset: ToolsetPort,
         a2a_client: A2aPort | None = None,
         orchestrator: OrchestratorPort | None = None,
+        gateway_service: GatewayService | None = None,
     ) -> None:
         """
         Args:
@@ -46,11 +48,13 @@ class RegistryService:
             toolset: 도구셋 포트 (MCP용)
             a2a_client: A2A 클라이언트 포트 (선택, None이면 A2A 미지원)
             orchestrator: 오케스트레이터 포트 (선택, A2A LLM 연결용)
+            gateway_service: Gateway 서비스 (선택, Phase 6 Part A Step 2)
         """
         self._storage = storage
         self._toolset = toolset
         self._a2a_client = a2a_client
         self._orchestrator = orchestrator
+        self._gateway_service = gateway_service
 
     async def register_endpoint(
         self,
@@ -109,6 +113,10 @@ class RegistryService:
                         endpoint_id=endpoint.id,
                     )
                 )
+
+            # Gateway Service에 엔드포인트 등록 (Phase 6 Part A Step 2)
+            if self._gateway_service:
+                self._gateway_service.register_endpoint(endpoint)
 
         elif endpoint_type == EndpointType.A2A:
             # A2A 클라이언트 확인

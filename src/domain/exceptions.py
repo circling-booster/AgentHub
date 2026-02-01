@@ -71,6 +71,13 @@ class ToolLimitExceededError(DomainException):
     pass
 
 
+class RateLimitExceededError(DomainException):
+    """Rate Limit 초과 (Gateway Token Bucket)"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.RATE_LIMIT_EXCEEDED)
+
+
 # ============================================================
 # LLM 관련 예외
 # ============================================================

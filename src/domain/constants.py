@@ -32,5 +32,8 @@ class ErrorCode:
     # Workflow 관련 에러
     WORKFLOW_NOT_FOUND = "WorkflowNotFoundError"
 
+    # Gateway 관련 에러
+    RATE_LIMIT_EXCEEDED = "RateLimitExceededError"
+
     # 기타
     UNKNOWN = "UnknownError"
