@@ -8,6 +8,7 @@ from src.domain.entities.tool import Tool
 from src.domain.exceptions import EndpointConnectionError, EndpointNotFoundError
 from src.domain.services.registry_service import RegistryService
 from tests.unit.fakes import FakeEndpointStorage, FakeToolset
+from tests.unit.fakes.fake_a2a_client import FakeA2aClient
 
 
 class TestRegistryService:
@@ -209,3 +210,102 @@ class TestRegistryService:
         # Then
         assert result is True
         assert storage.endpoints[endpoint.id].enabled is False
+
+
+class TestRegistryServiceA2A:
+    """RegistryService A2A 지원 테스트"""
+
+    @pytest.fixture
+    def storage(self):
+        return FakeEndpointStorage()
+
+    @pytest.fixture
+    def toolset(self):
+        return FakeToolset()
+
+    @pytest.fixture
+    def a2a_client(self):
+        return FakeA2aClient()
+
+    @pytest.fixture
+    def service(self, storage, toolset, a2a_client):
+        return RegistryService(storage=storage, toolset=toolset, a2a_client=a2a_client)
+
+    @pytest.mark.asyncio
+    async def test_register_a2a_endpoint(self, service, a2a_client):
+        """
+        Given: A2A 클라이언트가 설정된 RegistryService
+        When: A2A 타입으로 엔드포인트 등록 시
+        Then: agent_card가 포함된 A2A 엔드포인트 반환
+        """
+        # When
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            name="Test A2A Agent",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # Then
+        assert endpoint.type == EndpointType.A2A
+        assert endpoint.name == "Test A2A Agent"
+        assert endpoint.agent_card is not None
+        assert "name" in endpoint.agent_card
+        assert endpoint.id in a2a_client._agents
+
+    @pytest.mark.asyncio
+    async def test_list_endpoints_a2a_filter(self, service):
+        """
+        Given: MCP와 A2A 엔드포인트가 등록된 상태
+        When: type_filter="A2A"로 조회 시
+        Then: A2A 엔드포인트만 반환
+        """
+        # Given
+        await service.register_endpoint(url="https://mcp.example.com/server")
+        await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # When
+        endpoints = await service.list_endpoints(type_filter=EndpointType.A2A)
+
+        # Then
+        assert len(endpoints) == 1
+        assert endpoints[0].type == EndpointType.A2A
+
+    @pytest.mark.asyncio
+    async def test_unregister_a2a_endpoint(self, service, a2a_client):
+        """
+        Given: 등록된 A2A 엔드포인트
+        When: unregister_endpoint() 호출 시
+        Then: A2A 클라이언트에서도 제거됨
+        """
+        # Given
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # When
+        result = await service.unregister_endpoint(endpoint.id)
+
+        # Then
+        assert result is True
+        assert endpoint.id not in a2a_client._agents
+
+    @pytest.mark.asyncio
+    async def test_register_a2a_without_client_raises_error(self, storage, toolset):
+        """
+        Given: A2A 클라이언트 없는 RegistryService
+        When: A2A 엔드포인트 등록 시도 시
+        Then: ValueError 발생
+        """
+        # Given
+        service_without_a2a = RegistryService(storage=storage, toolset=toolset)
+
+        # When / Then
+        with pytest.raises(ValueError, match="A2A client not configured"):
+            await service_without_a2a.register_endpoint(
+                url="http://localhost:9001",
+                endpoint_type=EndpointType.A2A,
+            )

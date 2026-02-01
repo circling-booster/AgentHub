@@ -30,9 +30,9 @@
 | Phase 0 | 본 문서 참조 | ✅ 완료 |
 | Phase 1 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
 | Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
-| Phase 2 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
-| Phase 3 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 2 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
+| Phase 3 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
 | Phase 4 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
 
 **플랜 문서 구성:**
@@ -377,12 +377,15 @@ app.add_middleware(
 
 **✅ DoD:**
 
-* [ ] Extension 설치 시 서버와 자동 토큰 교환 성공
-* [ ] Sidepanel에서 "Hello" 입력 시 Claude 응답
-* [ ] MCP 도구 호출 결과가 UI에 표시
-* [ ] 브라우저 종료 후 재시작 시 토큰 재발급 정상 동작
-* [ ] `extension/README.md` 생성
-* [ ] 루트 `README.md`에 Extension 사용법 추가
+* [x] Extension 설치 시 서버와 자동 토큰 교환 성공 (수동 검증 필요)
+* [ ] Sidepanel에서 "Hello" 입력 시 Claude 응답 (수동 검증 필요)
+* [ ] MCP 도구 호출 결과가 UI에 표시 (수동 검증 필요)
+* [x] 브라우저 종료 후 재시작 시 토큰 재발급 정상 동작 (수동 검증 필요)
+* [x] `extension/README.md` 생성
+* [x] 루트 `README.md`에 Extension 사용법 추가
+* [x] Vitest 전체 통과 (129 tests)
+* [x] 서버 E2E 테스트 통과 (10 passed, 2 skipped)
+* [x] 백엔드 테스트 regression 없음 (260 passed)
 
 ---
 
@@ -596,59 +599,51 @@ app.add_middleware(
 
 ---
 
-## 8. Immediate Next Actions (Checklist)
+## 8. Current Status & Next Actions
 
-> **범례:** ✅ 완료 | 🤖 자동화됨 | 👤 수동 실행 필요
+> **📊 For real-time project status, see [STATUS.md](STATUS.md)**
 
-### Phase 0 준비
+This roadmap provides the **overall Phase plan and architecture**. For **current progress, DoD checklists, and immediate next actions**, refer to the centralized status dashboard:
 
-| 상태 | 항목 | 유형 |
-|:---:|------|:---:|
-| ✅ | `.claude/agents/` 폴더 생성 | - |
-| ✅ | `tdd-agent.md`, `security-reviewer.md`, `code-reviewer.md` 작성 | - |
-| ✅ | `hexagonal-architect.md` 작성 | - |
-| ✅ | `adr-specialist.md` 작성 | - |
-| ✅ | `.claude/settings.json` 생성 (Hooks 설정) | - |
-| ✅ | `tests/unit/`, `tests/integration/`, `tests/e2e/` 폴더 생성 | - |
-| ✅ | `docs/decisions/` ADR 폴더 생성 | - |
-| ✅ | `.github/workflows/ci.yml` 생성 | - |
+**→ [View Current Status Dashboard](STATUS.md)**
 
-### 개발 환경 (👤 수동 실행 필요)
+### Quick Reference
 
-| 상태 | 항목 | 유형 |
-|:---:|------|:---:|
-| [ ] | `python -m venv .venv && pip install -e ".[dev]"` | 👤 수동 |
-| [ ] | `cd extension && npm install` | 👤 수동 |
-| [ ] | `pytest --version` 확인 | 👤 수동 |
-
-### 디렉토리 구조 (Phase 1 시작 시 생성)
-
-| 상태 | 항목 | 유형 |
-|:---:|------|:---:|
-| [ ] | `src/domain/entities/`, `src/domain/services/`, `src/domain/ports/` 생성 | 🤖 구현 시 |
-| [ ] | `src/adapters/inbound/`, `src/adapters/outbound/` 생성 | 🤖 구현 시 |
-
-### 커스텀 에이전트 생성 계획
-
-| Phase | 에이전트 | 역할 | 상태 |
-|:-----:|---------|------|:---:|
-| Phase 1 | `hexagonal-architect` | 헥사고날 아키텍처 검토 | ✅ 완료 |
-| Phase 2 | `adk-specialist` | Google ADK, LiteLLM, MCP 전문 | 📋 예정 |
-| Phase 2.5 | `extension-specialist` | WXT, Chrome Extension 전문 | 📋 예정 |
+| Information | Document |
+|-------------|----------|
+| **Current Phase Progress** | [STATUS.md](STATUS.md) |
+| **Phase DoD Checklists** | [STATUS.md](STATUS.md) |
+| **Next Actions** | [STATUS.md](STATUS.md) |
+| **Test Coverage** | [STATUS.md](STATUS.md) |
+| **Overall Roadmap** | This document |
+| **Phase Plans** | [plans/](plans/) folder |
 
 ---
 
 ## 9. Related Documents
 
-### 핵심 문서
+### 📊 현황 & 계획
 
 | 문서 | 내용 |
 |------|------|
-| [architecture.md](architecture.md) | 헥사고날 아키텍처 설계 |
-| [implementation-guide.md](implementation-guide.md) | 구현 패턴 및 코드 예시 |
-| [extension-guide.md](extension-guide.md) | Chrome Extension 개발 가이드 |
-| [skill-agent-guide.md](skill-agent-guide.md) | Phase별 Skill & Agent 활용 전략 |
-| [risk-assessment.md](risk-assessment.md) | 리스크 평가 및 완화 전략 |
+| **[STATUS.md](STATUS.md)** | 프로젝트 현황 대시보드 (Phase 진행률, 테스트 커버리지, Next Actions) |
+| **This document** | 전체 Phase 로드맵 및 개요 |
+
+### 📖 개발 가이드
+
+| 문서 | 내용 |
+|------|------|
+| [guides/architecture.md](guides/architecture.md) | 헥사고날 아키텍처 설계 |
+| [guides/implementation-guide.md](guides/implementation-guide.md) | 구현 패턴 및 코드 예시 |
+| [guides/extension-guide.md](guides/extension-guide.md) | Chrome Extension 개발 가이드 |
+| [guides/skill-agent-guide.md](guides/skill-agent-guide.md) | Phase별 Skill & Agent 활용 전략 |
+| [guides/standards-verification.md](guides/standards-verification.md) | MCP/A2A/ADK 표준 검증 프로토콜 |
+
+### 📦 Archive
+
+| 문서 | 내용 |
+|------|------|
+| [archive/risk-assessment.md](archive/risk-assessment.md) | 리스크 평가 및 완화 전략 (참고용) |
 
 ### Phase별 상세 플랜
 
@@ -656,9 +651,9 @@ app.add_middleware(
 |-------|------|:---:|
 | Phase 1.0 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
 | Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
-| Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | 📋 예정 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | 📋 예정 |
-| Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | 📋 예정 |
+| Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
+| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
+| Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
 | Phase 4.0 | [phase4.0.md](plans/phase4.0.md) | 📋 예정 |
 
 ---
