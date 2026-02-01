@@ -187,14 +187,32 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 
 ## 🧩 Test Resources
 
-> **Policy:** Test with **local servers only**, not external servers.
+> **Policy:** Test with **local servers first**, external servers only when necessary.
 
-| Type | Resource | Execution |
-|------|----------|-----------|
-| MCP Test Server | `http://127.0.0.1:9000/mcp` (local Synapse) | `SYNAPSE_PORT=9000 python -m synapse` |
-| A2A Test Agent | `http://127.0.0.1:9001` (Echo Agent) | conftest subprocess 자동 시작 |
+### MCP Servers
 
-**MCP Server Project:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
+| Type | Endpoint | Auth | Usage | Execution |
+|------|----------|------|-------|-----------|
+| **Local (Synapse)** | `http://127.0.0.1:9000/mcp` | None (default) | Phase 1-4 tests | `python -m synapse` |
+| **Local (Multi-port)** | `http://127.0.0.1:9001/mcp` | API Key | Phase 5-B auth tests | `python -m synapse --multi` |
+| **Local (Multi-port)** | `http://127.0.0.1:9002/mcp` | OAuth 2.0 | Phase 5-B OAuth tests | `python -m synapse --multi` |
+| **External (MCP Apps)** | `https://remote-mcp-server-authless.idosalomon.workers.dev/mcp` | None | Phase 6-B MCP Apps verification | External server |
+
+**Local MCP Server Project:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
+
+**Multi-port Configuration:**
+- Multiprocessing-based (each port = independent process)
+- Port 9000: No auth (default, backward-compatible)
+- Port 9001: API Key auth (`X-API-Key` header)
+- Port 9002: OAuth 2.0 (`Authorization: Bearer <token>`)
+- Dev/test only (production: use reverse proxy + single port)
+
+### A2A Agents
+
+| Type | Endpoint | Usage | Execution |
+|------|----------|-------|-----------|
+| **Echo Agent** | `http://127.0.0.1:9001` | Phase 3+ A2A tests | conftest subprocess auto-start |
+| **Math Agent** | Dynamic port | Phase 5-A A2A verification | conftest subprocess auto-start |
 
 ---
 

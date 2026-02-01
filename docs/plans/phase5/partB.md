@@ -152,9 +152,26 @@ async def _create_mcp_toolset(self, url: str, auth_config: AuthConfig | None = N
 6. GREEN: dynamic_toolset.py 수정
 7. REFACTOR: auth 관련 메서드 분리
 
+**테스트 환경 설정:**
+```bash
+# Synapse 다중 포트 모드로 인증 시나리오 테스트
+cd C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP
+
+# 환경변수 설정 (Windows PowerShell)
+$env:SYNAPSE_PORTS="9000,9001,9002"
+$env:SYNAPSE_PORT_9000_AUTH="none"
+$env:SYNAPSE_PORT_9001_AUTH="apikey"
+$env:SYNAPSE_PORT_9001_API_KEYS='["test-key-1","test-key-2"]'
+$env:SYNAPSE_PORT_9002_AUTH="oauth"
+
+# 다중 포트 모드 실행
+python -m synapse --multi
+```
+
 **DoD:**
 - [ ] 인증 헤더가 MCP 서버 요청에 포함되는지 검증
 - [ ] 인증 없는 기존 서버도 정상 동작 (regression-free)
+- [ ] Synapse 다중 포트로 API Key 인증 테스트 통과
 
 ---
 
