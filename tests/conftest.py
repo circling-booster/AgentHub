@@ -20,6 +20,28 @@ load_dotenv()
 import pytest  # noqa: E402
 
 
+def pytest_sessionstart(session):  # noqa: ARG001 - pytest hook signature
+    """pytest 세션 시작 시 litellm verbose logging 비활성화
+
+    litellm의 LoggingWorker가 atexit 핸들러에서 이미 닫힌 파일에
+    로그를 작성하려 시도하는 문제를 방지합니다.
+
+    Issue: ValueError: I/O operation on closed file
+    Solution: verbose logging을 비활성화하여 LoggingWorker 사용 방지
+    """
+    # Suppress litellm verbose logging
+    os.environ["LITELLM_LOG"] = "ERROR"
+
+    # Disable litellm callbacks for tests (우리의 AgentHubLogger는 영향 없음)
+    try:
+        import litellm
+
+        litellm.suppress_debug_info = True
+        litellm.set_verbose = False
+    except ImportError:
+        pass
+
+
 def pytest_addoption(parser):
     """pytest 커스텀 옵션 추가"""
     parser.addoption(
@@ -34,6 +56,35 @@ def pytest_configure(config):
     """pytest 마커 등록"""
     config.addinivalue_line("markers", "local_a2a: mark test as requiring local A2A agent")
     config.addinivalue_line("markers", "local_mcp: mark test as requiring local MCP server")
+
+
+def pytest_sessionfinish(session, exitstatus):  # noqa: ARG001 - pytest hook signature
+    """pytest 세션 종료 시 litellm LoggingWorker 정리
+
+    litellm의 LoggingWorker가 atexit 핸들러에서 이미 닫힌 파일에
+    로그를 작성하려 시도하는 문제를 방지합니다.
+
+    Issue: ValueError: I/O operation on closed file
+    Solution: pytest 종료 전에 LoggingWorker를 명시적으로 종료
+    """
+    try:
+        # Method 1: LoggingWorker stop (if available)
+        from litellm.litellm_core_utils.logging_worker import logging_worker_thread
+
+        if logging_worker_thread is not None and hasattr(logging_worker_thread, "stop"):
+            logging_worker_thread.stop()
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        # Method 2: Suppress litellm verbose logger
+        import logging
+
+        litellm_logger = logging.getLogger("litellm")
+        litellm_logger.handlers.clear()
+        litellm_logger.propagate = False
+    except Exception:
+        pass
 
 
 # ============================================================
@@ -57,8 +108,12 @@ def test_config():
 
 @pytest.fixture
 def sample_mcp_url():
-    """테스트용 MCP 서버 URL (기본, 무인증)"""
-    return "http://127.0.0.1:9000/mcp"
+    """테스트용 MCP 서버 URL (기본, 무인증)
+
+    환경변수 MCP_TEST_PORT로 포트 오버라이드 가능 (기본: 9000)
+    """
+    port = int(os.environ.get("MCP_TEST_PORT", "9000"))
+    return f"http://127.0.0.1:{port}/mcp"
 
 
 @pytest.fixture
@@ -69,13 +124,17 @@ def sample_mcp_urls_auth():
     Phase 5-B 인증 테스트용 fixture.
     Synapse 다중 포트 모드 (`python -m synapse --multi`) 필요.
 
+    환경변수 MCP_TEST_PORT로 기본 포트 오버라이드 가능 (기본: 9000).
+    다중 포트는 기본 포트 + 1, +2로 자동 설정.
+
     Returns:
         dict: 인증 타입별 URL 매핑
     """
+    base_port = int(os.environ.get("MCP_TEST_PORT", "9000"))
     return {
-        "no_auth": "http://127.0.0.1:9000/mcp",  # 무인증 (기본)
-        "api_key": "http://127.0.0.1:9001/mcp",  # API Key 인증
-        "oauth": "http://127.0.0.1:9002/mcp",  # OAuth 2.0 인증
+        "no_auth": f"http://127.0.0.1:{base_port}/mcp",  # 무인증 (기본)
+        "api_key": f"http://127.0.0.1:{base_port + 1}/mcp",  # API Key 인증
+        "oauth": f"http://127.0.0.1:{base_port + 2}/mcp",  # OAuth 2.0 인증
     }
 
 
@@ -144,13 +203,16 @@ def _wait_for_health(url: str, timeout: int = 10) -> bool:
 @pytest.fixture(scope="session")
 def a2a_echo_agent():
     """
-    A2A Echo Agent subprocess fixture (port 9003).
+    A2A Echo Agent subprocess fixture (기본 포트: 9003).
+
+    환경변수 A2A_ECHO_PORT로 포트 오버라이드 가능.
+    pytest-xdist 병렬 실행 시 포트 충돌 방지용.
 
     Automatically starts the echo agent server before tests
     and terminates it after the session ends.
 
     Returns:
-        Base URL of the echo agent (http://127.0.0.1:9003)
+        Base URL of the echo agent (http://127.0.0.1:{port})
     """
     # Echo agent script path
     echo_script = Path(__file__).parent / "fixtures" / "a2a_agents" / "echo_agent.py"
@@ -158,7 +220,8 @@ def a2a_echo_agent():
     if not echo_script.exists():
         pytest.skip(f"Echo agent script not found: {echo_script}")
 
-    port = 9003
+    # 환경변수로 포트 오버라이드 가능 (기본: 9003)
+    port = int(os.environ.get("A2A_ECHO_PORT", "9003"))
     base_url = f"http://127.0.0.1:{port}"
 
     # Start echo agent subprocess
@@ -258,13 +321,16 @@ def mcp_synapse_server():
     로컬 환경에서만 자동 실행 (autouse).
     CI 환경에서는 mock_mcp_toolset_in_ci가 대신 동작.
 
+    환경변수 MCP_TEST_PORT로 기본 포트 오버라이드 가능 (기본: 9000).
+    다중 포트는 기본 포트 + 1, +2로 자동 설정 (예: 8888, 8889, 8890).
+
     Automatically starts the Synapse server with --multi flag:
-    - Port 9000: No auth (backward-compatible)
-    - Port 9001: API Key auth (X-API-Key header)
-    - Port 9002: OAuth 2.0 (Authorization: Bearer <token>)
+    - Port {base}: No auth (backward-compatible)
+    - Port {base+1}: API Key auth (X-API-Key header)
+    - Port {base+2}: OAuth 2.0 (Authorization: Bearer <token>)
 
     Returns:
-        Base URL of the MCP server (http://127.0.0.1:9000/mcp)
+        Base URL of the MCP server (http://127.0.0.1:{port}/mcp)
     """
     # Synapse 프로젝트 경로
     synapse_dir = Path(r"C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP")
@@ -272,7 +338,8 @@ def mcp_synapse_server():
     if not synapse_dir.exists():
         pytest.skip(f"Synapse project not found: {synapse_dir}")
 
-    port = 9000
+    # 환경변수로 포트 오버라이드 가능 (기본: 9000)
+    port = int(os.environ.get("MCP_TEST_PORT", "9000"))
     base_url = f"http://127.0.0.1:{port}"
     mcp_url = f"{base_url}/mcp"
 
@@ -288,14 +355,18 @@ def mcp_synapse_server():
         except (httpx.ConnectError, httpx.TimeoutException):
             pytest.fail(f"Port {port} in use but server not responding")
 
-    # 다중 포트 환경변수 설정
+    # 다중 포트 환경변수 설정 (동적 포트 지원)
+    port_auth = port
+    port_apikey = port + 1
+    port_oauth = port + 2
+
     env = os.environ.copy()
-    env["SYNAPSE_PORTS"] = "9000,9001,9002"
-    env["SYNAPSE_PORT_9000_AUTH"] = "none"
-    env["SYNAPSE_PORT_9001_AUTH"] = "apikey"
-    env["SYNAPSE_PORT_9001_API_KEYS"] = '["test-key-1","test-key-2"]'
-    env["SYNAPSE_PORT_9002_AUTH"] = "oauth"
-    env["SYNAPSE_PORT_9002_OAUTH_ISSUER"] = "https://mock-issuer.example.com"
+    env["SYNAPSE_PORTS"] = f"{port_auth},{port_apikey},{port_oauth}"
+    env[f"SYNAPSE_PORT_{port_auth}_AUTH"] = "none"
+    env[f"SYNAPSE_PORT_{port_apikey}_AUTH"] = "apikey"
+    env[f"SYNAPSE_PORT_{port_apikey}_API_KEYS"] = '["test-key-1","test-key-2"]'
+    env[f"SYNAPSE_PORT_{port_oauth}_AUTH"] = "oauth"
+    env[f"SYNAPSE_PORT_{port_oauth}_OAUTH_ISSUER"] = "https://mock-issuer.example.com"
 
     # Synapse subprocess 시작 (다중 포트 모드)
     proc = subprocess.Popen(

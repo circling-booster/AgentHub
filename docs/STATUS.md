@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-02-01 (Phase 5 Part C Complete)
-> **Current Phase:** Phase 5 Part C Complete (Content Script + Page Context Toggle)
+> **Last Updated:** 2026-02-01 (Phase 5 Part D Complete)
+> **Current Phase:** Phase 5 Part D Complete (Test Infrastructure Enhancement)
 > **Active Branch:** `feature/phase-5`
 
 ---
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 98% (Phase 5 Part C Complete) |
-| **Backend Coverage** | 90% (Target: 90%) |
-| **Backend Tests** | 451 passed / 465 collected (pytest) |
+| **Overall Progress** | 99% (Phase 5 Part D Complete) |
+| **Backend Coverage** | 91% (Target: 90%) |
+| **Backend Tests** | 461 passed / 476 collected (pytest) |
 | **Extension Tests** | 232 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 5 Part C Complete (2026-02-01) |
+| **Last Milestone** | Phase 5 Part D Complete (2026-02-01) |
 
 ---
 
@@ -36,7 +36,7 @@
 | **Phase 5 Part A** | **✅ Complete** | **100%** | **A2A Verification (Wiring, Echo, Math Agent, Full Flow)** |
 | **Phase 5 Part B** | **✅ Complete** | **100%** | **MCP Authentication (AuthConfig, Header/API Key, OAuth 2.1 Flow)** |
 | **Phase 5 Part C** | **✅ Complete** | **100%** | **Content Script + Page Context Toggle (30 Extension tests, 7 Backend tests)** |
-| Phase 5 Part D | 📋 Planned | 0% | Test Infrastructure Enhancement |
+| **Phase 5 Part D** | **✅ Complete** | **100%** | **Test Infrastructure (Server Startup Validation, Dynamic Ports, litellm Logging Fix)** |
 | Phase 5 Part E | 📋 Planned | 0% | ADK Workflow Agents (SequentialAgent, ParallelAgent) |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
@@ -438,6 +438,74 @@
 
 ---
 
+## 🎯 Phase 5 Part D 완료 요약
+
+**완료 일자:** 2026-02-01
+**결과:** Test Infrastructure Enhancement 완료 (Server Startup Validation, Dynamic Ports, litellm Logging Fix)
+
+### 완료된 Steps (11-13)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **11** | Server Startup Validation | 4개 integration tests | ✅ |
+| **12** | Dynamic Test Port Configuration | 5개 integration tests | ✅ |
+| **13** | tests/README.md Review & Update | Documentation | ✅ |
+
+### 핵심 성과
+
+- ✅ **Server Startup 검증**: FastAPI app 인스턴스, DI Container wiring, Lifespan, 라우터 등록, Settings 로딩
+- ✅ **동적 포트 할당**: 환경변수 `MCP_TEST_PORT`, `A2A_ECHO_PORT`로 포트 오버라이드 가능
+- ✅ **pytest-xdist 병렬 실행 지원**: 포트 충돌 방지 (`pytest -n auto`)
+- ✅ **litellm 로깅 문제 해결**: pytest 종료 시 `ValueError: I/O operation on closed file` 완전 제거
+- ✅ **테스트 품질**: 9 tests 추가 (461 total, 269 passed after deselect)
+- ✅ **커버리지 유지**: 91% (목표 90% 초과)
+- ✅ **Regression 0**: 모든 기존 테스트 통과
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 따름 (일부 회귀 테스트 제외)
+
+### 구현 파일
+
+- `tests/integration/test_app_startup.py`: Server Startup Validation (4 tests)
+- `tests/integration/test_dynamic_ports.py`: Dynamic Port Configuration (5 tests)
+- `tests/conftest.py`: 환경변수 지원 (`MCP_TEST_PORT`, `A2A_ECHO_PORT`), litellm logging 비활성화
+
+### 테스트 파일
+
+- `tests/integration/test_app_startup.py`: 4 tests
+  - `test_app_creates_and_starts`: FastAPI app 인스턴스 생성
+  - `test_all_routers_registered`: 모든 라우터 등록 확인
+  - `test_settings_loaded`: Settings 로딩 확인
+  - `test_lifespan_startup_and_shutdown`: Lifespan 이벤트 확인
+- `tests/integration/test_dynamic_ports.py`: 5 tests
+  - `test_a2a_math_agent_uses_dynamic_port`: Math Agent 동적 포트 확인
+  - `test_a2a_echo_agent_env_override`: Echo Agent 환경변수 오버라이드
+  - `test_mcp_synapse_port_env_override`: MCP Synapse 환경변수 오버라이드
+  - `test_port_defaults_when_env_not_set` (2 parametrize): 환경변수 기본값 확인
+
+### litellm 로깅 문제 해결
+
+**문제:**
+```
+ValueError: I/O operation on closed file.
+File "litellm/litellm_core_utils/logging_worker.py", line 422, in _safe_log
+    verbose_logger.info(message)
+```
+
+**해결:**
+1. `pytest_sessionstart` hook에서 `LITELLM_LOG=ERROR` 환경변수 설정
+2. `litellm.suppress_debug_info = True`, `litellm.set_verbose = False`
+3. `pytest_sessionfinish` hook에서 litellm logger handlers 제거
+
+**결과:** pytest 종료 시 로깅 에러 0개 ✅
+
+### 테스트 결과
+
+- **Total**: 461 passed, 2 skipped, 11 deselected (269 passed after deselect)
+- **Integration Tests**: 91 → 100 (+9 tests, Step 11+12)
+- **Regression**: 0 (모든 기존 테스트 통과)
+- **Logging Errors**: 0 (litellm 문제 해결)
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -458,6 +526,7 @@
 
 ## 📅 Recent Milestones
 
+- **2026-02-01**: Phase 5 Part D Complete - Test Infrastructure (Server Startup Validation, Dynamic Ports, litellm Logging Fix, 9 tests, 461 total)
 - **2026-02-01**: Phase 5 Part C Complete - Content Script + Page Context Toggle (37 tests, 232 Extension / 451 Backend)
 - **2026-02-01**: Phase 5 Part B Complete - MCP Authentication (AuthConfig, OAuth 2.1 Flow, 24 tests)
 - **2026-02-01**: Phase 5 Part A Complete - A2A Verification (Wiring, Math Agent, Full Flow, 11 tests, 91% coverage)

@@ -43,7 +43,9 @@ tests/
 │   │
 │   └── conftest.py                # Fake Adapter fixture 중앙 제공
 │
-├── integration/                   # 통합 테스트 (91 tests + 4 LLM deselected)
+├── integration/                   # 통합 테스트 (100 tests + 4 LLM deselected)
+│   ├── test_app_startup.py        # Server Startup Validation (Phase 5-D Step 11)
+│   ├── test_dynamic_ports.py      # Dynamic Test Port Configuration (Phase 5-D Step 12)
 │   └── adapters/
 │       ├── conftest.py            # 공통 fixture (authenticated_client, CI Mock)
 │       ├── test_sqlite_storage.py # SQLite WAL 테스트
@@ -266,8 +268,28 @@ cd extension && npx vitest run tests/hooks/useChat.test.ts
 
 | 타입 | 엔드포인트 | 용도 | 실행 |
 |------|-----------|------|------|
-| **Echo Agent** | `http://127.0.0.1:9003` | Phase 3+ A2A 테스트 | conftest subprocess 자동 시작 |
+| **Echo Agent** | `http://127.0.0.1:9003` (기본) | Phase 3+ A2A 테스트 | conftest subprocess 자동 시작 |
 | **Math Agent** | 동적 포트 | Phase 5-A A2A 검증 | conftest subprocess 자동 시작 |
+
+### 환경변수로 포트 오버라이드 (Phase 5-D)
+
+pytest-xdist 병렬 실행 시 포트 충돌 방지를 위해 환경변수로 포트 변경 가능:
+
+| 환경변수 | 기본값 | 설명 |
+|---------|:-----:|------|
+| `MCP_TEST_PORT` | 9000 | MCP Synapse 서버 기본 포트 (9001, 9002는 자동 +1, +2) |
+| `A2A_ECHO_PORT` | 9003 | A2A Echo Agent 포트 |
+
+**예시:**
+```bash
+# 다른 포트로 테스트 실행 (포트 충돌 시)
+MCP_TEST_PORT=8888 A2A_ECHO_PORT=8899 pytest tests/ -n auto
+
+# pytest-xdist 병렬 실행
+pytest tests/ -n auto  # 기본 포트 사용
+```
+
+**주의:** Math Agent는 항상 동적 포트 할당 (환경변수 불필요)
 
 ---
 
@@ -539,11 +561,13 @@ pytest -n auto
 ### Server Tests (Python / pytest)
 
 - **Unit Tests:** 155 passed
-- **Integration Tests:** 91 passed (+4 LLM deselected)
+- **Integration Tests:** 100 passed (+4 LLM deselected)
+  - ✅ Phase 5-D: Server Startup Validation (4 tests)
+  - ✅ Phase 5-D: Dynamic Port Configuration (5 tests)
 - **E2E Tests (TestClient):** 10 passed, 2 skipped (MCP 서버 필요)
 - **E2E Tests (Playwright):** 7 scenarios (기본 제외, `@e2e_playwright`)
-- **Total:** 260 passed, 2 skipped, 4 deselected, 7 Playwright (excluded)
-- **Coverage:** 90.63%
+- **Total:** 269 passed, 2 skipped, 4 deselected, 7 Playwright (excluded)
+- **Coverage:** 91% (Phase 5 Part A-D complete)
 
 ### Extension Tests (TypeScript / Vitest)
 
