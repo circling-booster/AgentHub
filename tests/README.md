@@ -266,7 +266,7 @@ cd extension && npx vitest run tests/hooks/useChat.test.ts
 
 | 타입 | 엔드포인트 | 용도 | 실행 |
 |------|-----------|------|------|
-| **Echo Agent** | `http://127.0.0.1:9001` | Phase 3+ A2A 테스트 | conftest subprocess 자동 시작 |
+| **Echo Agent** | `http://127.0.0.1:9003` | Phase 3+ A2A 테스트 | conftest subprocess 자동 시작 |
 | **Math Agent** | 동적 포트 | Phase 5-A A2A 검증 | conftest subprocess 자동 시작 |
 
 ---
@@ -664,37 +664,34 @@ chmod +x tests/e2e/start_test_server.sh
 
 ## Future Improvements
 
-### Synapse MCP Server Auto-Start (Planned for Phase 5-B)
+### Synapse MCP Server Auto-Start (✅ Implemented)
 
 **현재 상태:**
-- 로컬 테스트 시 Synapse 수동 실행 필요
-- `mcp_synapse_server` fixture는 구현됨 (tests/conftest.py)
-- 아직 Integration 테스트에서 사용 안 함
+- ✅ 로컬 환경에서 Synapse 자동 실행 (`autouse=True`)
+- ✅ 포트 충돌 해결 (Echo Agent: 9003, Synapse: 9000/9001/9002)
+- CI 환경은 mock 사용 (기존 동작 유지)
 
-**목표:**
-- A2A 에이전트처럼 Synapse도 pytest에서 자동 실행
-- 테스트 실행 시 수동 서버 실행 불필요
+**변경 사항 (2026-02-01)**:
+- A2A Echo Agent 포트 변경: 9001 → 9003
+- Synapse fixture 조건부 autouse 활성화
+- 로컬/CI 환경 분리 (로컬: 실제 서버, CI: mock)
 
-**적용 시점:** Phase 5-B (MCP Authentication 구현 시)
+**동작 방식:**
 
-**적용 방법:**
-```python
-# tests/integration/adapters/test_mcp_routes.py
-@pytest.mark.usefixtures("mcp_synapse_server")
-class TestMcpServerRegistration:
-    # Synapse 자동 실행 및 종료
-    ...
-```
+| 환경 | Synapse 자동 실행 | Mock 사용 |
+|------|:----------------:|:---------:|
+| **로컬** | ✅ (autouse) | ❌ |
+| **CI** | ❌ | ✅ (mock_mcp_toolset_in_ci) |
 
 **장점:**
 - 완전 자동화 (`pytest` 한 번에 모든 테스트)
 - A2A 에이전트와 일관성
 - 신규 개발자 진입 장벽 낮춤
+- CI 환경은 빠른 mock 사용
 
-**고려사항:**
-- 포트 충돌 처리 (이미 실행 중인 서버 재사용)
-- 다중 포트 환경변수 설정 (Phase 5-B)
-- subprocess 로그 디버깅
+**참고:**
+- 포트가 이미 사용 중이면 기존 서버 재사용 (충돌 방지)
+- Synapse 프로젝트 없으면 pytest.skip (다른 환경 호환)
 
 ---
 

@@ -85,8 +85,8 @@ def main():
     # Suppress experimental warnings
     warnings.filterwarnings("ignore", message=".*EXPERIMENTAL.*")
 
-    # Get port from command line (default 9001)
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 9001
+    # Get port from command line (default 9003)
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 9003
 
     # Create echo agent
     agent = EchoAgent()

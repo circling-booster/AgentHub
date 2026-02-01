@@ -5,6 +5,7 @@ AgentHub 공통 테스트 픽스처
 pytest가 자동으로 이 파일을 로드합니다.
 """
 
+import os
 import subprocess
 import sys
 import time
@@ -143,13 +144,13 @@ def _wait_for_health(url: str, timeout: int = 10) -> bool:
 @pytest.fixture(scope="session")
 def a2a_echo_agent():
     """
-    A2A Echo Agent subprocess fixture (port 9001).
+    A2A Echo Agent subprocess fixture (port 9003).
 
     Automatically starts the echo agent server before tests
     and terminates it after the session ends.
 
     Returns:
-        Base URL of the echo agent (http://127.0.0.1:9001)
+        Base URL of the echo agent (http://127.0.0.1:9003)
     """
     # Echo agent script path
     echo_script = Path(__file__).parent / "fixtures" / "a2a_agents" / "echo_agent.py"
@@ -157,7 +158,7 @@ def a2a_echo_agent():
     if not echo_script.exists():
         pytest.skip(f"Echo agent script not found: {echo_script}")
 
-    port = 9001
+    port = 9003
     base_url = f"http://127.0.0.1:{port}"
 
     # Start echo agent subprocess
@@ -247,10 +248,15 @@ def a2a_math_agent():
     print("\n✓ A2A Math Agent stopped")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(
+    scope="session", autouse=(os.getenv("CI") != "true" and os.getenv("GITHUB_ACTIONS") != "true")
+)
 def mcp_synapse_server():
     """
     Synapse MCP Server subprocess fixture (port 9000).
+
+    로컬 환경에서만 자동 실행 (autouse).
+    CI 환경에서는 mock_mcp_toolset_in_ci가 대신 동작.
 
     Automatically starts the Synapse server before tests
     and terminates it after the session ends.

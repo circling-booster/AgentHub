@@ -211,7 +211,7 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 
 | Type | Endpoint | Usage | Execution |
 |------|----------|-------|-----------|
-| **Echo Agent** | `http://127.0.0.1:9001` | Phase 3+ A2A tests | conftest subprocess auto-start |
+| **Echo Agent** | `http://127.0.0.1:9003` | Phase 3+ A2A tests | conftest subprocess auto-start |
 | **Math Agent** | Dynamic port | Phase 5-A A2A verification | conftest subprocess auto-start |
 
 ---
