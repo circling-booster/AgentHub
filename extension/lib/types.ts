@@ -36,6 +36,34 @@ export interface StreamEventAgentTransfer {
   agent_name: string;
 }
 
+export interface StreamEventWorkflowStart {
+  type: 'workflow_start';
+  workflow_id: string;
+  workflow_type: string;
+  total_steps: number;
+}
+
+export interface StreamEventWorkflowStepStart {
+  type: 'workflow_step_start';
+  workflow_id: string;
+  step_number: number;
+  agent_name: string;
+}
+
+export interface StreamEventWorkflowStepComplete {
+  type: 'workflow_step_complete';
+  workflow_id: string;
+  step_number: number;
+  agent_name: string;
+}
+
+export interface StreamEventWorkflowComplete {
+  type: 'workflow_complete';
+  workflow_id: string;
+  status: string;
+  total_steps: number;
+}
+
 export interface StreamEventError {
   type: 'error';
   content: string;
@@ -48,6 +76,10 @@ export type StreamEvent =
   | StreamEventToolCall
   | StreamEventToolResult
   | StreamEventAgentTransfer
+  | StreamEventWorkflowStart
+  | StreamEventWorkflowStepStart
+  | StreamEventWorkflowStepComplete
+  | StreamEventWorkflowComplete
   | StreamEventDone
   | StreamEventError;
 
@@ -134,4 +166,21 @@ export interface PageContext {
   selectedText: string;
   metaDescription: string;
   mainContent: string; // Simplified main content (max 2000 chars)
+}
+
+/** Workflow Step (Phase 5 Part E - matches server WorkflowStepSchema) */
+export interface WorkflowStep {
+  agent_endpoint_id: string;
+  output_key: string;
+  instruction?: string;
+}
+
+/** Workflow (Phase 5 Part E - matches server WorkflowResponse schema) */
+export interface Workflow {
+  id: string;
+  name: string;
+  workflow_type: 'sequential' | 'parallel';
+  description: string;
+  steps: WorkflowStep[];
+  created_at: string;
 }
