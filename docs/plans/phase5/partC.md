@@ -74,6 +74,7 @@ export function extractPageContext(): PageContext {
 2. RED: `test_extract_selected_text` (Vitest)
 3. RED: `test_content_messaging_roundtrip` (Vitest)
 4. GREEN: content.ts, content-extract.ts, content-messaging.ts 구현
+5. REFACTOR
 
 **DoD:**
 - [ ] Content Script가 페이지 URL, 제목, 선택 텍스트 추출
@@ -135,20 +136,23 @@ async def process_message(self, message: str, conversation_id: str,
 ```
 
 **TDD 순서:**
+
+0. TDD SKILL 호출 : '/tdd'
 1. RED: `test_message_with_page_context_includes_url` (pytest)
 2. RED: `test_message_without_page_context_unchanged` (pytest)
 3. RED: `test_page_context_truncated_at_limit` (pytest)
 4. RED: `test_toggle_state_persists` (Vitest)
 5. RED: `test_toggle_off_excludes_context` (Vitest)
+6. RED: 그외 모든 구현 내용에 대한 테스트 작성
 6. GREEN: 모든 파일 수정
-7. REFACTOR: 컨텍스트 포맷팅 함수 분리
+7. REFACTOR: 컨텍스트 포맷팅 함수 분리 포함 리펙토링
 
 **DoD:**
 - [ ] 토글 ON: 메시지에 페이지 컨텍스트 포함
 - [ ] 토글 OFF: 기존과 동일하게 동작
 - [ ] 컨텍스트 길이 제한 (1000자)
 - [ ] Backend API에서 page_context 필드 수용
-
+- [ ] REFACTOR 완료
 ---
 
 ## 커밋 정책

@@ -87,9 +87,15 @@ async def chat_stream(
                 extra={"conversation_id": conversation_id, "lifecycle": "streaming"},
             )
 
+            # Phase 5 Part C: page_context를 dict로 변환
+            page_context_dict = None
+            if body.page_context:
+                page_context_dict = body.page_context.model_dump()
+
             async for chunk in orchestrator.send_message(
                 conversation_id=conversation_id,
                 message=body.message,
+                page_context=page_context_dict,  # Phase 5 Part C
             ):
                 # 클라이언트 연결 해제 확인 (Zombie Task 방지)
                 if await request.is_disconnected():

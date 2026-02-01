@@ -71,7 +71,12 @@ class FakeConversationService:
             return await self.create_conversation()
         return await self.get_conversation(conversation_id)
 
-    async def send_message(self, conversation_id: str | None, content: str):
+    async def send_message(
+        self,
+        conversation_id: str | None,
+        content: str,
+        page_context: dict | None = None,
+    ):
         """메시지 전송 및 스트리밍 응답"""
         if conversation_id is None:
             conv = await self.create_conversation()

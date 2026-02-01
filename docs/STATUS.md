@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-02-01 (Phase 5 Part B Complete)
-> **Current Phase:** Phase 5 Part B Complete (MCP Authentication)
+> **Last Updated:** 2026-02-01 (Phase 5 Part C Complete)
+> **Current Phase:** Phase 5 Part C Complete (Content Script + Page Context Toggle)
 > **Active Branch:** `feature/phase-5`
 
 ---
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 97% (Phase 5 Part B Complete) |
+| **Overall Progress** | 98% (Phase 5 Part C Complete) |
 | **Backend Coverage** | 90% (Target: 90%) |
-| **Backend Tests** | 445 passed / 458 collected (pytest) |
-| **Extension Tests** | 197 tests (Vitest) |
+| **Backend Tests** | 451 passed / 465 collected (pytest) |
+| **Extension Tests** | 232 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 5 Part B Complete (2026-02-01) |
+| **Last Milestone** | Phase 5 Part C Complete (2026-02-01) |
 
 ---
 
@@ -35,7 +35,8 @@
 | **Phase 4 Part D** | **✅ Complete** | **100%** | **Reliability & Scale (A2A Health, Defer Loading)** |
 | **Phase 5 Part A** | **✅ Complete** | **100%** | **A2A Verification (Wiring, Echo, Math Agent, Full Flow)** |
 | **Phase 5 Part B** | **✅ Complete** | **100%** | **MCP Authentication (AuthConfig, Header/API Key, OAuth 2.1 Flow)** |
-| Phase 5 Part C-D | 📋 Planned | 0% | Content Script, Test Infra |
+| **Phase 5 Part C** | **✅ Complete** | **100%** | **Content Script + Page Context Toggle (30 Extension tests, 7 Backend tests)** |
+| Phase 5 Part D | 📋 Planned | 0% | Test Infrastructure Enhancement |
 | Phase 5 Part E | 📋 Planned | 0% | ADK Workflow Agents (SequentialAgent, ParallelAgent) |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
@@ -370,6 +371,73 @@
 
 ---
 
+## 🎯 Phase 5 Part C 완료 요약
+
+**완료 일자:** 2026-02-01
+**결과:** Content Script + Page Context Toggle 완료 (페이지 컨텍스트 LLM 전달)
+
+### 완료된 Steps (9-10)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **9** | Content Script Implementation | 22개 Extension tests (TDD) | ✅ |
+| **10** | Sidepanel Toggle + Context Injection | 11개 tests (8 Extension + 3 Backend) | ✅ |
+
+### 핵심 성과
+
+- ✅ **Content Script**: 페이지 URL, 제목, 선택 텍스트, 메타 설명, 주요 콘텐츠 추출
+- ✅ **usePageContext Hook**: 페이지 컨텍스트 상태 관리 (enabled, context, loading, toggleEnabled, fetchContext)
+- ✅ **페이지 컨텍스트 토글 UI**: ChatInterface에 "Include page context" 체크박스 추가
+- ✅ **Backend API**: PageContextSchema 추가, page_context 필드 지원
+- ✅ **Orchestrator Context Injection**: 페이지 컨텍스트를 LLM 메시지에 주입 (MAX_CONTENT_LENGTH=1000)
+- ✅ **전체 플로우 연결**: Extension → Background → Offscreen → SSE → Backend → LLM
+- ✅ **테스트 품질**: 37 tests (30 Extension + 7 Backend)
+- ✅ **커버리지 유지**: 90% (목표 90% 달성)
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+### 구현 파일 (Extension)
+
+- `extension/lib/content-extract.ts`: 페이지 컨텍스트 추출 로직
+- `extension/lib/content-messaging.ts`: Content Script ↔ Background 메시지 타입
+- `extension/lib/background-handlers.ts`: requestPageContext 함수 추가
+- `extension/entrypoints/content.ts`: Content Script 엔트리포인트
+- `extension/lib/hooks/usePageContext.ts`: 페이지 컨텍스트 상태 관리 훅
+- `extension/components/ChatInterface.tsx`: 페이지 컨텍스트 토글 UI
+- `extension/hooks/useChat.ts`: page_context를 sendMessage에 포함
+- `extension/entrypoints/background.ts`: page_context 파라미터 추가
+- `extension/lib/offscreen-handlers.ts`: page_context 전달
+- `extension/lib/sse.ts`: page_context를 API 요청에 포함
+
+### 구현 파일 (Backend)
+
+- `src/adapters/inbound/http/schemas/chat.py`: PageContextSchema 추가
+- `src/adapters/outbound/adk/orchestrator_adapter.py`: _format_page_context 메서드, 컨텍스트 주입
+- `src/domain/services/orchestrator_service.py`: page_context 파라미터 전달
+- `src/domain/services/conversation_service.py`: page_context 파라미터 전달
+- `tests/unit/fakes/fake_conversation_service.py`: page_context 파라미터 추가
+- `tests/unit/fakes/fake_orchestrator.py`: page_context 파라미터 추가
+
+### 테스트 파일
+
+**Extension (30 tests):**
+- `extension/lib/content-extract.test.ts`: 10 tests (페이지 컨텍스트 추출)
+- `extension/lib/content-messaging.test.ts`: 4 tests (메시지 타입)
+- `extension/lib/background-handlers-content.test.ts`: 4 tests (requestPageContext)
+- `extension/entrypoints/content.test.ts`: 4 tests (Content Script 메시지 핸들러)
+- `extension/lib/hooks/usePageContext.test.ts`: 8 tests (usePageContext hook)
+
+**Backend (7 tests):**
+- `tests/integration/adapters/test_page_context_api.py`: 3 tests (API 통합)
+- `tests/unit/adapters/test_page_context_injection.py`: 4 tests (컨텍스트 주입)
+
+### 테스트 결과
+
+- **Extension**: 232 tests passing (221 → 232, +11 tests)
+- **Backend**: 451 tests passing (444 → 451, +7 tests)
+- **Regression**: 0 (모든 기존 테스트 통과)
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -390,8 +458,10 @@
 
 ## 📅 Recent Milestones
 
-- **2026-02-01**: Phase 5 Part E Planned - ADK Workflow Agents (SequentialAgent, ParallelAgent, ADR-10)
+- **2026-02-01**: Phase 5 Part C Complete - Content Script + Page Context Toggle (37 tests, 232 Extension / 451 Backend)
+- **2026-02-01**: Phase 5 Part B Complete - MCP Authentication (AuthConfig, OAuth 2.1 Flow, 24 tests)
 - **2026-02-01**: Phase 5 Part A Complete - A2A Verification (Wiring, Math Agent, Full Flow, 11 tests, 91% coverage)
+- **2026-02-01**: Phase 5 Part E Planned - ADK Workflow Agents (SequentialAgent, ParallelAgent, ADR-10)
 - **2026-01-31**: Phase 5-7 Plans Created - Priority-based restructuring (15 plan files, ADR-5~8)
 - **2026-02-01**: ADR-9 - LangGraph=A2A, Plugin=개별 도구만 (Phase 6C/8 범위 명확화)
 - **2026-02-01**: Phase 4 Part A-D Complete - Critical Fixes + Observability + Dynamic Intelligence + Reliability (91% coverage, 389 tests)

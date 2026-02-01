@@ -7,11 +7,22 @@ from pydantic import BaseModel, Field
 from src.domain.entities.stream_chunk import StreamChunk
 
 
+class PageContextSchema(BaseModel):
+    """페이지 컨텍스트 (Phase 5 Part C)"""
+
+    url: str
+    title: str
+    selectedText: str = ""
+    metaDescription: str = ""
+    mainContent: str = ""
+
+
 class ChatRequest(BaseModel):
     """채팅 스트리밍 요청"""
 
     conversation_id: str | None = None
     message: str = Field(..., min_length=1)
+    page_context: PageContextSchema | None = None  # Phase 5 Part C
 
 
 class ChatStreamEvent(BaseModel):

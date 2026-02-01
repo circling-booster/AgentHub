@@ -119,6 +119,7 @@ class ConversationService:
         self,
         conversation_id: str | None,
         content: str,
+        page_context: dict | None = None,  # Phase 5 Part C
     ) -> AsyncIterator[StreamChunk]:
         """
         메시지 전송 및 스트리밍 응답
@@ -129,6 +130,7 @@ class ConversationService:
         Args:
             conversation_id: 대화 ID 또는 None
             content: 사용자 메시지 내용
+            page_context: 페이지 컨텍스트 (Phase 5 Part C, optional)
 
         Yields:
             StreamChunk 이벤트
@@ -151,9 +153,11 @@ class ConversationService:
         await self._storage.save_message(user_message)
         await self._storage.save_conversation(conversation)
 
-        # LLM 응답 스트리밍
+        # LLM 응답 스트리밍 (Phase 5 Part C: page_context 전달)
         response_chunks: list[StreamChunk] = []
-        async for chunk in self._orchestrator.process_message(content, conversation.id):
+        async for chunk in self._orchestrator.process_message(
+            content, conversation.id, page_context=page_context
+        ):
             response_chunks.append(chunk)
             yield chunk
 

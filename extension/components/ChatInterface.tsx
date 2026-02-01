@@ -7,11 +7,13 @@
 
 import { useRef, useEffect } from 'react';
 import { useChat } from '../hooks/useChat';
+import { usePageContext } from '../lib/hooks/usePageContext';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 
 export function ChatInterface() {
   const { messages, streaming, error, sendMessage } = useChat();
+  const { enabled, toggleEnabled } = usePageContext();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -39,6 +41,17 @@ export function ChatInterface() {
         )}
 
         <div ref={messagesEndRef} />
+      </div>
+
+      <div className="page-context-toggle">
+        <label>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={toggleEnabled}
+          />
+          Include page context
+        </label>
       </div>
 
       <ChatInput onSend={sendMessage} disabled={streaming} />

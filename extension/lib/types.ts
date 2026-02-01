@@ -126,3 +126,12 @@ export interface A2aAgent {
   agent_card: Record<string, unknown> | null;
   registered_at: string;
 }
+
+/** Page Context (Phase 5 Part C - Content Script) */
+export interface PageContext {
+  url: string;
+  title: string;
+  selectedText: string;
+  metaDescription: string;
+  mainContent: string; // Simplified main content (max 2000 chars)
+}

@@ -49,6 +49,7 @@ class FakeOrchestrator(OrchestratorPort):
         self,
         message: str,
         conversation_id: str,
+        page_context: dict | None = None,
     ) -> AsyncIterator[StreamChunk]:
         """
         메시지 처리 및 스트리밍 응답

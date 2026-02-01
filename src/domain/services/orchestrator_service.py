@@ -33,6 +33,7 @@ class OrchestratorService(ChatPort):
         self,
         conversation_id: str | None,
         message: str,
+        page_context: dict | None = None,  # Phase 5 Part C
     ) -> AsyncIterator[StreamChunk]:
         """
         메시지 전송 및 스트리밍 응답
@@ -42,11 +43,14 @@ class OrchestratorService(ChatPort):
         Args:
             conversation_id: 대화 ID 또는 None
             message: 사용자 메시지
+            page_context: 페이지 컨텍스트 (Phase 5 Part C, optional)
 
         Yields:
             StreamChunk 이벤트
         """
-        async for chunk in self._conversation_service.send_message(conversation_id, message):
+        async for chunk in self._conversation_service.send_message(
+            conversation_id, message, page_context=page_context
+        ):
             yield chunk
 
     async def get_conversation(self, conversation_id: str) -> Conversation:

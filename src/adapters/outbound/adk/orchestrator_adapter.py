@@ -219,10 +219,39 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         return "\n".join(instruction_parts)
 
+    def _format_page_context(self, page_context: dict) -> str:
+        """
+        페이지 컨텍스트를 메시지 형식으로 변환 (Phase 5 Part C)
+
+        Args:
+            page_context: {url, title, selectedText, metaDescription, mainContent}
+
+        Returns:
+            포맷된 컨텍스트 문자열
+        """
+        MAX_CONTENT_LENGTH = 1000  # Prevent context overflow
+
+        parts = ["[Page Context]"]
+        parts.append(f"URL: {page_context.get('url', '')}")
+        parts.append(f"Title: {page_context.get('title', '')}")
+
+        if page_context.get("metaDescription"):
+            parts.append(f"Description: {page_context['metaDescription']}")
+
+        if page_context.get("selectedText"):
+            parts.append(f"Selected Text: {page_context['selectedText']}")
+
+        if page_context.get("mainContent"):
+            content = page_context["mainContent"][:MAX_CONTENT_LENGTH]
+            parts.append(f"Content: {content}")
+
+        return "\n".join(parts)
+
     async def process_message(
         self,
         message: str,
         conversation_id: str,
+        page_context: dict | None = None,  # Phase 5 Part C
     ) -> AsyncIterator[StreamChunk]:
         """
         메시지 처리 및 스트리밍 응답
@@ -233,6 +262,7 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         Args:
             message: 사용자 메시지
             conversation_id: 대화 ID (ADK session_id로 사용)
+            page_context: 페이지 컨텍스트 (Phase 5 Part C, optional)
 
         Yields:
             StreamChunk 이벤트 (text, tool_call, tool_result, agent_transfer)
@@ -264,10 +294,17 @@ class AdkOrchestratorAdapter(OrchestratorPort):
                 session_id=session_id,
             )
 
+        # 페이지 컨텍스트 주입 (Phase 5 Part C)
+        if page_context:
+            context_block = self._format_page_context(page_context)
+            augmented_message = f"{context_block}\n\n{message}"
+        else:
+            augmented_message = message
+
         # 사용자 메시지를 Content로 변환
         user_content = types.Content(
             role="user",
-            parts=[types.Part(text=message)],
+            parts=[types.Part(text=augmented_message)],
         )
 
         # Runner를 통해 Agent 실행

@@ -91,6 +91,7 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
    - Details: @docs/guides/implementation-guide.md#9-security-patterns
 
 5. **TDD Required (Test-First Development)**
+   - YOU MUST USE skill(/tdd).
    - YOU MUST NOT implement any entity, service, or adapter without writing tests FIRST
    - Follow Red-Green-Refactor cycle: failing test → minimal implementation → refactoring
    - Code without tests cannot be committed/PR'd

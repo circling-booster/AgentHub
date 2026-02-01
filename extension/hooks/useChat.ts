@@ -11,6 +11,7 @@ import type { ChatMessage } from '../lib/types';
 import { MessageType } from '../lib/messaging';
 import type { ExtensionMessage } from '../lib/messaging';
 import { ErrorCode } from '../lib/constants';
+import { usePageContext } from '../lib/hooks/usePageContext';
 
 interface ChatState {
   messages: ChatMessage[];
@@ -79,6 +80,9 @@ export function useChat(): ChatState {
 
   // Use ref for streaming state to avoid stale closure in listener
   const streamingRef = useRef(false);
+
+  // Page context hook for including page context in messages
+  const { enabled: pageContextEnabled, context: pageContext } = usePageContext();
 
   // Restore chat state from session storage on mount
   useEffect(() => {
@@ -262,15 +266,16 @@ export function useChat(): ChatState {
     setStreaming(true);
     streamingRef.current = true;
 
-    // Send START_STREAM_CHAT to Background
+    // Send START_STREAM_CHAT to Background (with page_context if enabled)
     await browser.runtime.sendMessage({
       type: MessageType.START_STREAM_CHAT,
       payload: {
         conversationId,
         message: content,
+        page_context: pageContextEnabled && pageContext ? pageContext : undefined,
       },
     });
-  }, [conversationId]);
+  }, [conversationId, pageContextEnabled, pageContext]);
 
   return {
     messages,
