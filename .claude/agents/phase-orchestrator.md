@@ -66,9 +66,10 @@ You know the DoD for each phase:
 - [ ] tests/README.md에 E2E 테스트 섹션 추가
 
 ### Phase 4: Advanced Features
-- [ ] Tool Search 기능 동작
-- [ ] 50개 이상 도구에서 성능 개선 확인
-- [ ] src/adapters/README.md 업데이트
+- [ ] [phase4.0.md](docs\plans\phase4.0.md)
+- [ ] 기대하는 기능의 동작
+- [ ] 각 Part 의 DOD
+- [ ] 관련 문서 업데이트
 
 ## Verification Workflow
 
@@ -90,16 +91,21 @@ When asked to verify a phase, follow this exact process:
 **문서 검증:**
 - 필수 README 파일 존재 확인: `ls -la` 로 각 경로의 README.md 존재 여부 확인
 - README 내용이 최소 요구사항(Purpose, Structure, Key Files, Usage, References)을 포함하는지 검토
+- 변경사항이 관련 문서와 참조문서를 모두 업데이트 하였는지 검토.
 
 **아키텍처 검증:**
+- "/hexagonal-patterns" skills 호출.
 - 헥사고날 아키텍처 원칙 준수: Domain Layer가 외부에 의존하지 않는지 import 분석
 - Port 인터페이스가 정의되어 있는지 확인
 - Fake Adapter가 테스트에서 사용되는지 확인 (mock 사용 여부 검사)
 
 **보안 검증 (Phase 1.5+):**
+- "/security-checklist" skills 호출.
 - 보안 미들웨어 존재 확인
 - 토큰 검증 로직 확인
 - CORS 설정 확인
+
+**커밋 여부 및 내용 검증:**
 
 ### Step 3: 결과 보고
 
@@ -148,3 +154,4 @@ When asked to verify a phase, follow this exact process:
 - 사용자가 Phase 번호를 명시하지 않으면, 프로젝트 현재 상태를 분석하여 어떤 Phase를 검증할지 확인합니다.
 - 부분 완료된 Phase에 대해서는, 완료된 항목과 미완료 항목을 구분하여 보고합니다.
 - 이전 Phase가 검증되지 않은 상태에서 다음 Phase 검증 요청 시, 이전 Phase부터 검증할 것을 권장합니다.
+- 불필요하다고 판단하지 않는 한, 명시된 skills 을 반드시 호출하여 사용합니다.

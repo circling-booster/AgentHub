@@ -7,6 +7,7 @@ import pytest
 
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 from src.adapters.outbound.adk.orchestrator_adapter import AdkOrchestratorAdapter
+from src.domain.entities.stream_chunk import StreamChunk
 
 
 @pytest.fixture
@@ -92,9 +93,12 @@ class TestAdkOrchestratorAdapterProcessMessage:
         ):
             chunks.append(chunk)
 
-        # Then: 텍스트 chunk 수신
+        # Then: StreamChunk 수신
         assert len(chunks) > 0
-        assert all(isinstance(c, str) for c in chunks)
+        assert all(isinstance(c, StreamChunk) for c in chunks)
+        # 최소 하나의 text 타입 chunk 존재
+        text_chunks = [c for c in chunks if c.type == "text"]
+        assert len(text_chunks) > 0
 
 
 class TestAdkOrchestratorAdapterCleanup:
@@ -128,9 +132,8 @@ class TestAdkOrchestratorAdapterA2aIntegration:
 
         # When: A2A sub_agent 추가
         endpoint_id = "test-a2a-echo"
-        agent_card_url = f"{a2a_echo_agent}/.well-known/agent.json"
-
-        await orchestrator.add_a2a_agent(endpoint_id, agent_card_url)
+        # Port 인터페이스는 base URL을 받아서 Agent Card URL로 변환
+        await orchestrator.add_a2a_agent(endpoint_id, a2a_echo_agent)
 
         # Then: sub_agents에 추가됨
         assert endpoint_id in orchestrator._sub_agents
@@ -149,15 +152,13 @@ class TestAdkOrchestratorAdapterA2aIntegration:
         # Given: A2A sub_agent 추가
         await orchestrator.initialize()
         endpoint_id = "test-a2a-echo"
-        agent_card_url = f"{a2a_echo_agent}/.well-known/agent.json"
-        await orchestrator.add_a2a_agent(endpoint_id, agent_card_url)
+        await orchestrator.add_a2a_agent(endpoint_id, a2a_echo_agent)
         assert endpoint_id in orchestrator._sub_agents
 
         # When: sub_agent 제거
-        result = await orchestrator.remove_a2a_agent(endpoint_id)
+        await orchestrator.remove_a2a_agent(endpoint_id)
 
         # Then: 제거 성공
-        assert result is True
         assert endpoint_id not in orchestrator._sub_agents
         assert len(orchestrator._sub_agents) == 0
 
@@ -165,16 +166,16 @@ class TestAdkOrchestratorAdapterA2aIntegration:
         """
         Given: 존재하지 않는 A2A agent ID
         When: 제거 시도
-        Then: False 반환
+        Then: 에러 없이 정상 동작 (graceful skip)
         """
         # Given: 초기화
         await orchestrator.initialize()
 
-        # When: 존재하지 않는 agent 제거
-        result = await orchestrator.remove_a2a_agent("nonexistent-id")
+        # When: 존재하지 않는 agent 제거 (에러 없음)
+        await orchestrator.remove_a2a_agent("nonexistent-id")
 
-        # Then: False
-        assert result is False
+        # Then: sub_agents 비어있음
+        assert len(orchestrator._sub_agents) == 0
 
     async def test_orchestrator_preserves_session_after_rebuild(
         self, orchestrator, a2a_echo_agent: str
@@ -196,3 +197,94 @@ class TestAdkOrchestratorAdapterA2aIntegration:
         # Then: 동일한 session_service 유지
         assert orchestrator._session_service is initial_session_service
         assert orchestrator._session_service is not None
+
+
+class TestAdkOrchestratorAdapterDynamicInstruction:
+    """동적 시스템 프롬프트 테스트 (TDD Step 8)"""
+
+    async def test_dynamic_instruction_includes_mcp_tools(
+        self, orchestrator, dynamic_toolset, mcp_test_server_url: str
+    ):
+        """
+        Given: MCP 서버가 등록됨
+        When: Agent를 초기화하거나 재구성
+        Then: instruction에 MCP 도구 목록이 포함됨
+        """
+        # Given: MCP 서버 등록 (test fixture 사용)
+        from src.domain.entities.endpoint import Endpoint, EndpointType
+
+        endpoint = Endpoint(
+            id="test-mcp",
+            name="Test MCP Server",
+            url=mcp_test_server_url,
+            type=EndpointType.MCP,
+            enabled=True,
+        )
+        await dynamic_toolset.add_mcp_server(endpoint)
+
+        # When: Orchestrator 초기화
+        await orchestrator.initialize()
+
+        # Then: Agent instruction에 MCP 도구 정보 포함
+        agent = orchestrator._agent
+        assert agent is not None
+        instruction = agent.instruction
+
+        # instruction에 "Available MCP Tools" 섹션 포함
+        assert "Available MCP Tools" in instruction or "MCP Tools" in instruction
+        # 서버 이름 포함
+        assert "Test MCP Server" in instruction
+
+    async def test_dynamic_instruction_includes_a2a_agents(self, orchestrator, a2a_echo_agent: str):
+        """
+        Given: A2A 에이전트가 등록됨
+        When: Agent를 재구성
+        Then: instruction에 A2A 에이전트 정보가 포함됨
+        """
+        # Given: Orchestrator 초기화 및 A2A 에이전트 추가
+        await orchestrator.initialize()
+        endpoint_id = "test-a2a-echo"
+        await orchestrator.add_a2a_agent(endpoint_id, a2a_echo_agent)
+
+        # Then: Agent instruction에 A2A 에이전트 정보 포함
+        agent = orchestrator._agent
+        assert agent is not None
+        instruction = agent.instruction
+
+        # instruction에 "Available A2A Agents" 섹션 포함
+        assert "Available A2A Agents" in instruction or "A2A Agents" in instruction
+        # 에이전트 ID 포함 (설명에 포함될 것으로 예상)
+        assert "test-a2a-echo" in instruction or "a2a_test_a2a_echo" in instruction
+
+    async def test_instruction_updates_on_server_add_remove(
+        self, orchestrator, dynamic_toolset, mcp_test_server_url: str
+    ):
+        """
+        Given: Agent가 초기화됨
+        When: MCP 서버를 추가/제거
+        Then: instruction이 자동으로 갱신됨
+        """
+        from src.domain.entities.endpoint import Endpoint, EndpointType
+
+        # Given: 초기화
+        await orchestrator.initialize()
+        initial_instruction = orchestrator._agent.instruction
+
+        # When: MCP 서버 추가 (동적 toolset 업데이트)
+        endpoint = Endpoint(
+            id="test-mcp-dynamic",
+            name="Dynamic MCP Server",
+            url=mcp_test_server_url,
+            type=EndpointType.MCP,
+            enabled=True,
+        )
+        await dynamic_toolset.add_mcp_server(endpoint)
+
+        # Agent 재구성 필요 (실제로는 RegistryService에서 자동 호출됨)
+        # 여기서는 명시적으로 재구성
+        await orchestrator._rebuild_agent()
+
+        # Then: instruction이 업데이트됨
+        updated_instruction = orchestrator._agent.instruction
+        assert updated_instruction != initial_instruction
+        assert "Dynamic MCP Server" in updated_instruction

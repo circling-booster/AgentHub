@@ -12,8 +12,10 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
-from src.adapters.inbound.http.schemas.chat import ChatRequest
+from src.adapters.inbound.http.schemas.chat import ChatRequest, ChatStreamEvent
 from src.config.container import Container
+from src.domain.entities.stream_chunk import StreamChunk
+from src.domain.exceptions import DomainException
 from src.domain.services.orchestrator_service import OrchestratorService
 
 logger = logging.getLogger(__name__)
@@ -41,8 +43,11 @@ async def chat_stream(
 
     Events:
         - data: {"type": "text", "content": "..."}
+        - data: {"type": "tool_call", "tool_name": "...", "tool_arguments": {...}}
+        - data: {"type": "tool_result", "tool_name": "...", "result": "..."}
+        - data: {"type": "agent_transfer", "agent_name": "..."}
         - data: {"type": "done"}
-        - data: {"type": "error", "message": "..."}
+        - data: {"type": "error", "content": "...", "error_code": "..."}
     """
 
     async def generate() -> AsyncIterator[str]:
@@ -82,9 +87,15 @@ async def chat_stream(
                 extra={"conversation_id": conversation_id, "lifecycle": "streaming"},
             )
 
+            # Phase 5 Part C: page_context를 dict로 변환
+            page_context_dict = None
+            if body.page_context:
+                page_context_dict = body.page_context.model_dump()
+
             async for chunk in orchestrator.send_message(
                 conversation_id=conversation_id,
                 message=body.message,
+                page_context=page_context_dict,  # Phase 5 Part C
             ):
                 # 클라이언트 연결 해제 확인 (Zombie Task 방지)
                 if await request.is_disconnected():
@@ -98,9 +109,10 @@ async def chat_stream(
                     )
                     break
 
-                # "text" 이벤트 전송
-                event_data = json.dumps({"type": "text", "content": chunk})
-                yield f"data: {event_data}\n\n"
+                # StreamChunk → SSE 이벤트 전송
+                event = ChatStreamEvent.from_stream_chunk(chunk)
+                event_data = event.model_dump(exclude_none=True)
+                yield f"data: {json.dumps(event_data)}\n\n"
                 chunk_count += 1
 
             # "done" 이벤트 전송
@@ -126,8 +138,25 @@ async def chat_stream(
             )
             raise  # CancelledError는 다시 발생시켜야 함
 
+        except DomainException as e:
+            # 도메인 예외 → typed error 이벤트 전송
+            logger.error(
+                "Stream domain error",
+                extra={
+                    "conversation_id": conversation_id,
+                    "lifecycle": "error",
+                    "chunks_sent": chunk_count,
+                    "error": str(e),
+                    "error_code": e.code,
+                },
+                exc_info=True,
+            )
+            error_chunk = StreamChunk.error(str(e), code=e.code)
+            event = ChatStreamEvent.from_stream_chunk(error_chunk)
+            yield f"data: {json.dumps(event.model_dump(exclude_none=True))}\n\n"
+
         except Exception as e:
-            # 에러 이벤트 전송
+            # 예상하지 못한 에러 → generic error 이벤트 전송
             logger.error(
                 "Stream error",
                 extra={
@@ -138,8 +167,9 @@ async def chat_stream(
                 },
                 exc_info=True,
             )
-            error_data = json.dumps({"type": "error", "message": str(e)})
-            yield f"data: {error_data}\n\n"
+            error_chunk = StreamChunk.error(str(e), code="UnknownError")
+            event = ChatStreamEvent.from_stream_chunk(error_chunk)
+            yield f"data: {json.dumps(event.model_dump(exclude_none=True))}\n\n"
 
         finally:
             # 리소스 정리 보장

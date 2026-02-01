@@ -10,7 +10,12 @@
       "Bash(ruff format:*)",
       "Bash(pytest:*)",
       "Bash(git status:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(if [ -f \"C:/Users/sungb/Documents/GitHub/AgentHub/src/domain/README.md\" ])",
+      "Bash(then echo \"EXISTS\")",
+      "Bash(else echo \"NOT_EXISTS\")",
+      "Bash(fi)",
+      "Bash(npm test)"
     ]
   }
 }

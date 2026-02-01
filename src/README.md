@@ -176,6 +176,125 @@ src/
 
 참조: [src/adapters/README.md](adapters/README.md#adk-adapters), [docs/implementation-guide.md#2-dynamictoolset-구현](../docs/implementation-guide.md#2-dynamictoolset-구현)
 
+## Phase 4 Part A-D: Advanced Features (2026-01-31)
+
+### StreamChunk SSE 이벤트 확장 (Part A)
+
+**역할:** SSE 스트리밍 이벤트 타입 확장으로 도구 호출 및 에이전트 전환 가시성 확보
+
+**핵심 이벤트:**
+- `text`: 일반 텍스트 스트리밍
+- `tool_call`: 도구 호출 시작 (name, arguments)
+- `tool_result`: 도구 실행 결과
+- `agent_transfer`: A2A 에이전트 전환
+
+**주요 파일:**
+- `src/domain/entities/stream_chunk.py`: StreamChunk 엔티티 (frozen dataclass)
+- `src/adapters/inbound/http/routes/chat.py`: SSE 이벤트 변환
+
+**Extension 통합:**
+- `extension/lib/sse.ts`: StreamChunk 타입 정의
+- `extension/components/ToolCallIndicator.tsx`: 도구 호출 UI
+
+### Observability (Part B)
+
+**목표:** LLM 호출, 도구 호출, 에러 추적 가시성 확보
+
+#### ErrorCode 상수화 (Step 0)
+```
+Backend: src/domain/constants.py (ErrorCode 클래스)
+Extension: extension/lib/constants.ts (ErrorCode enum)
+
+타입 안전성 보장:
+- LlmRateLimitError
+- EndpointConnectionError
+- ToolNotFoundError
+- ...
+```
+
+#### LiteLLM CustomLogger (Step 5)
+```
+파일: src/adapters/outbound/adk/litellm_callbacks.py
+
+로깅 내용:
+- 모델명 (openai/gpt-4o-mini, anthropic/claude-sonnet-4-5 등)
+- 토큰 수 (prompt_tokens, completion_tokens)
+- 지연시간 (response_ms)
+
+설정: observability.log_llm_requests = true
+```
+
+#### Tool Call Tracing (Step 6)
+```
+SQLite 테이블: tool_calls
+- id, message_id, tool_name, arguments, result, error, duration_ms
+
+API: GET /api/conversations/{id}/tool-calls
+
+파일: src/adapters/outbound/storage/sqlite_conversation_storage.py
+```
+
+#### Structured Logging (Step 7)
+```
+파일: src/config/logging_config.py
+
+포맷 옵션:
+- "text" (기본): 일반 텍스트 로그
+- "json": JSON 포맷 (timestamp, level, logger, message, extra)
+
+설정: observability.log_format = "json"
+```
+
+### Dynamic Intelligence (Part C)
+
+**목표:** 컨텍스트 인식 시스템 프롬프트 및 도구 재시도 로직
+
+#### Context-Aware System Prompt (Step 8)
+```
+파일: src/adapters/outbound/adk/orchestrator_adapter.py
+
+동적 instruction 생성:
+- 등록된 MCP 도구 목록 자동 포함
+- 등록된 A2A 에이전트 정보 자동 포함
+
+메서드: _build_dynamic_instruction()
+```
+
+#### Tool Execution Retry (Step 9)
+```
+파일: src/adapters/outbound/adk/dynamic_toolset.py
+
+재시도 로직:
+- TRANSIENT_ERRORS: ConnectionError, TimeoutError
+- Exponential Backoff: 1s, 2s, 4s, ...
+- 설정: mcp.max_retries = 2, mcp.retry_backoff_seconds = 1.0
+```
+
+### Reliability & Scale (Part D)
+
+**목표:** A2A Health 모니터링 및 대규모 도구 지원
+
+#### A2A Health Monitoring (Step 10)
+```
+파일: src/domain/services/health_monitor_service.py
+
+타입별 health check:
+- endpoint.type == MCP → toolset.health_check()
+- endpoint.type == A2A → a2a_client.health_check()
+```
+
+#### Defer Loading (Step 11)
+```
+파일: src/adapters/outbound/adk/dynamic_toolset.py
+
+확장성:
+- MAX_ACTIVE_TOOLS: 30 → 100
+- DeferredToolProxy: 메타데이터만 로드, 실행 시 Lazy Loading
+- 설정: mcp.defer_loading_threshold = 30
+```
+
+참조: [docs/plans/phase4/phase4.0.md](../docs/plans/phase4/phase4.0.md)
+
 ## Key Files
 
 | 파일 | 역할 |

@@ -12,6 +12,7 @@ import { STORAGE_KEYS, HEALTH_CHECK_INTERVAL_MINUTES, OFFSCREEN_DOCUMENT_PATH } 
 import type { ExtensionMessage } from '../lib/messaging';
 import { MessageType } from '../lib/messaging';
 import { initializeAuth, ensureOffscreenDocument, checkServerHealth } from '../lib/background-handlers';
+import type { PageContext } from '../lib/types';
 
 export default defineBackground(() => {
   // Active stream tracking
@@ -49,7 +50,11 @@ export default defineBackground(() => {
     return false;
   });
 
-  async function handleStartStreamChat(payload: { conversationId: string | null; message: string }) {
+  async function handleStartStreamChat(payload: {
+    conversationId: string | null;
+    message: string;
+    page_context?: PageContext;
+  }) {
     const requestId = crypto.randomUUID();
 
     // Read token from session storage (Background has access)

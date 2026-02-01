@@ -42,9 +42,10 @@ class TestNestedModels:
         assert settings.timeout_seconds == 5
 
     def test_mcp_settings_defaults(self):
-        """McpSettings 기본값"""
+        """McpSettings 기본값 (Step 11: max_active_tools 30 → 100)"""
         settings = McpSettings()
-        assert settings.max_active_tools == 30
+        assert settings.max_active_tools == 100  # Step 11: 30 → 100
+        assert settings.defer_loading_threshold == 30  # Step 11
         assert settings.cache_ttl_seconds == 300
 
 

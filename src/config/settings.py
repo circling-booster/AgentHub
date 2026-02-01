@@ -43,8 +43,19 @@ class HealthCheckSettings(BaseModel):
 class McpSettings(BaseModel):
     """MCP 설정"""
 
-    max_active_tools: int = 30
+    max_active_tools: int = 100  # Step 11: 30 → 100
+    defer_loading_threshold: int = 30  # Step 11: Defer loading 활성화 기준
     cache_ttl_seconds: int = 300
+    max_retries: int = 2
+    retry_backoff_seconds: float = 1.0
+
+
+class ObservabilitySettings(BaseModel):
+    """관찰성 설정 (Step 5-7: Part B)"""
+
+    log_llm_requests: bool = True
+    max_log_chars: int = 500
+    log_format: str = "text"  # "text" or "json" (Step 7)
 
 
 class Settings(BaseSettings):
@@ -62,6 +73,7 @@ class Settings(BaseSettings):
     storage: StorageSettings = Field(default_factory=StorageSettings)
     health_check: HealthCheckSettings = Field(default_factory=HealthCheckSettings)
     mcp: McpSettings = Field(default_factory=McpSettings)
+    observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
 
     # API 키 (환경변수에서만, 플랫 필드 유지)
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config.container import Container
 
 from .exceptions import register_exception_handlers
-from .routes import a2a, a2a_card, auth, chat, conversations, health, mcp
+from .routes import a2a, a2a_card, auth, chat, conversations, health, mcp, oauth, workflow
 from .security import ExtensionAuthMiddleware
 
 logger = logging.getLogger(__name__)
@@ -30,12 +30,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     - MCP 연결 정리
     """
     # Startup
+    container = app.container
+    settings = container.settings()
+
+    # Step 7: 로깅 설정 초기화 (최우선)
+    from src.config.logging_config import setup_logging
+
+    setup_logging(settings)
     logger.info("AgentHub API starting up")
 
-    container = app.container
-
     # LiteLLM이 os.environ에서 API 키를 읽으므로, Settings에서 로드한 키를 환경변수에 반영
-    settings = container.settings()
     _export_api_keys(settings)
 
     # SQLite 스토리지 초기화
@@ -47,6 +51,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     orchestrator = container.orchestrator_adapter()
     await orchestrator.initialize()
     logger.info("Orchestrator initialized")
+
+    # 저장된 엔드포인트 복원
+    registry = container.registry_service()
+    restore_result = await registry.restore_endpoints()
+    logger.info(
+        f"Endpoints restored: {len(restore_result['restored'])} succeeded, "
+        f"{len(restore_result['failed'])} failed"
+    )
 
     yield
 
@@ -106,11 +118,13 @@ def create_app() -> FastAPI:
     # 라우터 등록
     app.include_router(auth.router)
     app.include_router(health.router)
+    app.include_router(oauth.router)  # OAuth 2.1
     app.include_router(mcp.router)
     app.include_router(a2a.router)
     app.include_router(a2a_card.router)  # A2A Agent Card
     app.include_router(chat.router)
     app.include_router(conversations.router)
+    app.include_router(workflow.router)  # Workflow Management
 
     return app
 

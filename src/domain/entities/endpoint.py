@@ -13,6 +13,7 @@ from src.domain.entities.enums import EndpointStatus, EndpointType
 from src.domain.exceptions import InvalidUrlError
 
 if TYPE_CHECKING:
+    from src.domain.entities.auth_config import AuthConfig
     from src.domain.entities.tool import Tool
 
 
@@ -34,6 +35,7 @@ class Endpoint:
         last_health_check: 마지막 상태 확인 시각
         tools: 제공하는 도구 목록 (MCP only)
         agent_card: A2A Agent Card 정보 (A2A only)
+        auth_config: 인증 설정 (선택적, MCP 서버용)
 
     Example:
         >>> endpoint = Endpoint(
@@ -54,6 +56,7 @@ class Endpoint:
     last_health_check: datetime | None = None
     tools: list["Tool"] = field(default_factory=list)
     agent_card: dict[str, Any] | None = None
+    auth_config: "AuthConfig | None" = None
 
     def __post_init__(self) -> None:
         """생성 후 URL 유효성 검증 및 이름 자동 설정"""

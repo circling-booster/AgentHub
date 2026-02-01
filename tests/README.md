@@ -43,7 +43,9 @@ tests/
 │   │
 │   └── conftest.py                # Fake Adapter fixture 중앙 제공
 │
-├── integration/                   # 통합 테스트 (91 tests + 4 LLM deselected)
+├── integration/                   # 통합 테스트 (100 tests + 4 LLM deselected)
+│   ├── test_app_startup.py        # Server Startup Validation (Phase 5-D Step 11)
+│   ├── test_dynamic_ports.py      # Dynamic Test Port Configuration (Phase 5-D Step 12)
 │   └── adapters/
 │       ├── conftest.py            # 공통 fixture (authenticated_client, CI Mock)
 │       ├── test_sqlite_storage.py # SQLite WAL 테스트
@@ -211,6 +213,9 @@ class TestConversationService:
 # 전체 테스트 (LLM 제외)
 pytest
 
+# LLM/MCP 모두 포함 (API 키 필요, 비용 발생)
+pytest tests/integration/ --run-llm
+
 # 단위 테스트만
 pytest tests/unit/
 
@@ -247,22 +252,92 @@ cd extension && npx vitest run tests/hooks/useChat.test.ts
 
 ## Troubleshooting
 
+## Test Resources
+
+> **정책:** 로컬 서버 우선, 외부 서버는 필요 시만 사용
+
+### MCP 서버
+
+| 타입 | 엔드포인트 | 인증 | 용도 | 실행 |
+|------|-----------|------|------|------|
+| **로컬 (Synapse)** | `http://127.0.0.1:9000/mcp` | 없음 (기본) | Phase 1-4 테스트 | `python -m synapse` |
+| **로컬 (Synapse 다중포트)** | `http://127.0.0.1:9001/mcp` | API Key | Phase 5-B 인증 테스트 | `python -m synapse --multi` |
+| **로컬 (Synapse 다중포트)** | `http://127.0.0.1:9002/mcp` | OAuth 2.0 | Phase 5-B OAuth 테스트 | `python -m synapse --multi` |
+| **외부 (MCP Apps)** | `https://remote-mcp-server-authless.idosalomon.workers.dev/mcp` | 없음 | Phase 6-B MCP Apps 검증 | 외부 서버 |
+
+**로컬 MCP 서버 프로젝트:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
+
+### A2A 에이전트
+
+| 타입 | 엔드포인트 | 용도 | 실행 |
+|------|-----------|------|------|
+| **Echo Agent** | `http://127.0.0.1:9003` (기본) | Phase 3+ A2A 테스트 | conftest subprocess 자동 시작 |
+| **Math Agent** | 동적 포트 | Phase 5-A A2A 검증 | conftest subprocess 자동 시작 |
+
+### 환경변수로 포트 오버라이드 (Phase 5-D)
+
+pytest-xdist 병렬 실행 시 포트 충돌 방지를 위해 환경변수로 포트 변경 가능:
+
+| 환경변수 | 기본값 | 설명 |
+|---------|:-----:|------|
+| `MCP_TEST_PORT` | 9000 | MCP Synapse 서버 기본 포트 (9001, 9002는 자동 +1, +2) |
+| `A2A_ECHO_PORT` | 9003 | A2A Echo Agent 포트 |
+
+**예시:**
+```bash
+# 다른 포트로 테스트 실행 (포트 충돌 시)
+MCP_TEST_PORT=8888 A2A_ECHO_PORT=8899 pytest tests/ -n auto
+
+# pytest-xdist 병렬 실행
+pytest tests/ -n auto  # 기본 포트 사용
+```
+
+**주의:** Math Agent는 항상 동적 포트 할당 (환경변수 불필요)
+
+---
+
 ### MCP 관련 오류
 
 MCP 테스트 실패 시 **디버깅 전 필수 확인사항:**
 
 #### 1. 로컬 MCP 서버 실행 확인
 
+**단일 포트 (기본, 인증 없음):**
 ```bash
 # Synapse MCP 서버 실행 (별도 터미널)
 cd C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP
-SYNAPSE_PORT=9000 python -m synapse
+python -m synapse  # 기본 포트 9000, 인증 없음
 
 # 서버 동작 확인
 curl http://127.0.0.1:9000/mcp
 # 또는
 pytest tests/e2e/test_extension_server.py::TestMcpManagementFlow::test_mcp_server_registration -v
 ```
+
+**다중 포트 (개발/테스트 전용, 인증 시나리오 테스트):**
+```bash
+# 여러 인증 방식을 동시에 테스트하는 경우
+cd C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP
+
+# 환경변수 설정 (Windows PowerShell)
+$env:SYNAPSE_PORTS="9000,9001,9002"
+$env:SYNAPSE_PORT_9000_AUTH="none"  # 무인증 (기본)
+$env:SYNAPSE_PORT_9001_AUTH="apikey"  # API Key 인증
+$env:SYNAPSE_PORT_9001_API_KEYS='["test-key-1","test-key-2"]'
+$env:SYNAPSE_PORT_9002_AUTH="oauth"  # OAuth 인증 (Phase 5-B)
+
+# 다중 포트 모드로 실행
+python -m synapse --multi
+# 또는
+python test_multiport.py
+
+# 각 포트별 테스트
+curl http://127.0.0.1:9000/mcp  # 인증 없음 (성공)
+curl http://127.0.0.1:9001/mcp -H "X-API-Key: test-key-1"  # API Key (성공)
+curl http://127.0.0.1:9002/mcp -H "Authorization: Bearer <token>"  # OAuth (Phase 5-B)
+```
+
+**참고:** 다중 포트는 multiprocessing 기반으로 각 포트마다 독립적인 프로세스 실행. 메모리 사용량 프로세스당 약 50-100MB 추가.
 
 #### 2. 포트 충돌 확인
 
@@ -489,11 +564,13 @@ pytest -n auto
 ### Server Tests (Python / pytest)
 
 - **Unit Tests:** 155 passed
-- **Integration Tests:** 91 passed (+4 LLM deselected)
+- **Integration Tests:** 100 passed (+4 LLM deselected)
+  - ✅ Phase 5-D: Server Startup Validation (4 tests)
+  - ✅ Phase 5-D: Dynamic Port Configuration (5 tests)
 - **E2E Tests (TestClient):** 10 passed, 2 skipped (MCP 서버 필요)
 - **E2E Tests (Playwright):** 7 scenarios (기본 제외, `@e2e_playwright`)
-- **Total:** 260 passed, 2 skipped, 4 deselected, 7 Playwright (excluded)
-- **Coverage:** 90.63%
+- **Total:** 269 passed, 2 skipped, 4 deselected, 7 Playwright (excluded)
+- **Coverage:** 91% (Phase 5 Part A-D complete)
 
 ### Extension Tests (TypeScript / Vitest)
 
@@ -609,6 +686,39 @@ pytest tests/e2e/ --run-mcp -v
 chmod +x tests/e2e/start_test_server.sh
 ./tests/e2e/start_test_server.sh
 ```
+
+---
+
+## Future Improvements
+
+### Synapse MCP Server Auto-Start (✅ Implemented)
+
+**현재 상태:**
+- ✅ 로컬 환경에서 Synapse 자동 실행 (`autouse=True`)
+- ✅ 포트 충돌 해결 (Echo Agent: 9003, Synapse: 9000/9001/9002)
+- CI 환경은 mock 사용 (기존 동작 유지)
+
+**변경 사항 (2026-02-01)**:
+- A2A Echo Agent 포트 변경: 9001 → 9003
+- Synapse fixture 조건부 autouse 활성화
+- 로컬/CI 환경 분리 (로컬: 실제 서버, CI: mock)
+
+**동작 방식:**
+
+| 환경 | Synapse 자동 실행 | Mock 사용 |
+|------|:----------------:|:---------:|
+| **로컬** | ✅ (autouse) | ❌ |
+| **CI** | ❌ | ✅ (mock_mcp_toolset_in_ci) |
+
+**장점:**
+- 완전 자동화 (`pytest` 한 번에 모든 테스트)
+- A2A 에이전트와 일관성
+- 신규 개발자 진입 장벽 낮춤
+- CI 환경은 빠른 mock 사용
+
+**참고:**
+- 포트가 이미 사용 중이면 기존 서버 재사용 (충돌 방지)
+- Synapse 프로젝트 없으면 pytest.skip (다른 환경 호환)
 
 ---
 

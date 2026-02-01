@@ -7,6 +7,7 @@ from src.domain.entities.conversation import Conversation
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointStatus
 from src.domain.entities.message import Message
+from src.domain.entities.tool_call import ToolCall
 from src.domain.ports.outbound.storage_port import (
     ConversationStoragePort,
     EndpointStoragePort,
@@ -24,6 +25,7 @@ class FakeConversationStorage(ConversationStoragePort):
     def __init__(self) -> None:
         self.conversations: dict[str, Conversation] = {}
         self.messages: dict[str, list[Message]] = {}
+        self.tool_calls: dict[str, list[ToolCall]] = {}
 
     async def save_conversation(self, conversation: Conversation) -> None:
         """대화 저장"""
@@ -74,10 +76,37 @@ class FakeConversationStorage(ConversationStoragePort):
             return messages[-limit:]
         return messages
 
+    async def save_tool_call(
+        self,
+        message_id: str,
+        tool_call: ToolCall,
+    ) -> None:
+        """도구 호출 저장 (message_id로 그룹화)"""
+        if message_id not in self.tool_calls:
+            self.tool_calls[message_id] = []
+        self.tool_calls[message_id].append(tool_call)
+
+    async def get_tool_calls(
+        self,
+        conversation_id: str,
+    ) -> list[ToolCall]:
+        """대화의 모든 도구 호출 이력 조회 (모든 메시지의 tool_calls 합산)"""
+        # conversation_id에 속한 모든 메시지의 tool_calls 수집
+        all_tool_calls: list[ToolCall] = []
+        messages = self.messages.get(conversation_id, [])
+        for message in messages:
+            message_tool_calls = self.tool_calls.get(message.id, [])
+            all_tool_calls.extend(message_tool_calls)
+
+        # 시간순 정렬
+        all_tool_calls.sort(key=lambda tc: tc.created_at)
+        return all_tool_calls
+
     def clear(self) -> None:
         """모든 데이터 초기화"""
         self.conversations.clear()
         self.messages.clear()
+        self.tool_calls.clear()
 
 
 class FakeEndpointStorage(EndpointStoragePort):

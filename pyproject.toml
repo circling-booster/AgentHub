@@ -52,6 +52,7 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.1.0",
+    "pytest-timeout>=2.2.0",
     "playwright>=1.40.0",
 
     # Linting & Formatting
@@ -77,9 +78,12 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "-v --tb=short -m 'not llm and not e2e_playwright'"
+addopts = "-v --tb=short -m 'not llm and not e2e_playwright and not local_mcp and not local_a2a'"
+timeout = 120
 filterwarnings = [
     "ignore::DeprecationWarning",
+    "ignore::RuntimeWarning:litellm",
+    "ignore:.*EXPERIMENTAL.*:UserWarning",
 ]
 markers = [
     "llm: tests requiring LLM API key (excluded by default)",
@@ -87,6 +91,7 @@ markers = [
     "mcp: tests requiring running MCP server (--run-mcp option)",
     "e2e_playwright: full browser E2E tests with Playwright (excluded by default)",
     "local_a2a: tests requiring local A2A agent server (127.0.0.1:9001)",
+    "integration: integration tests (adapter + external systems)",
 ]
 
 [tool.ruff]

@@ -9,7 +9,6 @@ Google ADK-based MCP + A2A Integrated Agent System
 | Item | Details |
 |------|---------|
 | **Purpose** | Integrate MCP/A2A tools via Chrome Extension in local environment |
-| **Language** | Python 3.10+ (Backend) + TypeScript (Extension) |
 | **Architecture** | Hexagonal (Ports and Adapters) |
 | **Agent Framework** | Google ADK 1.23.0+ with LiteLLM |
 | **Default Model** | `openai/gpt-4o-mini` |
@@ -64,28 +63,6 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 
 **Environment:** Set API keys in `.env` file (ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY)
 
-### Automated Workflow (Hooks)
-
-- **PostToolUse Hook**: Auto ruff formatting after code changes
-- **Stop Hook**: Run unit tests on response completion (`pytest tests/unit/ -q --tb=line -x`)
-- **UserPromptSubmit Hook**: Full test + coverage verification on commit/pr/push (`pytest tests/ --cov=src --cov-fail-under=80 -q`)
-- **Git pre-commit hook**: Block direct commits to main branch
-- **GitHub Actions**: Block PRs with <80% coverage
-
-**Note:** All pytest hooks use token-optimized options (`-q --tb=line -x`) to minimize Claude Code context consumption.
-
-Details: `.claude/settings.json` and `.github/workflows/ci.yml`
-
----
-
-## ⚠️ Critical Constraints & Solutions
-
-| Constraint | Solution |
-|------------|----------|
-| MCPToolset.get_tools() is async | Async Factory Pattern (FastAPI startup initialization) |
-| SQLite concurrent writes | WAL mode + write lock |
-| Google Built-in Tools (SearchTool, etc.) | Gemini-only → Replace with MCP servers |
-
 ---
 
 ## 🔐 Key Principles
@@ -114,13 +91,20 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
    - Details: @docs/guides/implementation-guide.md#9-security-patterns
 
 5. **TDD Required (Test-First Development)**
+   - YOU MUST USE skill(/tdd).
    - YOU MUST NOT implement any entity, service, or adapter without writing tests FIRST
    - Follow Red-Green-Refactor cycle: failing test → minimal implementation → refactoring
    - Code without tests cannot be committed/PR'd
+   - **Treat Tests as Immutable Specifications**: A failure indicates a bug in the implementation, not the test. Only modify tests if the user confirms a requirement change.
 
 6. **MCP Transport**
    - Streamable HTTP preferred (2025 recommendation)
    - SSE fallback (legacy server compatibility)
+
+7. **Protocol Standards Compliance** ⭐
+   - **MCP Core Features**: MUST follow official MCP specification (Streamable HTTP, Resources when ADK supports)
+   - **A2A Protocol**: MUST implement based on A2A 0.3 specification (gRPC transport, Security Cards when ADK supports)
+   - **Custom Extensions**: MUST isolate in Plugin System to prevent vendor lock-in and ensure protocol upgradability
 
 ---
 
@@ -132,6 +116,7 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 | Direct modification of main branch | PreToolUse Hook blocks (exit 2) |
 | Use EventSource (SSE) | POST SSE requires fetch ReadableStream |
 | Write implementation code without tests | TDD required: write tests first (Red-Green-Refactor) |
+| Skip Refactoring steps | TDD required: Ensure behavior is preserved while improving structure. |
 | PR without tests | CI blocks if coverage <80% |
 
 ---
@@ -153,12 +138,6 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 ---
 
 ## 🧪 Test Strategy (TDD + Hexagonal)
-
-| Phase | Test Type | Target | Coverage Goal |
-|-------|-----------|--------|---------------|
-| Phase 1 | Unit | Domain Layer | 80% |
-| Phase 2 | Integration | MCP Adapter, API | 70% |
-| Phase 3 | E2E | Full Stack | Critical Path |
 
 **TDD Principles:**
 - Follow Red-Green-Refactor cycle strictly
@@ -182,15 +161,33 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 
 ## 🧩 Test Resources
 
-> **Policy:** Test with **local servers only**, not external servers.
+> **Policy:** Test with **local servers first**, external servers only when necessary.
 
-| Type | Resource | Execution |
-|------|----------|-----------|
-| MCP Test Server | `http://127.0.0.1:9000/mcp` (local Synapse) | `SYNAPSE_PORT=9000 python -m synapse` |
-| A2A Test Agent | `http://127.0.0.1:9001` (Echo Agent) | conftest subprocess 자동 시작 |
+### MCP Servers
 
-**MCP Server Project:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
+| Type | Endpoint | Auth | Usage | Execution |
+|------|----------|------|-------|-----------|
+| **Local (Synapse)** | `http://127.0.0.1:9000/mcp` | None (default) | Phase 1-4 tests | `python -m synapse` |
+| **Local (Multi-port)** | `http://127.0.0.1:9001/mcp` | API Key | Phase 5-B auth tests | `python -m synapse --multi` |
+| **Local (Multi-port)** | `http://127.0.0.1:9002/mcp` | OAuth 2.0 | Phase 5-B OAuth tests | `python -m synapse --multi` |
+| **External (MCP Apps)** | `https://remote-mcp-server-authless.idosalomon.workers.dev/mcp` | None | Phase 6-B MCP Apps verification | External server |
+
+**Local MCP Server Project:** `C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP`
+
+**Multi-port Configuration:**
+- Multiprocessing-based (each port = independent process)
+- Port 9000: No auth (default, backward-compatible)
+- Port 9001: API Key auth (`X-API-Key` header)
+- Port 9002: OAuth 2.0 (`Authorization: Bearer <token>`)
+- Dev/test only (production: use reverse proxy + single port)
+
+### A2A Agents
+
+| Type | Endpoint | Usage | Execution |
+|------|----------|-------|-----------|
+| **Echo Agent** | `http://127.0.0.1:9003` | Phase 3+ A2A tests | conftest subprocess auto-start |
+| **Math Agent** | Dynamic port | Phase 5-A A2A verification | conftest subprocess auto-start |
 
 ---
 
-*Last Optimized: 2026-01-30*
+*Last Optimized: 2026-01-31*

@@ -5,7 +5,7 @@
  */
 
 import { API_BASE, STORAGE_KEYS } from './constants';
-import type { Conversation, McpServer, HealthStatus } from './types';
+import type { Conversation, McpServer, HealthStatus, AuthConfig, Workflow, WorkflowStep } from './types';
 
 /**
  * Initialize authentication with server (Token Handshake)
@@ -114,10 +114,14 @@ export async function createConversation(title: string = ''): Promise<Conversati
 /**
  * Register MCP server (authenticated)
  */
-export async function registerMcpServer(url: string, name?: string): Promise<McpServer> {
+export async function registerMcpServer(
+  url: string,
+  name?: string,
+  auth?: AuthConfig
+): Promise<McpServer> {
   const response = await authenticatedFetch('/api/mcp/servers', {
     method: 'POST',
-    body: JSON.stringify({ url, name }),
+    body: JSON.stringify({ url, name, auth }),
   });
 
   if (!response.ok) {
@@ -219,5 +223,52 @@ export async function removeA2aAgent(agentId: string): Promise<void> {
 
   if (!response.ok) {
     throw new Error('Failed to remove A2A agent');
+  }
+}
+
+/**
+ * Get all workflows (authenticated)
+ */
+export async function getWorkflows(): Promise<Workflow[]> {
+  const response = await authenticatedFetch('/api/workflows');
+
+  if (!response.ok) {
+    throw new Error('Failed to get workflows');
+  }
+
+  return response.json();
+}
+
+/**
+ * Create workflow (authenticated)
+ */
+export async function createWorkflow(request: {
+  name: string;
+  workflow_type: 'sequential' | 'parallel';
+  description: string;
+  steps: WorkflowStep[];
+}): Promise<Workflow> {
+  const response = await authenticatedFetch('/api/workflows', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create workflow');
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete workflow (authenticated)
+ */
+export async function deleteWorkflow(workflowId: string): Promise<void> {
+  const response = await authenticatedFetch(`/api/workflows/${workflowId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete workflow');
   }
 }

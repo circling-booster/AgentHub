@@ -4,6 +4,7 @@ import pytest
 
 from src.domain.entities.conversation import Conversation
 from src.domain.entities.enums import MessageRole
+from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.exceptions import ConversationNotFoundError
 from src.domain.services.conversation_service import ConversationService
 from tests.unit.fakes import FakeConversationStorage, FakeOrchestrator
@@ -95,16 +96,15 @@ class TestConversationService:
         """새 대화에 메시지 전송"""
         # When
         chunks = []
-        conversation_id = None
         async for chunk in service.send_message(None, "Hello"):
             chunks.append(chunk)
-            if conversation_id is None:
-                # 첫 청크에서 conversation_id를 얻을 수 있어야 함
-                pass
 
         # Then
-        assert len(chunks) == 2  # "Hello! " + "How can I help you?"
-        assert "".join(chunks) == "Hello! How can I help you?"
+        assert len(chunks) == 2
+        assert all(isinstance(c, StreamChunk) for c in chunks)
+        assert chunks[0].type == "text"
+        assert chunks[0].content == "Hello! "
+        assert chunks[1].content == "How can I help you?"
 
     @pytest.mark.asyncio
     async def test_send_message_to_existing_conversation(self, service, storage):
@@ -120,6 +120,7 @@ class TestConversationService:
 
         # Then
         assert len(chunks) == 2
+        assert all(isinstance(c, StreamChunk) for c in chunks)
 
     @pytest.mark.asyncio
     async def test_send_message_saves_user_message(self, service, storage):
@@ -162,6 +163,35 @@ class TestConversationService:
         with pytest.raises(ConversationNotFoundError):
             async for _ in service.send_message("nonexistent", "Hello"):
                 pass
+
+    @pytest.mark.asyncio
+    async def test_send_message_accumulates_only_text_chunks(self, storage, orchestrator):
+        """tool_call/tool_result 청크는 저장 시 무시하고 text만 축적"""
+        # Given
+        orchestrator.set_responses(
+            [
+                StreamChunk.text("Before "),
+                StreamChunk.tool_call("search", {"q": "test"}),
+                StreamChunk.tool_result("search", "found"),
+                StreamChunk.text("After"),
+            ]
+        )
+        service = ConversationService(storage=storage, orchestrator=orchestrator)
+        conv = Conversation(id="conv-mix")
+        storage.conversations["conv-mix"] = conv
+
+        # When
+        chunks = []
+        async for chunk in service.send_message("conv-mix", "Test"):
+            chunks.append(chunk)
+
+        # Then: 4개 청크 모두 yield
+        assert len(chunks) == 4
+        # 저장된 어시스턴트 응답은 text만 축적
+        messages = storage.messages.get("conv-mix", [])
+        assistant_msgs = [m for m in messages if m.role == MessageRole.ASSISTANT]
+        assert len(assistant_msgs) == 1
+        assert assistant_msgs[0].content == "Before After"
 
     @pytest.mark.asyncio
     async def test_get_or_create_conversation_creates_new(self, service, storage):

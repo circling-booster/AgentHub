@@ -5,6 +5,8 @@
  */
 
 import { STORAGE_KEYS } from './constants';
+import { createGetPageContext, isGetPageContextResponse } from './content-messaging';
+import type { PageContext } from './types';
 
 // ==================== Token Handshake ====================
 
@@ -75,7 +77,9 @@ export async function checkServerHealth(): Promise<{
 
     // Get previous health status
     const stored = await browser.storage.local.get(STORAGE_KEYS.SERVER_HEALTH);
-    const previousHealth = stored[STORAGE_KEYS.SERVER_HEALTH];
+    const previousHealth = stored[STORAGE_KEYS.SERVER_HEALTH] as
+      | { status: string; lastChecked: number }
+      | undefined;
 
     // Save current status
     await browser.storage.local.set({
@@ -97,5 +101,45 @@ export async function checkServerHealth(): Promise<{
       },
     });
     return { isHealthy: false, shouldRetryAuth: false };
+  }
+}
+
+// ==================== Page Context Request ====================
+
+/**
+ * Request page context from the active tab's content script
+ *
+ * Returns null if:
+ * - No active tab found
+ * - Content script not loaded
+ * - Content script returns error
+ */
+export async function requestPageContext(): Promise<PageContext | null> {
+  try {
+    // Get active tab
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length === 0 || !tabs[0].id) {
+      return null;
+    }
+
+    const tabId = tabs[0].id;
+
+    // Send message to content script
+    const response = await browser.tabs.sendMessage(tabId, createGetPageContext());
+
+    // Validate response
+    if (!isGetPageContextResponse(response)) {
+      return null;
+    }
+
+    if (!response.success || !response.context) {
+      return null;
+    }
+
+    return response.context;
+  } catch (error) {
+    // Content script not loaded or tab closed
+    console.warn('[Background] Failed to request page context:', error);
+    return null;
   }
 }

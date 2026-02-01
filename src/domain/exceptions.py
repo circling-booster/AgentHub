@@ -3,6 +3,8 @@
 순수 Python으로 작성됩니다. 외부 라이브러리에 의존하지 않습니다.
 """
 
+from src.domain.constants import ErrorCode
+
 
 class DomainException(Exception):
     """도메인 예외 기본 클래스"""
@@ -21,7 +23,8 @@ class DomainException(Exception):
 class EndpointNotFoundError(DomainException):
     """엔드포인트를 찾을 수 없음"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.ENDPOINT_NOT_FOUND)
 
 
 class DuplicateEndpointError(DomainException):
@@ -33,13 +36,15 @@ class DuplicateEndpointError(DomainException):
 class EndpointConnectionError(DomainException):
     """엔드포인트 연결 실패"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.ENDPOINT_CONNECTION)
 
 
 class EndpointTimeoutError(DomainException):
     """엔드포인트 응답 시간 초과"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.ENDPOINT_TIMEOUT)
 
 
 # ============================================================
@@ -50,7 +55,8 @@ class EndpointTimeoutError(DomainException):
 class ToolNotFoundError(DomainException):
     """도구를 찾을 수 없음"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.TOOL_NOT_FOUND)
 
 
 class ToolExecutionError(DomainException):
@@ -73,13 +79,15 @@ class ToolLimitExceededError(DomainException):
 class LlmRateLimitError(DomainException):
     """LLM API Rate Limit 초과"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.LLM_RATE_LIMIT)
 
 
 class LlmAuthenticationError(DomainException):
     """LLM API 인증 실패"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.LLM_AUTHENTICATION)
 
 
 # ============================================================
@@ -90,7 +98,8 @@ class LlmAuthenticationError(DomainException):
 class ConversationNotFoundError(DomainException):
     """대화를 찾을 수 없음"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.CONVERSATION_NOT_FOUND)
 
 
 # ============================================================
@@ -101,10 +110,46 @@ class ConversationNotFoundError(DomainException):
 class InvalidUrlError(DomainException):
     """유효하지 않은 URL"""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.INVALID_URL)
 
 
 class ValidationError(DomainException):
     """입력 검증 실패"""
 
     pass
+
+
+# ============================================================
+# OAuth 관련 예외
+# ============================================================
+
+
+class OAuthTokenExchangeError(DomainException):
+    """OAuth Authorization Code → Access Token 교환 실패"""
+
+    pass
+
+
+class OAuthTokenRefreshError(DomainException):
+    """OAuth Refresh Token으로 Access Token 갱신 실패"""
+
+    pass
+
+
+class OAuthStateValidationError(DomainException):
+    """OAuth state 파라미터 검증 실패 (CSRF 방지)"""
+
+    pass
+
+
+# ============================================================
+# Workflow 관련 예외
+# ============================================================
+
+
+class WorkflowNotFoundError(DomainException):
+    """워크플로우를 찾을 수 없음"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.WORKFLOW_NOT_FOUND)

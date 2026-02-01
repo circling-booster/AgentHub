@@ -37,13 +37,14 @@ describe('Offscreen Document Handlers', () => {
         token: 'test-token',
       });
 
-      // Then: streamChat called with correct parameters (including token)
+      // Then: streamChat called with correct parameters (including token and page_context)
       expect(mockStreamChat).toHaveBeenCalledWith(
         'conv-123',
         'Test message',
         expect.any(Function),
         expect.any(AbortSignal),
         'test-token',
+        undefined, // page_context (not provided in this test)
       );
 
       // Events forwarded to Background

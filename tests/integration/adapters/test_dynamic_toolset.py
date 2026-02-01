@@ -12,13 +12,21 @@ from src.adapters.outbound.adk.dynamic_toolset import (
     DynamicToolset,
     ToolLimitExceededError,
 )
+from src.config.settings import McpSettings, Settings
 from src.domain.entities.endpoint import Endpoint, EndpointType
 
 
 @pytest.fixture
 def dynamic_toolset():
     """DynamicToolset 인스턴스 (캐시 TTL 1초로 설정)"""
-    return DynamicToolset(cache_ttl_seconds=1)
+    settings = Settings()
+    settings.mcp = McpSettings(
+        max_active_tools=30,
+        cache_ttl_seconds=1,  # 테스트용 짧은 TTL
+        max_retries=2,
+        retry_backoff_seconds=1.0,
+    )
+    return DynamicToolset(settings=settings)
 
 
 @pytest.fixture

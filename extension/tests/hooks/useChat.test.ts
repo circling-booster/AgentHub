@@ -322,4 +322,179 @@ describe('useChat', () => {
     const stored = await fakeBrowser.storage.session.get('chatState');
     expect(stored.chatState).toBeDefined();
   });
+
+  // Step 2: StreamChunk 이벤트 처리 테스트
+  it('should handle tool_call event and add indicator to messages', async () => {
+    // Given: Active stream
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => {
+      await result.current.sendMessage('Search for cats');
+    });
+
+    // When: tool_call event received
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: {
+          type: 'tool_call',
+          tool_name: 'search',
+          tool_arguments: { q: 'cats' },
+        },
+      });
+    });
+
+    // Then: Tool call tracked in messages state
+    expect(result.current.messages).toHaveLength(2); // user + assistant (with tool call)
+    const assistantMsg = result.current.messages[1];
+    expect(assistantMsg.role).toBe('assistant');
+    expect(assistantMsg.toolCalls).toBeDefined();
+    expect(assistantMsg.toolCalls).toHaveLength(1);
+    expect(assistantMsg.toolCalls![0]).toEqual({
+      name: 'search',
+      arguments: { q: 'cats' },
+    });
+  });
+
+  it('should handle tool_result event and update tool call status', async () => {
+    // Given: Tool call already made
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => {
+      await result.current.sendMessage('Search');
+    });
+
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: {
+          type: 'tool_call',
+          tool_name: 'search',
+          tool_arguments: { q: 'test' },
+        },
+      });
+    });
+
+    // When: tool_result event received
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: {
+          type: 'tool_result',
+          tool_name: 'search',
+          result: 'Found 10 results',
+        },
+      });
+    });
+
+    // Then: Tool result tracked
+    const assistantMsg = result.current.messages[1];
+    expect(assistantMsg.toolCalls).toHaveLength(1);
+    expect(assistantMsg.toolCalls![0].result).toBe('Found 10 results');
+  });
+
+  it('should handle agent_transfer event and add indicator to messages', async () => {
+    // Given: Active stream
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => {
+      await result.current.sendMessage('Complex task');
+    });
+
+    // When: agent_transfer event received
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: {
+          type: 'agent_transfer',
+          agent_name: 'specialist_agent',
+        },
+      });
+    });
+
+    // Then: Agent transfer tracked
+    const assistantMsg = result.current.messages[1];
+    expect(assistantMsg.agentTransfer).toBe('specialist_agent');
+  });
+
+  // Step 3: Typed Error Propagation 테스트
+  it('should handle error event with error_code', async () => {
+    // Given: Active stream
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    // When: Error event with typed code received
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: {
+          type: 'error',
+          content: 'Rate limit exceeded',
+          error_code: 'LlmRateLimitError',
+        },
+      });
+    });
+
+    // Then: User-friendly error message set
+    expect(result.current.error).toBe('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+    expect(result.current.streaming).toBe(false);
+  });
+
+  it('should map LlmAuthenticationError to user-friendly message', async () => {
+    // Given: Active stream
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    // When: Auth error received
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: {
+          type: 'error',
+          content: 'Invalid API key',
+          error_code: 'LlmAuthenticationError',
+        },
+      });
+    });
+
+    // Then: Auth error message
+    expect(result.current.error).toBe('API 인증 오류가 발생했습니다. 설정을 확인해주세요.');
+  });
+
+  it('should use generic message for UnknownError code', async () => {
+    // Given: Active stream
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    // When: Unknown error received
+    await act(async () => {
+      fakeBrowser.runtime.onMessage.trigger({
+        type: MessageType.STREAM_CHAT_EVENT,
+        requestId: 'any',
+        event: {
+          type: 'error',
+          content: 'Something unexpected',
+          error_code: 'UnknownError',
+        },
+      });
+    });
+
+    // Then: Generic error with original message
+    expect(result.current.error).toBe('오류가 발생했습니다: Something unexpected');
+  });
 });

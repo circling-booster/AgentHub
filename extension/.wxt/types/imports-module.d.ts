@@ -25,6 +25,7 @@ declare module '#imports' {
   export { McpServerManager } from '../components/McpServerManager';
   export { MessageBubble } from '../components/MessageBubble';
   export { ServerStatus } from '../components/ServerStatus';
+  export { ToolCallIndicator } from '../components/ToolCallIndicator';
   export { useA2aAgents } from '../hooks/useA2aAgents';
   export { useChat } from '../hooks/useChat';
   export { useMcpServers } from '../hooks/useMcpServers';

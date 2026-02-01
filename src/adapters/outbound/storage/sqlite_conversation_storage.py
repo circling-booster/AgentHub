@@ -109,6 +109,13 @@ class SqliteConversationStorage(ConversationStoragePort):
     async def _get_connection(self) -> aiosqlite.Connection:
         """싱글톤 연결 반환"""
         if self._connection is None:
+            # Ensure parent directory exists (CI 환경 대응)
+            import os
+
+            db_dir = os.path.dirname(self._db_path)
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+
             self._connection = await aiosqlite.connect(self._db_path)
             self._connection.row_factory = aiosqlite.Row
         return self._connection
@@ -321,6 +328,101 @@ class SqliteConversationStorage(ConversationStoragePort):
             return None
         conversation.messages = await self.get_messages(conversation_id)
         return conversation
+
+    async def save_tool_call(
+        self,
+        message_id: str,
+        tool_call: ToolCall,
+    ) -> None:
+        """
+        도구 호출 저장
+
+        Args:
+            message_id: 메시지 ID (FK)
+            tool_call: 저장할 ToolCall 객체
+        """
+        async with self._write_lock:
+            conn = await self._get_connection()
+            await conn.execute(
+                """
+                INSERT INTO tool_calls (
+                    id, message_id, tool_name, arguments,
+                    result, error, duration_ms, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    result = excluded.result,
+                    error = excluded.error,
+                    duration_ms = excluded.duration_ms
+                """,
+                (
+                    tool_call.id,
+                    message_id,
+                    tool_call.tool_name,
+                    json.dumps(tool_call.arguments),
+                    json.dumps(tool_call.result) if tool_call.result else None,
+                    tool_call.error,
+                    tool_call.duration_ms,
+                    tool_call.created_at.isoformat(),
+                ),
+            )
+            await conn.commit()
+
+    async def get_tool_calls(
+        self,
+        conversation_id: str,
+    ) -> list[ToolCall]:
+        """
+        대화의 모든 도구 호출 이력 조회
+
+        conversation_id에 속한 모든 메시지의 tool_calls를 JOIN하여 반환합니다.
+
+        Args:
+            conversation_id: 대화 ID
+
+        Returns:
+            ToolCall 목록 (시간순)
+        """
+        conn = await self._get_connection()
+
+        async with conn.execute(
+            """
+            SELECT tc.id, tc.tool_name, tc.arguments, tc.result, tc.error, tc.duration_ms, tc.created_at
+            FROM tool_calls tc
+            INNER JOIN messages m ON tc.message_id = m.id
+            WHERE m.conversation_id = ?
+            ORDER BY tc.created_at
+            """,
+            (conversation_id,),
+        ) as cursor:
+            rows = await cursor.fetchall()
+            tool_calls = []
+            for row in rows:
+                # arguments 파싱
+                arguments = row["arguments"]
+                if arguments:
+                    arguments = json.loads(arguments) if isinstance(arguments, str) else arguments
+                else:
+                    arguments = {}
+
+                # result 파싱
+                result = row["result"]
+                if result:
+                    result = json.loads(result) if isinstance(result, str) else result
+                else:
+                    result = None
+
+                tool_call = ToolCall(
+                    id=row["id"],
+                    tool_name=row["tool_name"],
+                    arguments=arguments,
+                    result=result,
+                    error=row["error"],
+                    duration_ms=row["duration_ms"],
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                )
+                tool_calls.append(tool_call)
+            return tool_calls
 
     async def close(self) -> None:
         """연결 종료"""

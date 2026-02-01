@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.exceptions import ConversationNotFoundError
 from src.domain.services.orchestrator_service import OrchestratorService
 from tests.unit.fakes import FakeConversationService
@@ -28,7 +29,9 @@ class TestOrchestratorService:
 
         # Then
         assert len(chunks) == 2
-        assert "".join(chunks) == "Hello! How can I help you?"
+        assert all(isinstance(c, StreamChunk) for c in chunks)
+        text = "".join(c.content for c in chunks if c.type == "text")
+        assert text == "Hello! How can I help you?"
 
     @pytest.mark.asyncio
     async def test_send_message_to_existing_conversation(self, service, conversation_service):
@@ -43,6 +46,7 @@ class TestOrchestratorService:
 
         # Then
         assert len(chunks) == 2
+        assert all(isinstance(c, StreamChunk) for c in chunks)
 
     @pytest.mark.asyncio
     async def test_send_message_nonexistent_conversation(self, service):

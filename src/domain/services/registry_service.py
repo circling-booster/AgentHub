@@ -3,13 +3,19 @@
 순수 Python으로 작성됩니다. 외부 라이브러리에 의존하지 않습니다.
 """
 
+import logging
+
+from src.domain.entities.auth_config import AuthConfig
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointType
 from src.domain.entities.tool import Tool
 from src.domain.exceptions import DuplicateEndpointError, EndpointNotFoundError
 from src.domain.ports.outbound.a2a_port import A2aPort
+from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
+
+logger = logging.getLogger(__name__)
 
 
 class RegistryService:
@@ -24,6 +30,7 @@ class RegistryService:
         _storage: 엔드포인트 저장소 포트
         _toolset: 도구셋 포트 (MCP용)
         _a2a_client: A2A 클라이언트 포트 (A2A용, 선택)
+        _orchestrator: 오케스트레이터 포트 (선택, A2A LLM 연결용)
     """
 
     def __init__(
@@ -31,22 +38,26 @@ class RegistryService:
         storage: EndpointStoragePort,
         toolset: ToolsetPort,
         a2a_client: A2aPort | None = None,
+        orchestrator: OrchestratorPort | None = None,
     ) -> None:
         """
         Args:
             storage: 엔드포인트 저장소 포트
             toolset: 도구셋 포트 (MCP용)
             a2a_client: A2A 클라이언트 포트 (선택, None이면 A2A 미지원)
+            orchestrator: 오케스트레이터 포트 (선택, A2A LLM 연결용)
         """
         self._storage = storage
         self._toolset = toolset
         self._a2a_client = a2a_client
+        self._orchestrator = orchestrator
 
     async def register_endpoint(
         self,
         url: str,
         name: str | None = None,
         endpoint_type: EndpointType = EndpointType.MCP,
+        auth_config: AuthConfig | None = None,
     ) -> Endpoint:
         """
         엔드포인트 등록
@@ -57,6 +68,7 @@ class RegistryService:
             url: 엔드포인트 URL
             name: 이름 (선택, 없으면 URL에서 추출)
             endpoint_type: 엔드포인트 타입 (MCP 또는 A2A, 기본값 MCP)
+            auth_config: 인증 설정 (선택, Phase 5-B Step 7)
 
         Returns:
             등록된 엔드포인트 객체
@@ -79,6 +91,7 @@ class RegistryService:
             url=url,
             type=endpoint_type,
             name=name or "",
+            auth_config=auth_config,  # Phase 5-B Step 7
         )
 
         # 타입별 처리
@@ -106,6 +119,10 @@ class RegistryService:
             agent_card = await self._a2a_client.register_agent(endpoint)
             endpoint.agent_card = agent_card
 
+            # LLM에 A2A 에이전트 연결 (orchestrator가 있는 경우만)
+            if self._orchestrator:
+                await self._orchestrator.add_a2a_agent(endpoint.id, url)
+
         # 저장
         await self._storage.save_endpoint(endpoint)
 
@@ -127,8 +144,12 @@ class RegistryService:
             return False
 
         # 타입별 해제 처리
-        if endpoint.type == EndpointType.A2A and self._a2a_client:
-            await self._a2a_client.unregister_agent(endpoint_id)
+        if endpoint.type == EndpointType.A2A:
+            if self._a2a_client:
+                await self._a2a_client.unregister_agent(endpoint_id)
+            # LLM에서 A2A 에이전트 연결 해제 (orchestrator가 있는 경우만)
+            if self._orchestrator:
+                await self._orchestrator.remove_a2a_agent(endpoint_id)
         elif endpoint.type == EndpointType.MCP:
             await self._toolset.remove_mcp_server(endpoint_id)
 
@@ -238,3 +259,45 @@ class RegistryService:
         endpoint.disable()
         await self._storage.save_endpoint(endpoint)
         return True
+
+    async def restore_endpoints(self) -> dict[str, list[str]]:
+        """
+        서버 시작 시 저장된 엔드포인트 복원
+
+        저장소에 있는 모든 엔드포인트를 재연결합니다.
+        실패한 엔드포인트는 건너뛰고 계속 진행합니다.
+
+        Returns:
+            {"restored": [...], "failed": [...]} 딕셔너리
+        """
+        endpoints = await self._storage.list_endpoints()
+        restored: list[str] = []
+        failed: list[str] = []
+
+        for endpoint in endpoints:
+            try:
+                if endpoint.type == EndpointType.MCP:
+                    # MCP 서버 재연결
+                    await self._toolset.add_mcp_server(endpoint)
+                    restored.append(endpoint.url)
+
+                elif endpoint.type == EndpointType.A2A:
+                    # A2A 에이전트 재등록
+                    if self._a2a_client and self._orchestrator:
+                        agent_card = await self._a2a_client.register_agent(endpoint)
+                        endpoint.agent_card = agent_card
+                        await self._orchestrator.add_a2a_agent(endpoint.id, endpoint.url)
+                        restored.append(endpoint.url)
+                    else:
+                        logger.warning(
+                            f"A2A endpoint {endpoint.url} skipped: "
+                            "a2a_client or orchestrator not configured"
+                        )
+                        failed.append(endpoint.url)
+
+            except Exception as e:
+                logger.warning(f"Failed to restore endpoint {endpoint.url}: {e}")
+                failed.append(endpoint.url)
+
+        logger.info(f"Endpoints restored: {len(restored)}, failed: {len(failed)}")
+        return {"restored": restored, "failed": failed}

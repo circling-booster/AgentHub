@@ -17,6 +17,7 @@ from src.adapters.outbound.storage.sqlite_conversation_storage import (
 )
 from src.config.settings import Settings
 from src.domain.services.conversation_service import ConversationService
+from src.domain.services.health_monitor_service import HealthMonitorService
 from src.domain.services.orchestrator_service import OrchestratorService
 from src.domain.services.registry_service import RegistryService
 
@@ -46,13 +47,14 @@ class Container(containers.DeclarativeContainer):
     # ADK Adapters
     dynamic_toolset = providers.Singleton(
         DynamicToolset,
-        cache_ttl_seconds=settings.provided.mcp.cache_ttl_seconds,
+        settings=settings,
     )
 
     orchestrator_adapter = providers.Singleton(
         AdkOrchestratorAdapter,
         model=settings.provided.llm.default_model,
         dynamic_toolset=dynamic_toolset,
+        enable_llm_logging=settings.provided.observability.log_llm_requests,
     )
 
     # A2A Adapter
@@ -75,4 +77,13 @@ class Container(containers.DeclarativeContainer):
         toolset=dynamic_toolset,
         storage=endpoint_storage,
         a2a_client=a2a_client_adapter,
+        orchestrator=orchestrator_adapter,
+    )
+
+    health_monitor_service = providers.Factory(
+        HealthMonitorService,
+        storage=endpoint_storage,
+        toolset=dynamic_toolset,
+        a2a_client=a2a_client_adapter,
+        check_interval_seconds=settings.provided.health_check.interval_seconds,
     )

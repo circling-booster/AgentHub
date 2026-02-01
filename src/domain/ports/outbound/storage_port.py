@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from src.domain.entities.conversation import Conversation
     from src.domain.entities.endpoint import Endpoint
     from src.domain.entities.message import Message
+    from src.domain.entities.tool_call import ToolCall
 
 
 class ConversationStoragePort(ABC):
@@ -126,6 +127,43 @@ class ConversationStoragePort(ABC):
             return None
         conversation.messages = await self.get_messages(conversation_id)
         return conversation
+
+    @abstractmethod
+    async def save_tool_call(
+        self,
+        message_id: str,
+        tool_call: "ToolCall",
+    ) -> None:
+        """
+        도구 호출 저장
+
+        ToolCall은 Message에 종속된 엔티티입니다.
+        Message 저장 후 이 메서드로 ToolCall을 저장합니다.
+
+        Args:
+            message_id: 메시지 ID (FK)
+            tool_call: 저장할 ToolCall 객체
+        """
+        pass
+
+    @abstractmethod
+    async def get_tool_calls(
+        self,
+        conversation_id: str,
+    ) -> list["ToolCall"]:
+        """
+        대화의 모든 도구 호출 이력 조회
+
+        conversation_id로 조회하지만, 내부적으로는 해당 대화의
+        모든 메시지의 tool_calls를 JOIN하여 반환합니다.
+
+        Args:
+            conversation_id: 대화 ID
+
+        Returns:
+            ToolCall 목록 (시간순)
+        """
+        pass
 
 
 class EndpointStoragePort(ABC):

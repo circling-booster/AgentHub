@@ -7,7 +7,8 @@ import asyncio
 import contextlib
 import logging
 
-from src.domain.entities.enums import EndpointStatus
+from src.domain.entities.enums import EndpointStatus, EndpointType
+from src.domain.ports.outbound.a2a_port import A2aPort
 from src.domain.ports.outbound.storage_port import EndpointStoragePort
 from src.domain.ports.outbound.toolset_port import ToolsetPort
 
@@ -23,7 +24,8 @@ class HealthMonitorService:
 
     Attributes:
         _storage: 엔드포인트 저장소 포트
-        _toolset: 도구셋 포트
+        _toolset: 도구셋 포트 (MCP health check)
+        _a2a_client: A2A 클라이언트 포트 (A2A health check, optional)
         _check_interval: 확인 주기 (초)
         _running: 실행 중 여부
         _task: 백그라운드 작업
@@ -33,16 +35,19 @@ class HealthMonitorService:
         self,
         storage: EndpointStoragePort,
         toolset: ToolsetPort,
+        a2a_client: A2aPort | None = None,
         check_interval_seconds: int = 30,
     ) -> None:
         """
         Args:
             storage: 엔드포인트 저장소 포트
-            toolset: 도구셋 포트
+            toolset: 도구셋 포트 (MCP health check)
+            a2a_client: A2A 클라이언트 포트 (optional)
             check_interval_seconds: 상태 확인 주기 (초)
         """
         self._storage = storage
         self._toolset = toolset
+        self._a2a_client = a2a_client
         self._check_interval = check_interval_seconds
         self._running = False
         self._task: asyncio.Task | None = None
@@ -111,7 +116,17 @@ class HealthMonitorService:
             if not endpoint.enabled:
                 continue
 
-            is_healthy = await self._toolset.health_check(endpoint.id)
+            # 타입별 health check
+            if endpoint.type == EndpointType.MCP:
+                is_healthy = await self._toolset.health_check(endpoint.id)
+            elif endpoint.type == EndpointType.A2A:
+                if self._a2a_client:
+                    is_healthy = await self._a2a_client.health_check(endpoint.id)
+                else:
+                    is_healthy = False
+            else:
+                is_healthy = False
+
             results[endpoint.id] = is_healthy
 
             # 상태 갱신
@@ -135,7 +150,16 @@ class HealthMonitorService:
         if endpoint is None:
             return False
 
-        is_healthy = await self._toolset.health_check(endpoint_id)
+        # 타입별 health check
+        if endpoint.type == EndpointType.MCP:
+            is_healthy = await self._toolset.health_check(endpoint_id)
+        elif endpoint.type == EndpointType.A2A:
+            if self._a2a_client:
+                is_healthy = await self._a2a_client.health_check(endpoint_id)
+            else:
+                is_healthy = False
+        else:
+            is_healthy = False
 
         # 상태 갱신
         new_status = EndpointStatus.CONNECTED if is_healthy else EndpointStatus.ERROR

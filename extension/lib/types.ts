@@ -19,14 +19,67 @@ export interface StreamEventDone {
   type: 'done';
 }
 
+export interface StreamEventToolCall {
+  type: 'tool_call';
+  tool_name: string;
+  tool_arguments: Record<string, unknown>;
+}
+
+export interface StreamEventToolResult {
+  type: 'tool_result';
+  tool_name: string;
+  result: string;
+}
+
+export interface StreamEventAgentTransfer {
+  type: 'agent_transfer';
+  agent_name: string;
+}
+
+export interface StreamEventWorkflowStart {
+  type: 'workflow_start';
+  workflow_id: string;
+  workflow_type: string;
+  total_steps: number;
+}
+
+export interface StreamEventWorkflowStepStart {
+  type: 'workflow_step_start';
+  workflow_id: string;
+  step_number: number;
+  agent_name: string;
+}
+
+export interface StreamEventWorkflowStepComplete {
+  type: 'workflow_step_complete';
+  workflow_id: string;
+  step_number: number;
+  agent_name: string;
+}
+
+export interface StreamEventWorkflowComplete {
+  type: 'workflow_complete';
+  workflow_id: string;
+  status: string;
+  total_steps: number;
+}
+
 export interface StreamEventError {
   type: 'error';
-  message: string;
+  content: string;
+  error_code?: string;
 }
 
 export type StreamEvent =
   | StreamEventConversationCreated
   | StreamEventText
+  | StreamEventToolCall
+  | StreamEventToolResult
+  | StreamEventAgentTransfer
+  | StreamEventWorkflowStart
+  | StreamEventWorkflowStepStart
+  | StreamEventWorkflowStepComplete
+  | StreamEventWorkflowComplete
   | StreamEventDone
   | StreamEventError;
 
@@ -37,6 +90,23 @@ export interface Conversation {
   created_at: string;
 }
 
+/** AuthConfig (matches server AuthConfigSchema) */
+export interface AuthConfig {
+  auth_type: 'none' | 'header' | 'api_key' | 'oauth2';
+  headers?: Record<string, string>;
+  api_key?: string;
+  api_key_header?: string;
+  api_key_prefix?: string;
+  oauth2_client_id?: string;
+  oauth2_client_secret?: string;
+  oauth2_token_url?: string;
+  oauth2_authorize_url?: string;
+  oauth2_scope?: string;
+  oauth2_access_token?: string;
+  oauth2_refresh_token?: string;
+  oauth2_token_expires_at?: number;
+}
+
 /** MCP Server (matches server MCP routes response) */
 export interface McpServer {
   id: string;
@@ -45,6 +115,7 @@ export interface McpServer {
   enabled: boolean;
   registered_at: string;
   tools?: Tool[];
+  auth?: AuthConfig;  // Phase 5-B Step 7
 }
 
 /** Tool (matches server Tool schema) */
@@ -60,12 +131,21 @@ export interface HealthStatus {
   timestamp?: string;
 }
 
+/** Tool call information */
+export interface ToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+  result?: string;
+}
+
 /** Chat message for UI state */
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   createdAt: Date;
+  toolCalls?: ToolCall[];
+  agentTransfer?: string;
 }
 
 /** A2A Agent (matches server A2aAgentResponse schema) */
@@ -77,4 +157,30 @@ export interface A2aAgent {
   enabled: boolean;
   agent_card: Record<string, unknown> | null;
   registered_at: string;
+}
+
+/** Page Context (Phase 5 Part C - Content Script) */
+export interface PageContext {
+  url: string;
+  title: string;
+  selectedText: string;
+  metaDescription: string;
+  mainContent: string; // Simplified main content (max 2000 chars)
+}
+
+/** Workflow Step (Phase 5 Part E - matches server WorkflowStepSchema) */
+export interface WorkflowStep {
+  agent_endpoint_id: string;
+  output_key: string;
+  instruction?: string;
+}
+
+/** Workflow (Phase 5 Part E - matches server WorkflowResponse schema) */
+export interface Workflow {
+  id: string;
+  name: string;
+  workflow_type: 'sequential' | 'parallel';
+  description: string;
+  steps: WorkflowStep[];
+  created_at: string;
 }

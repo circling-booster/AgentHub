@@ -9,6 +9,7 @@ Fake Adapters for Testing
     또는 conftest.py의 fixture를 사용하세요.
 """
 
+from tests.unit.fakes.fake_a2a_client import FakeA2aClient
 from tests.unit.fakes.fake_conversation_service import FakeConversationService
 from tests.unit.fakes.fake_orchestrator import FakeOrchestrator
 from tests.unit.fakes.fake_storage import (
@@ -18,6 +19,7 @@ from tests.unit.fakes.fake_storage import (
 from tests.unit.fakes.fake_toolset import FakeToolset
 
 __all__ = [
+    "FakeA2aClient",
     "FakeConversationService",
     "FakeConversationStorage",
     "FakeEndpointStorage",

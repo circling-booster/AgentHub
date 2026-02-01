@@ -9,6 +9,7 @@ from src.domain.exceptions import EndpointConnectionError, EndpointNotFoundError
 from src.domain.services.registry_service import RegistryService
 from tests.unit.fakes import FakeEndpointStorage, FakeToolset
 from tests.unit.fakes.fake_a2a_client import FakeA2aClient
+from tests.unit.fakes.fake_orchestrator import FakeOrchestrator
 
 
 class TestRegistryService:
@@ -309,3 +310,231 @@ class TestRegistryServiceA2A:
                 url="http://localhost:9001",
                 endpoint_type=EndpointType.A2A,
             )
+
+    @pytest.mark.asyncio
+    async def test_register_a2a_calls_orchestrator_add_agent(self, storage, toolset, a2a_client):
+        """
+        Given: orchestrator가 주입된 RegistryService
+        When: A2A 엔드포인트 등록 시
+        Then: orchestrator.add_a2a_agent()가 호출됨
+        """
+        # Given
+        orchestrator = FakeOrchestrator()
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+        # When
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # Then
+        assert len(orchestrator.added_a2a_agents) == 1
+        assert orchestrator.added_a2a_agents[0] == (endpoint.id, "http://localhost:9001")
+
+    @pytest.mark.asyncio
+    async def test_unregister_a2a_calls_orchestrator_remove_agent(
+        self, storage, toolset, a2a_client
+    ):
+        """
+        Given: orchestrator가 주입된 RegistryService + 등록된 A2A 엔드포인트
+        When: A2A 엔드포인트 삭제 시
+        Then: orchestrator.remove_a2a_agent()가 호출됨
+        """
+        # Given
+        orchestrator = FakeOrchestrator()
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # When
+        await service.unregister_endpoint(endpoint.id)
+
+        # Then
+        assert len(orchestrator.removed_a2a_agents) == 1
+        assert orchestrator.removed_a2a_agents[0] == endpoint.id
+
+    @pytest.mark.asyncio
+    async def test_register_a2a_without_orchestrator_graceful(self, storage, toolset, a2a_client):
+        """
+        Given: orchestrator=None인 RegistryService
+        When: A2A 엔드포인트 등록 시
+        Then: 에러 없이 정상 등록 (graceful skip)
+        """
+        # Given
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=None,
+        )
+
+        # When
+        endpoint = await service.register_endpoint(
+            url="http://localhost:9001",
+            endpoint_type=EndpointType.A2A,
+        )
+
+        # Then
+        assert endpoint.type == EndpointType.A2A
+        assert endpoint.agent_card is not None
+
+    @pytest.mark.asyncio
+    async def test_register_mcp_ignores_orchestrator(self, storage, toolset, a2a_client):
+        """
+        Given: orchestrator가 주입된 RegistryService
+        When: MCP 엔드포인트 등록 시
+        Then: orchestrator.add_a2a_agent()가 호출되지 않음 (regression 방지)
+        """
+        # Given
+        orchestrator = FakeOrchestrator()
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+        # When
+        await service.register_endpoint(
+            url="https://mcp.example.com/server",
+            endpoint_type=EndpointType.MCP,
+        )
+
+        # Then
+        assert len(orchestrator.added_a2a_agents) == 0
+
+
+class TestRegistryServiceRestore:
+    """RegistryService 엔드포인트 복원 테스트"""
+
+    @pytest.fixture
+    def storage(self):
+        return FakeEndpointStorage()
+
+    @pytest.fixture
+    def toolset(self):
+        return FakeToolset()
+
+    @pytest.fixture
+    def a2a_client(self):
+        return FakeA2aClient()
+
+    @pytest.fixture
+    def orchestrator(self):
+        return FakeOrchestrator()
+
+    @pytest.fixture
+    def service(self, storage, toolset, a2a_client, orchestrator):
+        return RegistryService(
+            storage=storage,
+            toolset=toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+    @pytest.mark.asyncio
+    async def test_restore_mcp_endpoints_reconnects(self, service, storage, toolset):
+        """
+        Given: 저장소에 MCP 엔드포인트 존재
+        When: restore_endpoints() 호출
+        Then: DynamicToolset에 재연결됨
+        """
+        # Given: 저장소에 MCP 엔드포인트 저장
+        mcp_endpoint = Endpoint(
+            url="https://mcp.example.com/server",
+            type=EndpointType.MCP,
+            name="Test MCP",
+        )
+        await storage.save_endpoint(mcp_endpoint)
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 재연결 성공
+        assert mcp_endpoint.url in result["restored"]
+        assert len(result["failed"]) == 0
+        assert mcp_endpoint.id in toolset.added_servers
+
+    @pytest.mark.asyncio
+    async def test_restore_a2a_endpoints_rewires(self, service, storage, a2a_client, orchestrator):
+        """
+        Given: 저장소에 A2A 엔드포인트 존재
+        When: restore_endpoints() 호출
+        Then: A2A 클라이언트 + Orchestrator에 재등록됨
+        """
+        # Given: 저장소에 A2A 엔드포인트 저장
+        a2a_endpoint = Endpoint(
+            url="http://localhost:9001",
+            type=EndpointType.A2A,
+            name="Test A2A",
+        )
+        await storage.save_endpoint(a2a_endpoint)
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 재등록 성공
+        assert a2a_endpoint.url in result["restored"]
+        assert len(result["failed"]) == 0
+        assert a2a_endpoint.id in a2a_client._agents
+        assert len(orchestrator.added_a2a_agents) == 1
+        assert orchestrator.added_a2a_agents[0] == (
+            a2a_endpoint.id,
+            "http://localhost:9001",
+        )
+
+    @pytest.mark.asyncio
+    async def test_restore_failed_endpoint_skipped(self, storage, a2a_client, orchestrator):
+        """
+        Given: 연결 실패하는 MCP 엔드포인트
+        When: restore_endpoints() 호출
+        Then: failed 목록에 포함되고 graceful 처리
+        """
+        # Given: 연결 실패하는 Toolset
+        failing_toolset = FakeToolset(should_fail_connection=True)
+        service = RegistryService(
+            storage=storage,
+            toolset=failing_toolset,
+            a2a_client=a2a_client,
+            orchestrator=orchestrator,
+        )
+
+        mcp_endpoint = Endpoint(
+            url="https://bad-server.com/mcp",
+            type=EndpointType.MCP,
+        )
+        await storage.save_endpoint(mcp_endpoint)
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 실패 처리 (에러 없음)
+        assert mcp_endpoint.url in result["failed"]
+        assert len(result["restored"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_restore_empty_storage(self, service):
+        """
+        Given: 저장소가 비어있음
+        When: restore_endpoints() 호출
+        Then: 빈 결과 반환
+        """
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 빈 결과
+        assert len(result["restored"]) == 0
+        assert len(result["failed"]) == 0

@@ -6,7 +6,7 @@
  */
 
 import { API_BASE } from './constants';
-import type { StreamEvent } from './types';
+import type { StreamEvent, PageContext } from './types';
 
 // Re-export StreamEvent for offscreen-handlers compatibility
 export type { StreamEvent } from './types';
@@ -19,6 +19,7 @@ export type { StreamEvent } from './types';
  * @param onEvent - Callback for each SSE event
  * @param signal - AbortSignal for cancellation
  * @param token - Extension authentication token
+ * @param pageContext - Page context (Phase 5 Part C)
  * @throws Error if HTTP error or network error
  */
 export async function streamChat(
@@ -27,6 +28,7 @@ export async function streamChat(
   onEvent: (event: StreamEvent) => void,
   signal?: AbortSignal,
   token?: string,
+  pageContext?: PageContext,
 ): Promise<void> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -43,6 +45,7 @@ export async function streamChat(
     body: JSON.stringify({
       conversation_id: conversationId,
       message,
+      page_context: pageContext,
     }),
     signal,
   });

@@ -7,12 +7,14 @@
 import { streamChat, StreamEvent } from './sse';
 import { MessageType } from './messaging';
 import type { ExtensionMessage } from './messaging';
+import type { PageContext } from './types';
 
 interface StreamChatPayload {
   conversationId: string | null;
   message: string;
   requestId: string;
   token: string;
+  page_context?: PageContext;
 }
 
 // Active stream tracking
@@ -22,7 +24,7 @@ const activeStreams = new Map<string, AbortController>();
  * Handle STREAM_CHAT message from Background
  */
 export async function handleStreamChat(payload: StreamChatPayload): Promise<void> {
-  const { conversationId, message, requestId, token } = payload;
+  const { conversationId, message, requestId, token, page_context } = payload;
 
   // Create AbortController for this stream
   const controller = new AbortController();
@@ -42,6 +44,7 @@ export async function handleStreamChat(payload: StreamChatPayload): Promise<void
       },
       controller.signal,
       token,
+      page_context,
     );
 
     // Stream completed successfully

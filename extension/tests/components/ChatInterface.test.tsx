@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ChatInterface } from '../../components/ChatInterface';
 
@@ -7,10 +7,28 @@ vi.mock('../../hooks/useChat', () => ({
   useChat: vi.fn(),
 }));
 
+// Mock usePageContext hook
+vi.mock('../../lib/hooks/usePageContext', () => ({
+  usePageContext: vi.fn(),
+}));
+
 import { useChat } from '../../hooks/useChat';
+import { usePageContext } from '../../lib/hooks/usePageContext';
 const mockUseChat = vi.mocked(useChat);
+const mockUsePageContext = vi.mocked(usePageContext);
 
 describe('ChatInterface', () => {
+  beforeEach(() => {
+    // Default mock for usePageContext
+    mockUsePageContext.mockReturnValue({
+      enabled: false,
+      context: null,
+      loading: false,
+      toggleEnabled: vi.fn(),
+      fetchContext: vi.fn(),
+    });
+  });
+
   it('should render empty state message when no messages', () => {
     mockUseChat.mockReturnValue({
       messages: [],
@@ -107,5 +125,70 @@ describe('ChatInterface', () => {
     render(<ChatInterface />);
 
     expect(screen.getByTestId('streaming-indicator')).toBeDefined();
+  });
+
+  it('should render page context toggle', () => {
+    mockUseChat.mockReturnValue({
+      messages: [],
+      conversationId: null,
+      streaming: false,
+      error: null,
+      sendMessage: vi.fn(),
+    });
+
+    render(<ChatInterface />);
+
+    const toggle = screen.getByLabelText('Include page context');
+    expect(toggle).toBeDefined();
+    expect((toggle as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('should call toggleEnabled when page context checkbox is clicked', () => {
+    const toggleEnabled = vi.fn();
+    mockUsePageContext.mockReturnValue({
+      enabled: false,
+      context: null,
+      loading: false,
+      toggleEnabled,
+      fetchContext: vi.fn(),
+    });
+
+    mockUseChat.mockReturnValue({
+      messages: [],
+      conversationId: null,
+      streaming: false,
+      error: null,
+      sendMessage: vi.fn(),
+    });
+
+    render(<ChatInterface />);
+
+    const toggle = screen.getByLabelText('Include page context') as HTMLInputElement;
+    fireEvent.click(toggle);
+
+    expect(toggleEnabled).toHaveBeenCalledTimes(1);
+  });
+
+  it('should show checked toggle when page context is enabled', () => {
+    mockUsePageContext.mockReturnValue({
+      enabled: true,
+      context: { url: 'https://example.com', title: 'Test', selectedText: '', metaDescription: '', mainContent: '' },
+      loading: false,
+      toggleEnabled: vi.fn(),
+      fetchContext: vi.fn(),
+    });
+
+    mockUseChat.mockReturnValue({
+      messages: [],
+      conversationId: null,
+      streaming: false,
+      error: null,
+      sendMessage: vi.fn(),
+    });
+
+    render(<ChatInterface />);
+
+    const toggle = screen.getByLabelText('Include page context') as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
   });
 });

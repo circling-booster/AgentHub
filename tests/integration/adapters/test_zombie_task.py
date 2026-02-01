@@ -8,6 +8,8 @@ import logging
 
 import pytest
 
+from src.domain.entities.stream_chunk import StreamChunk
+
 # Caplog 테스트를 위해 로거 가져오기
 logger = logging.getLogger("src.adapters.inbound.http.routes.chat")
 
@@ -37,7 +39,7 @@ class TestZombieTaskCancellation:
 
         # orchestrator.send_message가 async generator로 CancelledError를 발생시킴
         async def send_message_gen(*args, **kwargs):
-            yield "chunk1"
+            yield StreamChunk.text("chunk1")
             await asyncio.sleep(0.01)
             # CancelledError 발생
             raise asyncio.CancelledError()
@@ -91,7 +93,7 @@ class TestZombieTaskCancellation:
         async def send_message_gen(*args, **kwargs):
             for i in range(10):
                 await asyncio.sleep(0.01)
-                yield f"chunk_{i}"
+                yield StreamChunk.text(f"chunk_{i}")
 
         orchestrator.send_message = send_message_gen
 

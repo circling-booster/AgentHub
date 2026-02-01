@@ -12,7 +12,7 @@ from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
 
 toolset = MCPToolset(
     connection_params=StreamableHTTPConnectionParams(
-        url="https://example-server.modelcontextprotocol.io/mcp",
+        url="http://127.0.0.1:9000/mcp",
         timeout=120,
     ),
 )
@@ -60,7 +60,7 @@ async def _create_mcp_toolset(self, url: str) -> MCPToolset:
 
 ## MCP Test Server
 
-Integration testing endpoint: `https://example-server.modelcontextprotocol.io/mcp`
+Integration testing endpoint: `http://127.0.0.1:9000/mcp`
 
 ## Spec References
 
