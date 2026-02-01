@@ -5,9 +5,12 @@ AgentHub 공통 테스트 픽스처
 pytest가 자동으로 이 파일을 로드합니다.
 """
 
+import contextlib
 import os
+import platform
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -65,24 +68,35 @@ def pytest_sessionfinish(session, exitstatus):  # noqa: ARG001 - pytest hook sig
     로그를 작성하려 시도하는 문제를 방지합니다.
 
     Issue: ValueError: I/O operation on closed file
-    Solution: pytest 종료 전에 LoggingWorker를 명시적으로 종료
+    Solution: pytest 종료 전에 LoggingWorker를 명시적으로 종료하고
+    atexit 핸들러를 제거합니다.
     """
+    import atexit
+
     try:
-        # Method 1: LoggingWorker stop (if available)
+        # Method 1: LoggingWorker stop + atexit 해제
         from litellm.litellm_core_utils.logging_worker import logging_worker_thread
 
-        if logging_worker_thread is not None and hasattr(logging_worker_thread, "stop"):
-            logging_worker_thread.stop()
+        if logging_worker_thread is not None:
+            # Stop the worker thread
+            if hasattr(logging_worker_thread, "stop"):
+                logging_worker_thread.stop()
+
+            # Unregister atexit handler to prevent _flush_on_exit from firing
+            if hasattr(logging_worker_thread, "_flush_on_exit"):
+                with contextlib.suppress(Exception):
+                    atexit.unregister(logging_worker_thread._flush_on_exit)
     except (ImportError, AttributeError):
         pass
 
     try:
-        # Method 2: Suppress litellm verbose logger
+        # Method 2: Suppress litellm verbose logger and all handlers
         import logging
 
-        litellm_logger = logging.getLogger("litellm")
-        litellm_logger.handlers.clear()
-        litellm_logger.propagate = False
+        for logger_name in ("litellm", "LiteLLM", "LiteLLM Router", "LiteLLM Proxy"):
+            target_logger = logging.getLogger(logger_name)
+            target_logger.handlers.clear()
+            target_logger.propagate = False
     except Exception:
         pass
 
@@ -174,6 +188,72 @@ def _is_port_in_use(port: int) -> bool:
             return True
 
 
+def _subprocess_popen_safe(cmd: list, **kwargs) -> tuple[subprocess.Popen, Path | None]:
+    """Start subprocess with pipe-deadlock-safe I/O handling.
+
+    On long-running subprocesses (uvicorn servers), stdout/stderr PIPE buffers
+    (64KB) fill up and block the child process, causing deadlocks on teardown.
+
+    Solution: Redirect stdout to DEVNULL, stderr to a temp file for startup
+    diagnostics. Caller must clean up the temp file.
+
+    On Windows, uses CREATE_NEW_PROCESS_GROUP for reliable termination.
+
+    Returns:
+        (process, stderr_path): Process and path to stderr temp file (or None)
+    """
+    # Create temp file for stderr (startup diagnostics)
+    stderr_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
+        mode="w", suffix=".log", prefix="agenthub_test_", delete=False
+    )
+    stderr_path = Path(stderr_file.name)
+
+    # Windows: CREATE_NEW_PROCESS_GROUP for reliable termination
+    creationflags = 0
+    if platform.system() == "Windows":
+        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.DEVNULL,
+        stderr=stderr_file,
+        creationflags=creationflags,
+        **kwargs,
+    )
+
+    return proc, stderr_path
+
+
+def _terminate_process_safe(proc: subprocess.Popen, stderr_path: Path | None = None) -> None:
+    """Safely terminate a subprocess without deadlock risk.
+
+    Args:
+        proc: The subprocess to terminate
+        stderr_path: Path to stderr temp file to clean up
+    """
+    proc.terminate()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=5)
+
+    # Clean up stderr temp file
+    if stderr_path and stderr_path.exists():
+        with contextlib.suppress(OSError):
+            stderr_path.unlink()
+
+
+def _read_stderr_file(stderr_path: Path | None) -> str:
+    """Read stderr from temp file for diagnostics."""
+    if stderr_path and stderr_path.exists():
+        try:
+            return stderr_path.read_text(errors="replace")
+        except OSError:
+            return ""
+    return ""
+
+
 def _wait_for_health(url: str, timeout: int = 10) -> bool:
     """
     Wait for A2A server to be ready by checking agent card endpoint.
@@ -224,36 +304,26 @@ def a2a_echo_agent():
     port = int(os.environ.get("A2A_ECHO_PORT", "9003"))
     base_url = f"http://127.0.0.1:{port}"
 
-    # Start echo agent subprocess
-    proc = subprocess.Popen(
+    # Start echo agent subprocess (pipe-deadlock-safe)
+    proc, stderr_path = _subprocess_popen_safe(
         [sys.executable, str(echo_script), str(port)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
     )
 
     # Wait for health check (A2A server may take 15s to start)
     if not _wait_for_health(base_url, timeout=20):
-        proc.terminate()
-        stdout, stderr = proc.communicate(timeout=5)
+        stderr_content = _read_stderr_file(stderr_path)
+        _terminate_process_safe(proc, stderr_path)
         error_msg = f"Echo agent failed to start on port {port}\n"
-        if stderr:
-            error_msg += f"STDERR:\n{stderr}\n"
-        if stdout:
-            error_msg += f"STDOUT:\n{stdout}\n"
+        if stderr_content:
+            error_msg += f"STDERR:\n{stderr_content}\n"
         pytest.fail(error_msg)
 
     print(f"\n✓ A2A Echo Agent started: {base_url}")
 
     yield base_url
 
-    # Cleanup
-    proc.terminate()
-    try:
-        proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.wait()
+    # Cleanup (deadlock-safe)
+    _terminate_process_safe(proc, stderr_path)
 
     print("\n✓ A2A Echo Agent stopped")
 
@@ -277,36 +347,26 @@ def a2a_math_agent():
     port = _get_free_port()
     base_url = f"http://127.0.0.1:{port}"
 
-    # Start math agent subprocess
-    proc = subprocess.Popen(
+    # Start math agent subprocess (pipe-deadlock-safe)
+    proc, stderr_path = _subprocess_popen_safe(
         [sys.executable, str(math_script), str(port)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
     )
 
     # Wait for health check (LLM agent may take longer to start)
     if not _wait_for_health(base_url, timeout=30):
-        proc.terminate()
-        stdout, stderr = proc.communicate(timeout=5)
+        stderr_content = _read_stderr_file(stderr_path)
+        _terminate_process_safe(proc, stderr_path)
         error_msg = f"Math agent failed to start on port {port}\n"
-        if stderr:
-            error_msg += f"STDERR:\n{stderr}\n"
-        if stdout:
-            error_msg += f"STDOUT:\n{stdout}\n"
+        if stderr_content:
+            error_msg += f"STDERR:\n{stderr_content}\n"
         pytest.fail(error_msg)
 
     print(f"\n✓ A2A Math Agent started: {base_url}")
 
     yield base_url
 
-    # Cleanup
-    proc.terminate()
-    try:
-        proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.wait()
+    # Cleanup (deadlock-safe)
+    _terminate_process_safe(proc, stderr_path)
 
     print("\n✓ A2A Math Agent stopped")
 
@@ -368,20 +428,17 @@ def mcp_synapse_server():
     env[f"SYNAPSE_PORT_{port_oauth}_AUTH"] = "oauth"
     env[f"SYNAPSE_PORT_{port_oauth}_OAUTH_ISSUER"] = "https://mock-issuer.example.com"
 
-    # Synapse subprocess 시작 (다중 포트 모드)
-    proc = subprocess.Popen(
+    # Synapse subprocess 시작 (다중 포트 모드, pipe-deadlock-safe)
+    proc, stderr_path = _subprocess_popen_safe(
         [sys.executable, "-m", "synapse", "--multi"],
         cwd=str(synapse_dir),  # Synapse 디렉토리에서 실행
         env=env,  # 환경변수 전달
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
     )
 
     # Health check: MCP 엔드포인트 응답 대기
     start_time = time.time()
-    timeout = 15
-    while time.time() - start_time < timeout:
+    health_timeout = 15
+    while time.time() - start_time < health_timeout:
         try:
             response = httpx.get(base_url, timeout=2.0)
             if response.status_code in (200, 404):  # Synapse는 root에 404 반환 가능
@@ -391,25 +448,18 @@ def mcp_synapse_server():
         time.sleep(0.5)
     else:
         # Timeout 시 프로세스 종료 및 에러 출력
-        proc.terminate()
-        stdout, stderr = proc.communicate(timeout=5)
+        stderr_content = _read_stderr_file(stderr_path)
+        _terminate_process_safe(proc, stderr_path)
         error_msg = f"Synapse MCP server failed to start on port {port}\n"
-        if stderr:
-            error_msg += f"STDERR:\n{stderr}\n"
-        if stdout:
-            error_msg += f"STDOUT:\n{stdout}\n"
+        if stderr_content:
+            error_msg += f"STDERR:\n{stderr_content}\n"
         pytest.fail(error_msg)
 
     print(f"\n✓ Synapse MCP Server started (multi-port): {mcp_url} (9000-9002)")
 
     yield mcp_url
 
-    # Cleanup
-    proc.terminate()
-    try:
-        proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.wait()
+    # Cleanup (deadlock-safe)
+    _terminate_process_safe(proc, stderr_path)
 
     print("\n✓ Synapse MCP Server stopped")

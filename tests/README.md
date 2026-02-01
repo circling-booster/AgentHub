@@ -213,6 +213,9 @@ class TestConversationService:
 # 전체 테스트 (LLM 제외)
 pytest
 
+# LLM/MCP 모두 포함 (API 키 필요, 비용 발생)
+pytest tests/integration/ --run-llm
+
 # 단위 테스트만
 pytest tests/unit/
 

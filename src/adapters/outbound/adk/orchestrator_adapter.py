@@ -3,6 +3,7 @@
 TDD Phase: GREEN - Runner 패턴 적용 + A2A Sub-Agent 통합
 """
 
+import contextlib
 import logging
 from collections.abc import AsyncIterator
 
@@ -600,12 +601,27 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         logger.info(f"Workflow agent removed: {workflow_id}")
 
     async def close(self) -> None:
-        """리소스 정리"""
+        """리소스 정리
+
+        명시적으로 모든 리소스를 정리합니다:
+        - DynamicToolset (MCP 연결)
+        - InMemorySessionService (세션 데이터)
+        - Runner (ADK 런타임)
+        - Workflow/Sub-agent 참조
+        """
         await self._dynamic_toolset.close()
+
+        # InMemorySessionService 명시적 정리
+        if self._session_service is not None:
+            if hasattr(self._session_service, "close"):
+                with contextlib.suppress(Exception):
+                    await self._session_service.close()
+            self._session_service = None
+
         self._agent = None
         self._runner = None
-        self._session_service = None
         self._sub_agents.clear()
+        self._a2a_urls.clear()
         self._workflow_agents.clear()
         self._workflows.clear()
         self._initialized = False
