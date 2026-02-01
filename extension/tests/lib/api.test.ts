@@ -265,10 +265,87 @@ describe('API Client', () => {
         'http://localhost:8000/api/mcp/servers',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ url: 'http://localhost:9000/mcp', name: 'Test MCP' }),
+          body: JSON.stringify({ url: 'http://localhost:9000/mcp', name: 'Test MCP', auth: undefined }),
         })
       );
       expect(result.id).toBe('mcp-1');
+    });
+
+    it('registerMcpServer should send API Key auth config (Phase 5-B Step 7)', async () => {
+      // Given: Server accepts registration with auth
+      const authConfig = {
+        auth_type: 'api_key' as const,
+        api_key: 'test-key-1',
+        api_key_header: 'X-API-Key',
+        api_key_prefix: '',
+      };
+
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'mcp-2',
+          url: 'http://localhost:9001/mcp',
+          name: 'Auth MCP Server',
+          enabled: true,
+          registered_at: '2026-02-01T00:00:00Z',
+        }),
+      });
+
+      // When: Register MCP server with API Key auth
+      const result = await registerMcpServer('http://localhost:9001/mcp', 'Auth MCP Server', authConfig);
+
+      // Then: Auth config sent to server
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/mcp/servers',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            url: 'http://localhost:9001/mcp',
+            name: 'Auth MCP Server',
+            auth: authConfig,
+          }),
+        })
+      );
+      expect(result.id).toBe('mcp-2');
+    });
+
+    it('registerMcpServer should send custom headers auth config (Phase 5-B Step 7)', async () => {
+      // Given: Server accepts registration with custom headers
+      const authConfig = {
+        auth_type: 'header' as const,
+        headers: {
+          'X-Custom-Auth': 'custom-token',
+          'X-User-Id': 'user-123',
+        },
+      };
+
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'mcp-3',
+          url: 'http://localhost:9000/mcp',
+          name: 'Custom Header MCP',
+          enabled: true,
+          registered_at: '2026-02-01T00:00:00Z',
+        }),
+      });
+
+      // When: Register MCP server with custom headers
+      const result = await registerMcpServer('http://localhost:9000/mcp', 'Custom Header MCP', authConfig);
+
+      // Then: Auth config sent to server
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/mcp/servers',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            url: 'http://localhost:9000/mcp',
+            name: 'Custom Header MCP',
+            auth: authConfig,
+          }),
+        })
+      );
+      expect(result.id).toBe('mcp-3');
     });
 
     it('listMcpServers should GET /api/mcp/servers', async () => {

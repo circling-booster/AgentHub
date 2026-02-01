@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config.container import Container
 
 from .exceptions import register_exception_handlers
-from .routes import a2a, a2a_card, auth, chat, conversations, health, mcp
+from .routes import a2a, a2a_card, auth, chat, conversations, health, mcp, oauth
 from .security import ExtensionAuthMiddleware
 
 logger = logging.getLogger(__name__)
@@ -118,6 +118,7 @@ def create_app() -> FastAPI:
     # 라우터 등록
     app.include_router(auth.router)
     app.include_router(health.router)
+    app.include_router(oauth.router)  # OAuth 2.1
     app.include_router(mcp.router)
     app.include_router(a2a.router)
     app.include_router(a2a_card.router)  # A2A Agent Card

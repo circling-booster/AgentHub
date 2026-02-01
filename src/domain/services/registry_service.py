@@ -5,6 +5,7 @@
 
 import logging
 
+from src.domain.entities.auth_config import AuthConfig
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointType
 from src.domain.entities.tool import Tool
@@ -56,6 +57,7 @@ class RegistryService:
         url: str,
         name: str | None = None,
         endpoint_type: EndpointType = EndpointType.MCP,
+        auth_config: AuthConfig | None = None,
     ) -> Endpoint:
         """
         엔드포인트 등록
@@ -66,6 +68,7 @@ class RegistryService:
             url: 엔드포인트 URL
             name: 이름 (선택, 없으면 URL에서 추출)
             endpoint_type: 엔드포인트 타입 (MCP 또는 A2A, 기본값 MCP)
+            auth_config: 인증 설정 (선택, Phase 5-B Step 7)
 
         Returns:
             등록된 엔드포인트 객체
@@ -88,6 +91,7 @@ class RegistryService:
             url=url,
             type=endpoint_type,
             name=name or "",
+            auth_config=auth_config,  # Phase 5-B Step 7
         )
 
         # 타입별 처리

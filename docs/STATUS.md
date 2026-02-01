@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-02-01 (Phase 5 Part A Complete)
-> **Current Phase:** Phase 5 Part A Complete (A2A Verification)
+> **Last Updated:** 2026-02-01 (Phase 5 Part B Complete)
+> **Current Phase:** Phase 5 Part B Complete (MCP Authentication)
 > **Active Branch:** `feature/phase-5`
 
 ---
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 96% (Phase 5 Part A Complete) |
-| **Backend Coverage** | 91% (Target: 90%) |
-| **Backend Tests** | 400 passed / 402 collected (pytest) |
+| **Overall Progress** | 97% (Phase 5 Part B Complete) |
+| **Backend Coverage** | 90% (Target: 90%) |
+| **Backend Tests** | 445 passed / 458 collected (pytest) |
 | **Extension Tests** | 197 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 5 Part A Complete (2026-02-01) |
+| **Last Milestone** | Phase 5 Part B Complete (2026-02-01) |
 
 ---
 
@@ -34,7 +34,8 @@
 | **Phase 4 Part C** | **✅ Complete** | **100%** | **Dynamic Intelligence (Context-Aware Prompts, Tool Retry)** |
 | **Phase 4 Part D** | **✅ Complete** | **100%** | **Reliability & Scale (A2A Health, Defer Loading)** |
 | **Phase 5 Part A** | **✅ Complete** | **100%** | **A2A Verification (Wiring, Echo, Math Agent, Full Flow)** |
-| Phase 5 Part B-D | 📋 Planned | 0% | MCP Auth, Content Script, Test Infra |
+| **Phase 5 Part B** | **✅ Complete** | **100%** | **MCP Authentication (AuthConfig, Header/API Key, OAuth 2.1 Flow)** |
+| Phase 5 Part C-D | 📋 Planned | 0% | Content Script, Test Infra |
 | Phase 5 Part E | 📋 Planned | 0% | ADK Workflow Agents (SequentialAgent, ParallelAgent) |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
@@ -313,6 +314,59 @@
 - **이관 위치**: Phase 5 Part E (Steps 13-16)
 - **계획 문서**: [partE.md](plans/phase5/partE.md)
 - **ADR-10**: ADK Workflow Agents 도입 결정 기록
+
+---
+
+## 🎯 Phase 5 Part B 완료 요약
+
+**완료 일자:** 2026-02-01
+**결과:** MCP Authentication 완료 (AuthConfig, Header/API Key, OAuth 2.1 Flow)
+
+### 완료된 Steps (5-8)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **5** | AuthConfig Domain Entity | 0개 (Step 1.5에서 구현 완료) | ✅ |
+| **6** | Authenticated MCP Connection | 7개 unit tests | ✅ |
+| **7** | MCP Registration API with Auth | 3개 integration tests | ✅ |
+| **8** | OAuth 2.1 Flow (Hybrid) | 14개 tests (7 service + 4 adapter + 3 routes) | ✅ |
+
+### 핵심 성과
+
+- ✅ **AuthConfig 엔티티**: 4가지 인증 타입 지원 (none, header, api_key, oauth2)
+- ✅ **Authenticated MCP 연결**: DynamicToolset에서 auth headers 전달 (Streamable HTTP + SSE)
+- ✅ **MCP Registration API**: POST /api/mcp/servers에 auth 파라미터 추가
+- ✅ **OAuth 2.1 Flow**: Authorization Code Flow 구현 (authorize → callback → token)
+- ✅ **OAuthService**: 토큰 만료 검증, 갱신 필요 여부 판정 (순수 Python)
+- ✅ **OAuthAdapter**: httpx 기반 토큰 교환 및 갱신 (헥사고날 아키텍처)
+- ✅ **OAuth Routes**: GET /oauth/authorize, GET /oauth/callback (State 검증)
+- ✅ **테스트 품질**: 24 tests (7 service + 7 auth + 3 API + 7 adapter + 3 routes)
+- ✅ **커버리지 유지**: 90% (목표 90% 달성)
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+### 구현 파일
+
+- `src/domain/entities/auth_config.py`: AuthConfig 엔티티 (get_auth_headers 메서드)
+- `src/domain/services/oauth_service.py`: OAuthService (순수 Python)
+- `src/domain/ports/outbound/oauth_port.py`: OAuthPort 인터페이스
+- `src/adapters/outbound/oauth/oauth_adapter.py`: HttpxOAuthAdapter
+- `src/adapters/outbound/adk/dynamic_toolset.py`: _create_mcp_toolset에 auth_config 전달
+- `src/adapters/inbound/http/routes/oauth.py`: OAuth authorize/callback 엔드포인트
+- `src/adapters/inbound/http/schemas/mcp.py`: AuthConfigSchema
+- `src/domain/exceptions.py`: OAuth 예외 (TokenExchangeError, TokenRefreshError, StateValidationError)
+
+### 테스트 파일
+
+- `tests/unit/domain/services/test_oauth_service.py`: 7 tests
+- `tests/unit/adapters/test_mcp_auth.py`: 7 tests
+- `tests/unit/adapters/test_oauth_adapter.py`: 4 tests
+- `tests/integration/adapters/test_mcp_auth_api.py`: 3 tests
+- `tests/integration/adapters/test_oauth_routes.py`: 3 tests
+
+### Deferred Features → Phase 6
+
+- **Extension OAuth UI**: OAuth 플로우 시작 UI (Backend 완료, Frontend는 Phase 6)
+- **Melon MCP 실제 OAuth 테스트**: Mock OAuth provider 대신 실제 서버 연동 (선택적)
 
 ---
 

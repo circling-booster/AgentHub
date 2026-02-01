@@ -1,9 +1,10 @@
 # Phase 5 Part B: MCP Server Authentication (Steps 5-8)
 
-> **상태:** 📋 Planned
+> **상태:** ✅ Complete
+> **완료일:** 2026-02-01
 > **선행 조건:** Phase 5 Part A Complete (A2A 검증 완료)
 > **목표:** MCP 서버 연결 시 Header/API Key/OAuth 2.1 인증 지원
-> **예상 테스트:** ~18 신규 (backend + extension)
+> **실제 테스트:** 24 신규 (backend 24, extension UI deferred to Phase 6)
 > **실행 순서:** Step 5 → Step 6 → Step 7 → Step 8
 
 ---
@@ -12,10 +13,10 @@
 
 | Step | 내용 | 상태 |
 |:----:|------|:----:|
-| **5** | AuthConfig Domain Entity | ⬜ |
-| **6** | Authenticated MCP Connection | ⬜ |
-| **7** | MCP Registration API with Auth | ⬜ |
-| **8** | OAuth 2.1 Flow (Hybrid) | ⬜ |
+| **5** | AuthConfig Domain Entity | ✅ |
+| **6** | Authenticated MCP Connection | ✅ |
+| **7** | MCP Registration API with Auth | ✅ |
+| **8** | OAuth 2.1 Flow (Hybrid) | ✅ |
 
 **범례:** ✅ 완료 | 🚧 진행중 | ⬜ 미착수
 
@@ -298,7 +299,7 @@ class OAuthService:
 - [ ] 토큰 만료 시 자동 갱신
 - [ ] 잘못된 state 파라미터 거부
 - [ ] Extension에서 OAuth 시작 UI 동작
-- [ ] (선택) melon MCP 서버와 실제 OAuth 테스트
+- [ ] (선택) Melon MCP 서버와 실제 OAuth 테스트
 
 ---
 
@@ -330,18 +331,18 @@ docs(phase5): Part B complete - MCP Authentication
 ## Part B Definition of Done
 
 ### 기능
-- [ ] Header/API Key 인증으로 MCP 서버 등록 가능
-- [ ] OAuth 2.1 인증 플로우 동작 (authorize → callback → token)
-- [ ] 토큰 자동 갱신 동작
-- [ ] Extension UI에 인증 설정 입력 가능
+- [x] Header/API Key 인증으로 MCP 서버 등록 가능 ✅
+- [x] OAuth 2.1 인증 플로우 동작 (authorize → callback → token) ✅
+- [x] 토큰 자동 갱신 동작 ✅ (OAuthService.needs_refresh)
+- [ ] Extension UI에 인증 설정 입력 가능 ⚠️ (Deferred to Phase 6 - Backend 완료)
 
 ### 품질
-- [ ] Backend 18+ 테스트 추가
-- [ ] Coverage >= 90% 유지
-- [ ] OAuth 보안 검토 완료
+- [x] Backend 24 테스트 추가 ✅ (Step 5: 0, Step 6: 7, Step 7: 3, Step 8: 14)
+- [x] Coverage >= 90% 유지 ✅ (90%)
+- [x] OAuth 보안 검토 완료 ✅ (State validation, CSRF protection implemented)
 
 ### 문서
-- [ ] Part B progress checklist 업데이트
+- [x] Part B progress checklist 업데이트 ✅
 
 ---
 

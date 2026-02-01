@@ -58,6 +58,23 @@ export interface Conversation {
   created_at: string;
 }
 
+/** AuthConfig (matches server AuthConfigSchema) */
+export interface AuthConfig {
+  auth_type: 'none' | 'header' | 'api_key' | 'oauth2';
+  headers?: Record<string, string>;
+  api_key?: string;
+  api_key_header?: string;
+  api_key_prefix?: string;
+  oauth2_client_id?: string;
+  oauth2_client_secret?: string;
+  oauth2_token_url?: string;
+  oauth2_authorize_url?: string;
+  oauth2_scope?: string;
+  oauth2_access_token?: string;
+  oauth2_refresh_token?: string;
+  oauth2_token_expires_at?: number;
+}
+
 /** MCP Server (matches server MCP routes response) */
 export interface McpServer {
   id: string;
@@ -66,6 +83,7 @@ export interface McpServer {
   enabled: boolean;
   registered_at: string;
   tools?: Tool[];
+  auth?: AuthConfig;  // Phase 5-B Step 7
 }
 
 /** Tool (matches server Tool schema) */

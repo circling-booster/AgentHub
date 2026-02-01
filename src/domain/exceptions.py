@@ -118,3 +118,26 @@ class ValidationError(DomainException):
     """입력 검증 실패"""
 
     pass
+
+
+# ============================================================
+# OAuth 관련 예외
+# ============================================================
+
+
+class OAuthTokenExchangeError(DomainException):
+    """OAuth Authorization Code → Access Token 교환 실패"""
+
+    pass
+
+
+class OAuthTokenRefreshError(DomainException):
+    """OAuth Refresh Token으로 Access Token 갱신 실패"""
+
+    pass
+
+
+class OAuthStateValidationError(DomainException):
+    """OAuth state 파라미터 검증 실패 (CSRF 방지)"""
+
+    pass

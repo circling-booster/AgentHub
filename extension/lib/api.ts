@@ -5,7 +5,7 @@
  */
 
 import { API_BASE, STORAGE_KEYS } from './constants';
-import type { Conversation, McpServer, HealthStatus } from './types';
+import type { Conversation, McpServer, HealthStatus, AuthConfig } from './types';
 
 /**
  * Initialize authentication with server (Token Handshake)
@@ -114,10 +114,14 @@ export async function createConversation(title: string = ''): Promise<Conversati
 /**
  * Register MCP server (authenticated)
  */
-export async function registerMcpServer(url: string, name?: string): Promise<McpServer> {
+export async function registerMcpServer(
+  url: string,
+  name?: string,
+  auth?: AuthConfig
+): Promise<McpServer> {
   const response = await authenticatedFetch('/api/mcp/servers', {
     method: 'POST',
-    body: JSON.stringify({ url, name }),
+    body: JSON.stringify({ url, name, auth }),
   });
 
   if (!response.ok) {
