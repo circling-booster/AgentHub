@@ -77,7 +77,7 @@ class McpClientPort(ABC):
 - `list_resources()`, `read_resource()` 시그니처
 - `list_prompts()`, `get_prompt()` 시그니처
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_resource_entity_creation`
 2. RED: `test_prompt_template_entity_creation`
 3. RED: `test_mcp_client_connect_and_list_resources`

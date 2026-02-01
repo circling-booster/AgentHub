@@ -48,6 +48,13 @@ roots:
     name: "workspace"
 ```
 
+**TDD 규칙(SKILLS 호출):** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
+
 **DoD:**
 - [ ] MCP 서버 연결 시 roots 전달
 - [ ] 설정에서 roots 관리 가능
@@ -85,6 +92,13 @@ class Progress:
 {"type": "progress", "token": "xxx", "progress": 0.5, "message": "Processing..."}
 ```
 
+**TDD 규칙(SKILLS 호출):** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
+
 **DoD:**
 - [ ] MCP 서버 progress 알림을 SSE로 전달
 - [ ] Extension에 진행률 바 표시
@@ -110,6 +124,12 @@ class Progress:
 - `GET /api/tasks` - 실행 중인 Tasks 목록
 - `POST /api/tasks/{id}/cancel` - Task 취소
 - `POST /api/tasks/{id}/resume` - Task 재개
+
+**TDD 규칙(SKILLS 호출):** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
 
 **DoD:**
 - [ ] 장시간 작업 Task ID로 추적 가능
@@ -150,6 +170,12 @@ class RegistryDiscoveryPort(ABC):
 - 원클릭 설치 (stdio 자동 설정)
 
 **웹 검색 필수:** GitHub MCP Registry API 확인
+
+**TDD 규칙(SKILLS 호출):** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
 
 **DoD:**
 - [ ] Registry에서 MCP 서버 검색

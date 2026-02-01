@@ -32,6 +32,13 @@
 
 **라이브러리:** `react-markdown` + `remark-gfm` + `rehype-highlight`
 
+
+**TDD(SKILLS 호출) 순서(순수 UI 를 제외):** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
 **지원 범위:**
 - GFM 테이블, 체크리스트
 - 코드 블록 신택스 하이라이팅 (기존 개선)
@@ -68,6 +75,11 @@
   "settings": { "llm": {...}, "gateway": {...} }
 }
 ```
+**TDD(SKILLS 호출) 순서(순수 UI 를 제외):**
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
 
 **DoD:**
 - [ ] Export: 현재 설정을 JSON으로 다운로드
@@ -108,6 +120,12 @@
 | `extension/hooks/useUsage.ts` | NEW | Usage API 훅 |
 
 **기능:** 모델별 비용 차트, 월별 추이, 예산 설정 & 잔여 표시
+
+**TDD(SKILLS 호출) 순서(순수 UI 를 제외):**
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
 
 **DoD:**
 - [ ] 모델별/기간별 사용량 차트

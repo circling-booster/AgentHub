@@ -65,7 +65,7 @@ class CircuitBreaker:
     def can_execute(self) -> bool: ...
 ```
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_initial_state_is_closed`
 2. RED: `test_transitions_to_open_after_threshold`
 3. RED: `test_transitions_to_half_open_after_timeout`
@@ -117,7 +117,7 @@ class GatewayToolset(BaseToolset):
             raise
 ```
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_gateway_allows_when_circuit_closed`
 2. RED: `test_gateway_blocks_when_circuit_open`
 3. RED: `test_gateway_rate_limit_exceeded`

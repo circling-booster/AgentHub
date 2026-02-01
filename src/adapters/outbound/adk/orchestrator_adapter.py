@@ -7,7 +7,7 @@ import logging
 from collections.abc import AsyncIterator
 
 import litellm
-from google.adk.agents import LlmAgent
+from google.adk.agents import LlmAgent, ParallelAgent, SequentialAgent
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
@@ -17,6 +17,8 @@ from google.genai import types
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 from src.adapters.outbound.adk.litellm_callbacks import AgentHubLogger
 from src.domain.entities.stream_chunk import StreamChunk
+from src.domain.entities.workflow import Workflow
+from src.domain.exceptions import WorkflowNotFoundError
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 
 logger = logging.getLogger(__name__)
@@ -64,6 +66,8 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         self._session_service: InMemorySessionService | None = None
         self._sub_agents: dict[str, RemoteA2aAgent] = {}  # A2A sub-agents
         self._a2a_urls: dict[str, str] = {}  # endpoint_id -> url (for rebuilding)
+        self._workflow_agents: dict[str, SequentialAgent | ParallelAgent] = {}  # workflow agents
+        self._workflows: dict[str, Workflow] = {}  # workflow metadata
         self._initialized = False
 
     async def initialize(self) -> None:
@@ -400,6 +404,201 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         logger.info(f"A2A agent removed: {endpoint_id}")
 
+    async def create_workflow_agent(self, workflow: Workflow) -> None:
+        """
+        Workflow Agent 생성 (SequentialAgent 또는 ParallelAgent)
+
+        Step 13 Spike 결과: SequentialAgent + RemoteA2aAgent는 호환 가능
+
+        Args:
+            workflow: Workflow 엔티티
+
+        Raises:
+            ValueError: workflow_type이 "sequential" 또는 "parallel"이 아닌 경우
+            RuntimeError: 참조하는 A2A agent가 등록되지 않은 경우
+        """
+        if not self._initialized:
+            raise RuntimeError("Orchestrator must be initialized before creating workflow")
+
+        # Workflow 타입 검증
+        if workflow.workflow_type not in ("sequential", "parallel"):
+            raise ValueError(f"Invalid workflow_type: {workflow.workflow_type}")
+
+        # Step의 agent들이 모두 등록되어 있는지 확인
+        for step in workflow.steps:
+            if step.agent_endpoint_id not in self._a2a_urls:
+                raise RuntimeError(
+                    f"Agent not registered: {step.agent_endpoint_id}. "
+                    f"Register the A2A agent first via add_a2a_agent()"
+                )
+
+        # Sub-agents를 새로 생성 (re-parenting 에러 방지)
+        # ADK는 Agent를 한 번 parent에 할당하면 재할당 불가하므로,
+        # workflow agent용 새 RemoteA2aAgent 인스턴스를 생성해야 함
+        sub_agents = []
+        for step in workflow.steps:
+            endpoint_id = step.agent_endpoint_id
+            url = self._a2a_urls[endpoint_id]
+            agent_card_url = url if url.endswith("agent.json") else f"{url}/.well-known/agent.json"
+            agent_name = f"a2a_{endpoint_id}".replace("-", "_")
+
+            try:
+                remote_agent = RemoteA2aAgent(
+                    name=agent_name,
+                    description=f"Remote A2A agent: {endpoint_id}",
+                    agent_card=agent_card_url,
+                )
+                sub_agents.append(remote_agent)
+            except Exception as e:
+                raise RuntimeError(
+                    f"Failed to create RemoteA2aAgent for workflow: {endpoint_id}"
+                ) from e
+
+        # Workflow Agent 생성 (name을 유효한 Python identifier로 정규화)
+        # ADK Agent name은 하이픈(-)을 허용하지 않으므로 언더스코어로 변경
+        normalized_name = f"workflow_{workflow.id}".replace("-", "_")
+
+        if workflow.workflow_type == "sequential":
+            workflow_agent = SequentialAgent(
+                name=normalized_name,
+                sub_agents=sub_agents,
+            )
+        else:  # parallel
+            workflow_agent = ParallelAgent(
+                name=normalized_name,
+                sub_agents=sub_agents,
+            )
+
+        # 저장
+        self._workflow_agents[workflow.id] = workflow_agent
+        self._workflows[workflow.id] = workflow
+
+        logger.info(
+            f"Workflow agent created: {workflow.id} ({workflow.workflow_type}, {len(workflow.steps)} steps)"
+        )
+
+    async def execute_workflow(
+        self,
+        workflow_id: str,
+        message: str,
+        conversation_id: str,
+    ) -> AsyncIterator[StreamChunk]:
+        """
+        Workflow Agent 실행 및 이벤트 스트리밍
+
+        Args:
+            workflow_id: Workflow ID
+            message: 사용자 메시지
+            conversation_id: 대화 세션 ID
+
+        Yields:
+            StreamChunk 이벤트
+
+        Raises:
+            WorkflowNotFoundError: workflow_id를 찾을 수 없을 때
+        """
+        if workflow_id not in self._workflow_agents:
+            raise WorkflowNotFoundError(f"Workflow not found: {workflow_id}")
+
+        workflow = self._workflows[workflow_id]
+        workflow_agent = self._workflow_agents[workflow_id]
+
+        # workflow_start 이벤트
+        yield StreamChunk.workflow_start(
+            workflow_id=workflow.id,
+            workflow_type=workflow.workflow_type,
+            total_steps=len(workflow.steps),
+        )
+
+        # Runner로 Workflow Agent 실행
+        runner = Runner(
+            agent=workflow_agent,
+            app_name=APP_NAME,
+            session_service=self._session_service,
+        )
+
+        # 세션 생성/조회
+        session_id = f"{conversation_id}_workflow_{workflow_id}"
+        session = await self._session_service.get_session(
+            app_name=APP_NAME,
+            user_id=DEFAULT_USER_ID,
+            session_id=session_id,
+        )
+        if session is None:
+            session = await self._session_service.create_session(
+                app_name=APP_NAME,
+                user_id=DEFAULT_USER_ID,
+                session_id=session_id,
+            )
+
+        # 사용자 메시지
+        user_content = types.Content(
+            role="user",
+            parts=[types.Part(text=message)],
+        )
+
+        # Workflow 실행
+        current_step = 0
+        async for event in runner.run_async(
+            user_id=DEFAULT_USER_ID,
+            session_id=session_id,
+            new_message=user_content,
+        ):
+            # Agent Transfer 감지 → workflow_step_start/complete
+            if (
+                hasattr(event, "actions")
+                and event.actions
+                and getattr(event.actions, "transfer_to_agent", None)
+            ):
+                # Previous step complete (if any)
+                if current_step > 0:
+                    yield StreamChunk.workflow_step_complete(
+                        workflow_id=workflow.id,
+                        step_number=current_step,
+                        agent_name=workflow.steps[current_step - 1].agent_endpoint_id,
+                    )
+
+                # Next step start
+                current_step += 1
+                if current_step <= len(workflow.steps):
+                    yield StreamChunk.workflow_step_start(
+                        workflow_id=workflow.id,
+                        step_number=current_step,
+                        agent_name=workflow.steps[current_step - 1].agent_endpoint_id,
+                    )
+
+            # 텍스트 응답
+            if event.is_final_response() and event.content and event.content.parts:
+                for part in event.content.parts:
+                    if part.text:
+                        yield StreamChunk.text(part.text)
+
+        # Last step complete
+        if current_step > 0:
+            yield StreamChunk.workflow_step_complete(
+                workflow_id=workflow.id,
+                step_number=current_step,
+                agent_name=workflow.steps[current_step - 1].agent_endpoint_id,
+            )
+
+        # workflow_complete 이벤트
+        yield StreamChunk.workflow_complete(
+            workflow_id=workflow.id,
+            status="success",
+            total_steps=len(workflow.steps),
+        )
+
+    async def remove_workflow_agent(self, workflow_id: str) -> None:
+        """
+        Workflow Agent 제거
+
+        Args:
+            workflow_id: Workflow ID
+        """
+        self._workflow_agents.pop(workflow_id, None)
+        self._workflows.pop(workflow_id, None)
+        logger.info(f"Workflow agent removed: {workflow_id}")
+
     async def close(self) -> None:
         """리소스 정리"""
         await self._dynamic_toolset.close()
@@ -407,5 +606,7 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         self._runner = None
         self._session_service = None
         self._sub_agents.clear()
+        self._workflow_agents.clear()
+        self._workflows.clear()
         self._initialized = False
         logger.info("AdkOrchestratorAdapter closed")

@@ -43,7 +43,7 @@ LLM 응답 → MCP Server로 반환
 
 **보안:** Sampling 요청 시 사용자 승인 플로우 (Extension에서 confirm)
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_sampling_handler_calls_llm`
 2. RED: `test_sampling_returns_llm_response`
 3. RED: `test_sampling_user_approval_required`

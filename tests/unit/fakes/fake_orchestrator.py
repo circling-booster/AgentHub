@@ -6,6 +6,8 @@ OrchestratorPort의 테스트용 구현입니다.
 from collections.abc import AsyncIterator
 
 from src.domain.entities.stream_chunk import StreamChunk
+from src.domain.entities.workflow import Workflow
+from src.domain.exceptions import WorkflowNotFoundError
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 
 
@@ -40,6 +42,7 @@ class FakeOrchestrator(OrchestratorPort):
         self.processed_messages: list[tuple[str, str]] = []  # (message, conv_id)
         self.added_a2a_agents: list[tuple[str, str]] = []  # (endpoint_id, url)
         self.removed_a2a_agents: list[str] = []  # endpoint_id
+        self._workflows: dict[str, Workflow] = {}  # workflow_id -> Workflow
 
     async def initialize(self) -> None:
         """초기화"""
@@ -96,6 +99,82 @@ class FakeOrchestrator(OrchestratorPort):
         """
         self.removed_a2a_agents.append(endpoint_id)
 
+    async def create_workflow_agent(self, workflow: Workflow) -> None:
+        """
+        Workflow Agent 생성 (테스트용 간단 구현)
+
+        Args:
+            workflow: Workflow 엔티티
+        """
+        self._workflows[workflow.id] = workflow
+
+    async def execute_workflow(
+        self,
+        workflow_id: str,
+        message: str,
+        conversation_id: str,
+    ) -> AsyncIterator[StreamChunk]:
+        """
+        Workflow 실행 시뮬레이션
+
+        Args:
+            workflow_id: Workflow ID
+            message: 사용자 메시지
+            conversation_id: 대화 ID
+
+        Yields:
+            Workflow 이벤트들 (start, step_start, step_complete, complete)
+
+        Raises:
+            WorkflowNotFoundError: workflow_id를 찾을 수 없을 때
+        """
+        if workflow_id not in self._workflows:
+            raise WorkflowNotFoundError(f"Workflow not found: {workflow_id}")
+
+        workflow = self._workflows[workflow_id]
+
+        # workflow_start 이벤트
+        yield StreamChunk.workflow_start(
+            workflow_id=workflow.id,
+            workflow_type=workflow.workflow_type,
+            total_steps=len(workflow.steps),
+        )
+
+        # 각 step 실행
+        for i, step in enumerate(workflow.steps, start=1):
+            # step_start
+            yield StreamChunk.workflow_step_start(
+                workflow_id=workflow.id,
+                step_number=i,
+                agent_name=step.agent_endpoint_id,
+            )
+
+            # 텍스트 응답 (시뮬레이션)
+            yield StreamChunk.text(f"Step {i} response from {step.agent_endpoint_id}")
+
+            # step_complete
+            yield StreamChunk.workflow_step_complete(
+                workflow_id=workflow.id,
+                step_number=i,
+                agent_name=step.agent_endpoint_id,
+            )
+
+        # workflow_complete 이벤트
+        yield StreamChunk.workflow_complete(
+            workflow_id=workflow.id,
+            status="success",
+            total_steps=len(workflow.steps),
+        )
+
+    async def remove_workflow_agent(self, workflow_id: str) -> None:
+        """
+        Workflow Agent 제거
+
+        Args:
+            workflow_id: Workflow ID
+        """
+        self._workflows.pop(workflow_id, None)
+
     def reset(self) -> None:
         """상태 초기화"""
         self.initialized = False
@@ -103,4 +182,5 @@ class FakeOrchestrator(OrchestratorPort):
         self.processed_messages.clear()
         self.added_a2a_agents.clear()
         self.removed_a2a_agents.clear()
+        self._workflows.clear()
         self.should_fail = False

@@ -56,6 +56,14 @@ def get_message(code: str, lang: str = "ko", **kwargs) -> str:
 **지원 언어:** Korean (ko, 기본값) + English (en)
 **적용 범위:** 에러 메시지, API 응답 상태 텍스트
 
+
+**TDD 규칙(SKILLS 호출):** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
+
 **DoD:**
 - [ ] 에러 메시지 한/영 제공
 - [ ] default_language 설정 동작
@@ -107,6 +115,14 @@ i18n.use(initReactI18next).init({
 const { t } = useTranslation();
 <button>{t('chat.send')}</button>
 ```
+
+
+**TDD 규칙(SKILLS 호출):** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
 
 **DoD:**
 - [ ] 모든 UI 문자열 i18n key로 교체

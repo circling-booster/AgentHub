@@ -141,3 +141,15 @@ class OAuthStateValidationError(DomainException):
     """OAuth state 파라미터 검증 실패 (CSRF 방지)"""
 
     pass
+
+
+# ============================================================
+# Workflow 관련 예외
+# ============================================================
+
+
+class WorkflowNotFoundError(DomainException):
+    """워크플로우를 찾을 수 없음"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.WORKFLOW_NOT_FOUND)

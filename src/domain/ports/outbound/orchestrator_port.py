@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 
 from src.domain.entities.stream_chunk import StreamChunk
+from src.domain.entities.workflow import Workflow
 
 
 class OrchestratorPort(ABC):
@@ -74,6 +75,53 @@ class OrchestratorPort(ABC):
 
         Args:
             endpoint_id: 엔드포인트 ID
+        """
+        pass
+
+    @abstractmethod
+    async def create_workflow_agent(self, workflow: Workflow) -> None:
+        """
+        Workflow Agent 생성 (SequentialAgent 또는 ParallelAgent)
+
+        Args:
+            workflow: Workflow 엔티티 (id, type, steps)
+
+        Raises:
+            ValueError: workflow_type이 "sequential" 또는 "parallel"이 아닌 경우
+        """
+        pass
+
+    @abstractmethod
+    async def execute_workflow(
+        self,
+        workflow_id: str,
+        message: str,
+        conversation_id: str,
+    ) -> AsyncIterator[StreamChunk]:
+        """
+        Workflow Agent 실행 및 이벤트 스트리밍
+
+        Args:
+            workflow_id: Workflow ID
+            message: 사용자 메시지
+            conversation_id: 대화 세션 ID
+
+        Yields:
+            StreamChunk 이벤트 (workflow_start, workflow_step_start,
+            workflow_step_complete, workflow_complete, text, done)
+
+        Raises:
+            WorkflowNotFoundError: workflow_id에 해당하는 workflow가 없을 때
+        """
+        pass
+
+    @abstractmethod
+    async def remove_workflow_agent(self, workflow_id: str) -> None:
+        """
+        Workflow Agent 제거
+
+        Args:
+            workflow_id: Workflow ID
         """
         pass
 

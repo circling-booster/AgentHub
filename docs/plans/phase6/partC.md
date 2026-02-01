@@ -87,7 +87,7 @@ class PluginPort(ABC):
     async def health_check(self, plugin_id: str) -> bool: ...
 ```
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_plugin_config_creation`
 2. RED: `test_plugin_entity_defaults`
 3. RED: `test_plugin_port_interface_methods`
@@ -152,7 +152,7 @@ self._agent = LlmAgent(
 )
 ```
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_plugin_toolset_returns_empty_initially`
 2. RED: `test_plugin_toolset_caches_tools`
 3. RED: `test_plugin_toolset_retry_on_transient_error`
@@ -208,7 +208,7 @@ class LangChainToolPlugin(BasePluginAdapter):
         return [LangChainToolWrapper(t) for t in tools]
 ```
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_echo_plugin_returns_tool`
 2. RED: `test_echo_tool_echoes_input`
 3. RED: `test_langchain_plugin_wraps_tools`

@@ -29,5 +29,8 @@ class ErrorCode:
     # Validation 관련 에러
     INVALID_URL = "InvalidUrlError"
 
+    # Workflow 관련 에러
+    WORKFLOW_NOT_FOUND = "WorkflowNotFoundError"
+
     # 기타
     UNKNOWN = "UnknownError"

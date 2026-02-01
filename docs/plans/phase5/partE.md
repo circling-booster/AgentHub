@@ -193,7 +193,7 @@ async def execute_workflow(
     ...
 ```
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_workflow_entity_creation` (4 tests)
 2. RED: `test_workflow_step_validation` (4 tests)
 3. GREEN: Workflow 엔티티 구현
@@ -244,7 +244,7 @@ POST   /api/workflows/{id}/execute      # Workflow 실행 (SSE 스트리밍)
 | `extension/lib/sse.ts` | MODIFY | Workflow 이벤트 핸들링 추가 |
 | `extension/components/__tests__/WorkflowManager.test.tsx` | NEW | Vitest 테스트 |
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_create_workflow_api` (2 tests)
 2. RED: `test_execute_workflow_api_streams_sse` (2 tests)
 3. RED: `test_list_delete_workflow_api` (2 tests)
@@ -277,12 +277,13 @@ POST   /api/workflows/{id}/execute      # Workflow 실행 (SSE 스트리밍)
 1. **Sequential E2E**: Extension → Workflow 생성 → Echo→Math 순차 실행 → UI에 결과 표시
 2. **Parallel E2E**: Echo + Math 병렬 실행 → 결과 병합 → UI에 표시
 
-**TDD 순서:**
+**TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_parallel_workflow_execution` (2 tests)
 2. RED: `test_parallel_state_isolation` (2 tests)
 3. GREEN: ParallelAgent 지원 구현
 4. RED: E2E scenarios (2 tests)
 5. GREEN: E2E 통과
+6. REFACTOR
 
 **DoD:**
 - [ ] ParallelAgent로 2개 에이전트 병렬 실행

@@ -176,3 +176,101 @@ class TestStreamChunkEquality:
 
         # Then
         assert chunk1 != chunk2
+
+
+class TestWorkflowEventFactories:
+    """Workflow 관련 StreamChunk 이벤트 팩토리 테스트"""
+
+    def test_workflow_start_factory(self):
+        """
+        Given: workflow_id, workflow_type, total_steps
+        When: StreamChunk.workflow_start() 호출
+        Then: type="workflow_start" 청크 반환
+        """
+        # When
+        chunk = StreamChunk.workflow_start(
+            workflow_id="wf-123",
+            workflow_type="sequential",
+            total_steps=3,
+        )
+
+        # Then
+        assert chunk.type == "workflow_start"
+        assert chunk.workflow_id == "wf-123"
+        assert chunk.workflow_type == "sequential"
+        assert chunk.total_steps == 3
+
+    def test_workflow_step_start_factory(self):
+        """
+        Given: workflow_id, step_number, agent_name
+        When: StreamChunk.workflow_step_start() 호출
+        Then: type="workflow_step_start" 청크 반환
+        """
+        # When
+        chunk = StreamChunk.workflow_step_start(
+            workflow_id="wf-456",
+            step_number=1,
+            agent_name="echo_agent",
+        )
+
+        # Then
+        assert chunk.type == "workflow_step_start"
+        assert chunk.workflow_id == "wf-456"
+        assert chunk.step_number == 1
+        assert chunk.agent_name == "echo_agent"
+
+    def test_workflow_step_complete_factory(self):
+        """
+        Given: workflow_id, step_number, agent_name
+        When: StreamChunk.workflow_step_complete() 호출
+        Then: type="workflow_step_complete" 청크 반환
+        """
+        # When
+        chunk = StreamChunk.workflow_step_complete(
+            workflow_id="wf-789",
+            step_number=2,
+            agent_name="math_agent",
+        )
+
+        # Then
+        assert chunk.type == "workflow_step_complete"
+        assert chunk.workflow_id == "wf-789"
+        assert chunk.step_number == 2
+        assert chunk.agent_name == "math_agent"
+
+    def test_workflow_complete_factory(self):
+        """
+        Given: workflow_id, status, total_steps
+        When: StreamChunk.workflow_complete() 호출
+        Then: type="workflow_complete" 청크 반환
+        """
+        # When
+        chunk = StreamChunk.workflow_complete(
+            workflow_id="wf-complete",
+            status="success",
+            total_steps=3,
+        )
+
+        # Then
+        assert chunk.type == "workflow_complete"
+        assert chunk.workflow_id == "wf-complete"
+        assert chunk.workflow_status == "success"
+        assert chunk.total_steps == 3
+
+    def test_workflow_complete_with_error_status(self):
+        """
+        Given: workflow_id with error status
+        When: StreamChunk.workflow_complete() 호출
+        Then: status="error" 청크 반환
+        """
+        # When
+        chunk = StreamChunk.workflow_complete(
+            workflow_id="wf-error",
+            status="error",
+            total_steps=5,
+        )
+
+        # Then
+        assert chunk.type == "workflow_complete"
+        assert chunk.workflow_status == "error"
+        assert chunk.total_steps == 5

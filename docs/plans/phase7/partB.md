@@ -59,11 +59,16 @@ class StdioConfig:
     max_restart_attempts: int = 3
 ```
 
-**TDD 순서:**
+**TDD 규칙:** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+**TDD 순서(SKILLS 호출):**
 1. RED: `test_stdio_config_creation`
 2. RED: `test_stdio_config_with_allowed_paths`
 3. RED: `test_endpoint_with_stdio_config`
-4. GREEN: StdioConfig 구현
+4. GREEN: StdioConfig 구현 
 
 **DoD:**
 - [ ] StdioConfig 엔티티 정의
@@ -136,7 +141,12 @@ class PathPermissionService:
 - AgentHub 시작 시 이전 세션의 좀비 프로세스 정리
 - `atexit` + `signal` 핸들러로 비정상 종료 시에도 정리
 
-**TDD 순서:**
+**TDD 규칙:** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+**TDD 순서(SKILLS 호출):**
 1. RED: `test_process_starts_and_communicates`
 2. RED: `test_process_crash_restart`
 3. RED: `test_zombie_prevention_on_cleanup`
@@ -194,6 +204,12 @@ class StdioConfigSchema(BaseModel):
 [       Register Server        ]
 ```
 
+**TDD 규칙:** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
 **DoD:**
 - [ ] stdio MCP 서버 등록 + 도구 호출 동작
 - [ ] Extension에서 stdio 등록 UI 동작
@@ -216,6 +232,14 @@ strategy:
     os: [ubuntu-latest, macos-latest, windows-latest]
     python-version: ['3.10', '3.12']
 ```
+
+
+**TDD 규칙:** 
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
 
 **DoD:**
 - [ ] 3-OS CI 매트릭스 green
