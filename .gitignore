@@ -194,3 +194,13 @@ node_modules/
 
 # AgentHub data directory (SQLite DB, endpoints.json)
 data/
+
+# IDE / Editor (선택적)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
