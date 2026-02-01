@@ -39,10 +39,10 @@
 
 | Part | 파일 | Steps | 초점 | 우선순위 |
 |:----:|------|:-----:|------|:--------:|
-| A | [phase5.0-partA.md](phase5.0-partA.md) | 1-4 | A2A Verification & Test Agents | P0 (최우선) |
-| B | [phase5.0-partB.md](phase5.0-partB.md) | 5-8 | MCP Server Authentication | P1 |
-| C | [phase5.0-partC.md](phase5.0-partC.md) | 9-10 | Content Script (Page Context) | P2 |
-| D | [phase5.0-partD.md](phase5.0-partD.md) | 11-12 | Test Infrastructure Enhancement | Support |
+| A | [partA.md](partA.md) | 1-4 | A2A Verification & Test Agents | P0 (최우선) |
+| B | [partB.md](partB.md) | 5-8 | MCP Server Authentication | P1 |
+| C | [partC.md](partC.md) | 9-10 | Content Script (Page Context) | P2 |
+| D | [partD.md](partD.md) | 11-12 | Test Infrastructure Enhancement | Support |
 
 ---
 

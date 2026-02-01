@@ -28,15 +28,15 @@
 | Phase | 플랜 문서 | 상태 |
 |-------|----------|:---:|
 | Phase 0 | 본 문서 참조 | ✅ 완료 |
-| Phase 1 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
-| Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
-| Phase 2 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
-| Phase 3 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
-| Phase 4 | [phase4.0.md](plans/phase4.0.md) (Master + [Part A](plans/phase4.0-partA.md) ~ [Part D](plans/phase4.0-partD.md)) | ✅ 완료 (Part A-D) |
-| Phase 5 | [phase5.0.md](plans/phase5.0.md) (Master + [Part A](plans/phase5.0-partA.md) ~ [Part D](plans/phase5.0-partD.md)) | 📋 예정 |
-| Phase 6 | [phase6.0.md](plans/phase6.0.md) (Master + [Part A](plans/phase6.0-partA.md) ~ [Part D](plans/phase6.0-partD.md)) | 📋 예정 |
-| Phase 7 | [phase7.0.md](plans/phase7.0.md) (Master + [Part A](plans/phase7.0-partA.md) ~ [Part D](plans/phase7.0-partD.md)) | 📋 예정 |
+| Phase 1 | [phase1.0.md](plans/phase1/phase1.0.md) | ✅ 완료 |
+| Phase 1.5 | [phase1.5.md](plans/phase1/phase1.5.md) | ✅ 완료 |
+| Phase 2 | [phase2.0.md](plans/phase2/phase2.0.md) | ✅ 완료 |
+| Phase 2.5 | [phase2.5.md](plans/phase2/phase2.5.md) | ✅ 완료 |
+| Phase 3 | [phase3.0.md](plans/phase3/phase3.0.md) | ✅ 완료 |
+| Phase 4 | [phase4.0.md](plans/phase4/phase4.0.md) (Master + [Part A](plans/phase4/partA.md) ~ [Part D](plans/phase4/partD.md)) | ✅ 완료 (Part A-D) |
+| Phase 5 | [phase5.0.md](plans/phase5/phase5.0.md) (Master + [Part A](plans/phase5/partA.md) ~ [Part D](plans/phase5/partD.md)) | 📋 예정 |
+| Phase 6 | [phase6.0.md](plans/phase6/phase6.0.md) (Master + [Part A](plans/phase6/partA.md) ~ [Part D](plans/phase6/partD.md)) | 📋 예정 |
+| Phase 7 | [phase7.0.md](plans/phase7/phase7.0.md) (Master + [Part A](plans/phase7/partA.md) ~ [Part D](plans/phase7/partD.md)) | 📋 예정 |
 
 **플랜 문서 구성:**
 - 구현 전략 및 기술적 고려사항
@@ -172,7 +172,7 @@ pytest --version
 
 ### Phase 1: Domain Core (Backend Foundation)
 
-**📋 상세 플랜:** [phase1.0.md](plans/phase1.0.md)
+**📋 상세 플랜:** [phase1.0.md](plans/phase1/phase1.0.md)
 
 **목표:** 헥사고날 아키텍처의 Domain Layer 구축. 순수 Python으로 외부 의존성 없이 테스트 가능한 코어 로직.
 
@@ -236,7 +236,7 @@ pytest --version
 
 ### Phase 1.5: Security Layer
 
-**📋 상세 플랜:** [phase1.5.md](plans/phase1.5.md)
+**📋 상세 플랜:** [phase1.5.md](plans/phase1/phase1.5.md)
 
 **목표:** Server-Extension 간 Zero-Trust 보안 체계 확립. Drive-by RCE 공격 방지.
 
@@ -289,7 +289,7 @@ app.add_middleware(
 
 ### Phase 2: MCP Integration (Backend API)
 
-**📋 상세 플랜:** [phase2.0.md](plans/phase2.0.md) *(예정)*
+**📋 상세 플랜:** [phase2.0.md](plans/phase2/phase2.0.md) *(예정)*
 
 **목표:** MCP 서버 동적 연결 및 도구 호출 API 구현. **(핵심 기능)**
 
@@ -351,7 +351,7 @@ app.add_middleware(
 
 ### Phase 2.5: Chrome Extension
 
-**📋 상세 플랜:** [phase2.5.md](plans/phase2.5.md) *(예정)*
+**📋 상세 플랜:** [phase2.5.md](plans/phase2/phase2.5.md) *(예정)*
 
 **목표:** WXT 기반 Extension으로 서버와 연동. Offscreen Document로 장시간 요청 처리.
 
@@ -415,7 +415,7 @@ app.add_middleware(
 
 ### Phase 3: Stability & A2A Integration
 
-**📋 상세 플랜:** [phase3.0.md](plans/phase3.0.md) *(예정)*
+**📋 상세 플랜:** [phase3.0.md](plans/phase3/phase3.0.md) *(예정)*
 
 **목표:** 장시간 작업 안정성 확보, A2A 기본 통합, E2E 테스트 자동화.
 
@@ -482,30 +482,30 @@ app.add_middleware(
 
 ### Phase 4: Critical Fixes, Observability, Dynamic Intelligence, Reliability
 
-**📋 상세 플랜:** [phase4.0.md](plans/phase4.0.md) (Master) + Part A-D 개별 파일
+**📋 상세 플랜:** [phase4.0.md](plans/phase4/phase4.0.md) (Master) + Part A-D 개별 파일
 
 **목표:** A2A Wiring 버그 수정, 관찰성 확보, 동적 시스템 프롬프트, 안정성 강화
 
-#### 4.A Critical Fixes (Steps 1-4) — [phase4.0-partA.md](plans/phase4.0-partA.md)
+#### 4.A Critical Fixes (Steps 1-4) — [phase4.0-partA.md](plans/phase4/partA.md)
 
 * A2A 에이전트 LLM 연결 수정 (RegistryService → OrchestratorPort 주입)
 * SSE 이벤트 확장 (StreamChunk 도메인 엔티티)
 * 타입별 에러 전파
 * 앱 시작 시 엔드포인트 자동 복원
 
-#### 4.B Observability (Steps 0, 5-7) — [phase4.0-partB.md](plans/phase4.0-partB.md)
+#### 4.B Observability (Steps 0, 5-7) — [phase4.0-partB.md](plans/phase4/partB.md)
 
 * **Step 0 (Pre-Step):** 에러 코드 상수화 (타입 안전성 강화, Backend ↔ Extension 일치)
 * LiteLLM CustomLogger 콜백 로깅
 * Tool Call Tracing (SQLite 저장)
 * 구조화된 로깅 개선 (JSON 포맷 옵션)
 
-#### 4.C Dynamic Intelligence (Steps 8-9) — [phase4.0-partC.md](plans/phase4.0-partC.md)
+#### 4.C Dynamic Intelligence (Steps 8-9) — [phase4.0-partC.md](plans/phase4/partC.md)
 
 * 컨텍스트 인식 동적 시스템 프롬프트
 * 도구 실행 재시도 로직 (Exponential Backoff)
 
-#### 4.D Reliability & Scale (Steps 10-11) — [phase4.0-partD.md](plans/phase4.0-partD.md)
+#### 4.D Reliability & Scale (Steps 10-11) — [phase4.0-partD.md](plans/phase4/partD.md)
 
 * A2A 에이전트 Health 모니터링
 * Defer Loading (대규모 도구 지원, MAX_ACTIVE_TOOLS 100)
@@ -527,7 +527,7 @@ app.add_middleware(
 
 ### Phase 5: Verification + Core Connectivity
 
-**📋 상세 플랜:** [phase5.0.md](plans/phase5.0.md) (Master + [Part A](plans/phase5.0-partA.md) ~ [Part D](plans/phase5.0-partD.md))
+**📋 상세 플랜:** [phase5.0.md](plans/phase5/phase5.0.md) (Master + [Part A](plans/phase5/partA.md) ~ [Part D](plans/phase5/partD.md))
 
 **목표:** A2A 검증, MCP 인증, Content Script, 테스트 인프라
 
@@ -538,13 +538,13 @@ app.add_middleware(
 | **C** | Content Script (Page Context Toggle) | 9-10 | P2 |
 | **D** | Test Infrastructure Enhancement | 11-12 | Support |
 
-**✅ DoD:** [phase5.0.md](plans/phase5.0.md) 참조
+**✅ DoD:** [phase5.0.md](plans/phase5/phase5.0.md) 참조
 
 ---
 
 ### Phase 6: MCP Advanced + Plugin System + Production Hardening
 
-**📋 상세 플랜:** [phase6.0.md](plans/phase6.0.md) (Master + [Part A](plans/phase6.0-partA.md) ~ [Part D](plans/phase6.0-partD.md))
+**📋 상세 플랜:** [phase6.0.md](plans/phase6/phase6.0.md) (Master + [Part A](plans/phase6/partA.md) ~ [Part D](plans/phase6/partD.md))
 
 **목표:** Gateway, Cost Tracking, MCP Resources/Prompts/Apps, Plugin, Sampling/Elicitation, Vector Search
 
@@ -555,13 +555,13 @@ app.add_middleware(
 | **C** | Plugin System (Independent Port) | 9-12 | P4 |
 | **D** | MCP Sampling, Elicitation, Vector Search | 13-15 | P3 |
 
-**✅ DoD:** [phase6.0.md](plans/phase6.0.md) 참조
+**✅ DoD:** [phase6.0.md](plans/phase6/phase6.0.md) 참조
 
 ---
 
 ### Phase 7: Polish + stdio Transport + MCP Standards
 
-**📋 상세 플랜:** [phase7.0.md](plans/phase7.0.md) (Master + [Part A](plans/phase7.0-partA.md) ~ [Part D](plans/phase7.0-partD.md))
+**📋 상세 플랜:** [phase7.0.md](plans/phase7/phase7.0.md) (Master + [Part A](plans/phase7/partA.md) ~ [Part D](plans/phase7/partD.md))
 
 **목표:** Extension UX, stdio subprocess, Roots/Progress/Tasks/Registry, i18n
 
@@ -572,7 +572,7 @@ app.add_middleware(
 | **C** | MCP Required Features (Roots, Progress, Tasks, Registry) | 9-12 | P7 |
 | **D** | i18n (Backend + Extension) | 13-14 | Low |
 
-**✅ DoD:** [phase7.0.md](plans/phase7.0.md) 참조
+**✅ DoD:** [phase7.0.md](plans/phase7/phase7.0.md) 참조
 
 ---
 
@@ -751,25 +751,25 @@ This roadmap provides the **overall Phase plan and architecture**. For **current
 
 | Phase | 문서 | 상태 |
 |-------|------|:---:|
-| Phase 1.0 | [phase1.0.md](plans/phase1.0.md) | ✅ 완료 |
-| Phase 1.5 | [phase1.5.md](plans/phase1.5.md) | ✅ 완료 |
-| Phase 2.0 | [phase2.0.md](plans/phase2.0.md) | ✅ 완료 |
-| Phase 2.5 | [phase2.5.md](plans/phase2.5.md) | ✅ 완료 |
-| Phase 3.0 | [phase3.0.md](plans/phase3.0.md) | ✅ 완료 |
-| Phase 4.0 (Master) | [phase4.0.md](plans/phase4.0.md) | ✅ 완료 (Part A-D) |
-| Phase 4.0 Part A | [phase4.0-partA.md](plans/phase4.0-partA.md) | ✅ 완료 |
-| Phase 4.0 Part B | [phase4.0-partB.md](plans/phase4.0-partB.md) | ✅ 완료 |
-| Phase 4.0 Part C | [phase4.0-partC.md](plans/phase4.0-partC.md) | ✅ 완료 |
-| Phase 4.0 Part D | [phase4.0-partD.md](plans/phase4.0-partD.md) | ✅ 완료 |
-| Phase 5.0 (Master) | [phase5.0.md](plans/phase5.0.md) | 📋 예정 |
-| Phase 5.0 Part A | [phase5.0-partA.md](plans/phase5.0-partA.md) | 📋 예정 |
-| Phase 5.0 Part B | [phase5.0-partB.md](plans/phase5.0-partB.md) | 📋 예정 |
-| Phase 5.0 Part C | [phase5.0-partC.md](plans/phase5.0-partC.md) | 📋 예정 |
-| Phase 5.0 Part D | [phase5.0-partD.md](plans/phase5.0-partD.md) | 📋 예정 |
-| Phase 6.0 (Master) | [phase6.0.md](plans/phase6.0.md) | 📋 예정 |
-| Phase 6.0 Part A~D | [phase6.0-partA.md](plans/phase6.0-partA.md) ~ [partD](plans/phase6.0-partD.md) | 📋 예정 |
-| Phase 7.0 (Master) | [phase7.0.md](plans/phase7.0.md) | 📋 예정 |
-| Phase 7.0 Part A~D | [phase7.0-partA.md](plans/phase7.0-partA.md) ~ [partD](plans/phase7.0-partD.md) | 📋 예정 |
+| Phase 1.0 | [phase1.0.md](plans/phase1/phase1.0.md) | ✅ 완료 |
+| Phase 1.5 | [phase1.5.md](plans/phase1/phase1.5.md) | ✅ 완료 |
+| Phase 2.0 | [phase2.0.md](plans/phase2/phase2.0.md) | ✅ 완료 |
+| Phase 2.5 | [phase2.5.md](plans/phase2/phase2.5.md) | ✅ 완료 |
+| Phase 3.0 | [phase3.0.md](plans/phase3/phase3.0.md) | ✅ 완료 |
+| Phase 4.0 (Master) | [phase4.0.md](plans/phase4/phase4.0.md) | ✅ 완료 (Part A-D) |
+| Phase 4.0 Part A | [phase4.0-partA.md](plans/phase4/partA.md) | ✅ 완료 |
+| Phase 4.0 Part B | [phase4.0-partB.md](plans/phase4/partB.md) | ✅ 완료 |
+| Phase 4.0 Part C | [phase4.0-partC.md](plans/phase4/partC.md) | ✅ 완료 |
+| Phase 4.0 Part D | [phase4.0-partD.md](plans/phase4/partD.md) | ✅ 완료 |
+| Phase 5.0 (Master) | [phase5.0.md](plans/phase5/phase5.0.md) | 📋 예정 |
+| Phase 5.0 Part A | [phase5.0-partA.md](plans/phase5/partA.md) | 📋 예정 |
+| Phase 5.0 Part B | [phase5.0-partB.md](plans/phase5/partB.md) | 📋 예정 |
+| Phase 5.0 Part C | [phase5.0-partC.md](plans/phase5/partC.md) | 📋 예정 |
+| Phase 5.0 Part D | [phase5.0-partD.md](plans/phase5/partD.md) | 📋 예정 |
+| Phase 6.0 (Master) | [phase6.0.md](plans/phase6/phase6.0.md) | 📋 예정 |
+| Phase 6.0 Part A~D | [phase6.0-partA.md](plans/phase6/partA.md) ~ [partD](plans/phase6/partD.md) | 📋 예정 |
+| Phase 7.0 (Master) | [phase7.0.md](plans/phase7/phase7.0.md) | 📋 예정 |
+| Phase 7.0 Part A~D | [phase7.0-partA.md](plans/phase7/partA.md) ~ [partD](plans/phase7/partD.md) | 📋 예정 |
 
 ---
 

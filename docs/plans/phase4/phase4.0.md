@@ -39,10 +39,10 @@
 
 | Part | 파일 | Steps | 초점 |
 |:----:|------|:-----:|------|
-| A | [phase4.0-partA.md](phase4.0-partA.md) | 1-4 | Critical Fixes |
-| B | [phase4.0-partB.md](phase4.0-partB.md) | 5-7 | Observability |
-| C | [phase4.0-partC.md](phase4.0-partC.md) | 8-9 | Dynamic Intelligence |
-| D | [phase4.0-partD.md](phase4.0-partD.md) | 10-11 | Reliability & Scale |
+| A | [partA.md](partA.md) | 1-4 | Critical Fixes |
+| B | [partB.md](partB.md) | 5-7 | Observability |
+| C | [partC.md](partC.md) | 8-9 | Dynamic Intelligence |
+| D | [partD.md](partD.md) | 10-11 | Reliability & Scale |
 | E | [phase4.0-partE.md](phase4.0-partE.md) | 12-16 | Production Hardening (초안) |
 
 ---

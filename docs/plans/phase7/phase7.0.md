@@ -12,10 +12,10 @@
 
 | Part | 파일 | Steps | 초점 |
 |:----:|------|:-----:|------|
-| A | [phase7.0-partA.md](phase7.0-partA.md) | 1-4 | Extension UX Polish |
-| B | [phase7.0-partB.md](phase7.0-partB.md) | 5-8 | stdio Transport (Cross-platform) |
-| C | [phase7.0-partC.md](phase7.0-partC.md) | 9-12 | MCP Required Features |
-| D | [phase7.0-partD.md](phase7.0-partD.md) | 13-14 | i18n (Backend + Extension) |
+| A | [partA.md](partA.md) | 1-4 | Extension UX Polish |
+| B | [partB.md](partB.md) | 5-8 | stdio Transport (Cross-platform) |
+| C | [partC.md](partC.md) | 9-12 | MCP Required Features |
+| D | [partD.md](partD.md) | 13-14 | i18n (Backend + Extension) |
 
 ---
 

@@ -293,7 +293,7 @@ API: GET /api/conversations/{id}/tool-calls
 - 설정: mcp.defer_loading_threshold = 30
 ```
 
-참조: [docs/plans/phase4.0.md](../docs/plans/phase4.0.md)
+참조: [docs/plans/phase4/phase4.0.md](../docs/plans/phase4/phase4.0.md)
 
 ## Key Files
 

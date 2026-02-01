@@ -369,15 +369,15 @@
 4. **Part D (Support):** 테스트 인프라 강화
 
 **📋 Detailed Plans:**
-- [phase5.0.md](plans/phase5.0.md) (Master Plan)
-- [phase5.0-partA.md](plans/phase5.0-partA.md) | [partB](plans/phase5.0-partB.md) | [partC](plans/phase5.0-partC.md) | [partD](plans/phase5.0-partD.md)
+- [phase5.0.md](plans/phase5/phase5.0.md) (Master Plan)
+- [phase5.0-partA.md](plans/phase5/partA.md) | [partB](plans/phase5/partB.md) | [partC](plans/phase5/partC.md) | [partD](plans/phase5/partD.md)
 
 ### Phase 6-7 Overview
 
 | Phase | Focus | Plans |
 |:-----:|-------|-------|
-| **6** | MCP Advanced + Plugin + Hardening | [phase6.0.md](plans/phase6.0.md) + [Part A](plans/phase6.0-partA.md)~[D](plans/phase6.0-partD.md) |
-| **7** | Polish + stdio + MCP Standards + i18n | [phase7.0.md](plans/phase7.0.md) + [Part A](plans/phase7.0-partA.md)~[D](plans/phase7.0-partD.md) |
+| **6** | MCP Advanced + Plugin + Hardening | [phase6.0.md](plans/phase6/phase6.0.md) + [Part A](plans/phase6/partA.md)~[D](plans/phase6/partD.md) |
+| **7** | Polish + stdio + MCP Standards + i18n | [phase7.0.md](plans/phase7/phase7.0.md) + [Part A](plans/phase7/partA.md)~[D](plans/phase7/partD.md) |
 
 ---
 
@@ -421,11 +421,11 @@
 | CLAUDE.md | ✅ Up-to-date | 2026-01-31 |
 | docs/roadmap.md | ✅ Up-to-date | 2026-01-31 |
 | docs/architecture.md | ✅ Up-to-date | 2026-01-28 |
-| docs/plans/phase3.0.md | ✅ Complete | 2026-01-30 |
-| docs/plans/phase4.0.md | ✅ Updated | 2026-01-31 |
-| docs/plans/phase5.0.md | ✅ Created | 2026-01-31 |
-| docs/plans/phase6.0.md | ✅ Created | 2026-01-31 |
-| docs/plans/phase7.0.md | ✅ Created | 2026-01-31 |
+| docs/plans/phase3/phase3.0.md | ✅ Complete | 2026-01-30 |
+| docs/plans/phase4/phase4.0.md | ✅ Updated | 2026-01-31 |
+| docs/plans/phase5/phase5.0.md | ✅ Created | 2026-01-31 |
+| docs/plans/phase6/phase6.0.md | ✅ Created | 2026-01-31 |
+| docs/plans/phase7/phase7.0.md | ✅ Created | 2026-01-31 |
 | src/README.md | ⚠️ Pending | - |
 | src/adapters/README.md | ✅ Created | 2026-01-30 |
 | tests/README.md | ✅ Created | 2026-01-30 |
@@ -436,10 +436,10 @@
 ## 🔗 Quick Links
 
 - [Overall Roadmap](roadmap.md)
-- [Phase 4 Plan](plans/phase4.0.md) ✅
-- [Phase 5 Plan](plans/phase5.0.md) 📋
-- [Phase 6 Plan](plans/phase6.0.md) 📋
-- [Phase 7 Plan](plans/phase7.0.md) 📋
+- [Phase 4 Plan](plans/phase4/phase4.0.md) ✅
+- [Phase 5 Plan](plans/phase5/phase5.0.md) 📋
+- [Phase 6 Plan](plans/phase6/phase6.0.md) 📋
+- [Phase 7 Plan](plans/phase7/phase7.0.md) 📋
 - [Architecture Overview](guides/architecture.md)
 - [Implementation Guide](guides/implementation-guide.md)
 - [All Guides](guides/)

@@ -146,9 +146,36 @@ class McpClientPort(ABC):
 | `extension/components/McpAppIndicator.tsx` | NEW | MCP App 메타데이터 표시 |
 | `tests/unit/domain/entities/test_mcp_app.py` | NEW | McpApp 테스트 |
 
-**참고:** Synapse MCP 서버는 현재 MCP Apps 미지원. 외부 테스트 서버 또는 Synapse에 간단한 App 구현 필요.
+**외부 테스트 엔드포인트:**
+
+MCP Apps 구현 검증을 위해 다음 외부 서버 사용:
+- SSE Transport: `https://remote-mcp-server-authless.idosalomon.workers.dev/sse`
+- Streamable HTTP: `https://remote-mcp-server-authless.idosalomon.workers.dev/mcp`
+
+**⚠️ 웹 검색 필수 (구현 전 필수 수행):**
+
+Step 8 구현 시작 전 반드시 웹 검색으로 다음을 검증:
+1. **MCP Apps 스펙 확인:**
+   - MCP Apps가 공식 MCP 스펙에 포함되었는지
+   - `_meta.ui.resourceUri` 필드가 표준인지
+   - Tool 응답에서 MCP App 메타데이터 전달 방식
+
+2. **외부 엔드포인트 검증:**
+   - `remote-mcp-server-authless.idosalomon.workers.dev` 서버가 MCP Apps를 지원하는지
+   - 해당 서버의 MCP Apps 응답 형식이 표준을 준수하는지
+
+3. **최신 MCP 스펙 버전 확인:**
+   - MCP Specification 최신 버전 (2025-11-25 이후 변경 사항)
+   - MCP Apps 관련 Breaking Changes
+
+**검색 키워드 예시:**
+- "MCP Apps specification 2025"
+- "MCP _meta.ui.resourceUri standard"
+- "remote-mcp-server-authless MCP Apps support"
 
 **DoD:**
+- [ ] **웹 검색으로 MCP Apps 표준 검증 완료**
+- [ ] **외부 테스트 엔드포인트가 MCP Apps 지원 확인**
 - [ ] Tool 응답에서 `_meta.ui.resourceUri` 감지
 - [ ] Extension에서 MCP App 메타데이터 표시 (URI, type)
 - [ ] 실제 HTML 렌더링은 포함하지 않음
@@ -161,10 +188,15 @@ class McpClientPort(ABC):
 - [ ] MCP Resources 목록/읽기 API + UI
 - [ ] MCP Prompts 목록/실행 API + UI
 - [ ] MCP Apps 메타데이터 표시
+- [ ] **외부 테스트 엔드포인트로 MCP Apps 검증 완료**
 
 ### 품질
 - [ ] 17+ 테스트 추가
 - [ ] Coverage >= 90% 유지
+
+### 표준 검증
+- [ ] **웹 검색으로 MCP Apps 스펙 최신 버전 확인**
+- [ ] **외부 테스트 엔드포인트 표준 준수 검증**
 
 ---
 
@@ -173,7 +205,8 @@ class McpClientPort(ABC):
 | 리스크 | 심각도 | 대응 |
 |--------|:------:|------|
 | MCP Python SDK API 변경 | 🟡 | 웹 검색으로 최신 확인, 버전 고정 |
-| Synapse MCP Apps 미지원 | 🟡 | 외부 서버 또는 간단 구현 |
+| 외부 엔드포인트가 MCP Apps 미지원 | 🟡 | 웹 검색으로 사전 검증, 대체 엔드포인트 탐색 |
+| MCP Apps 스펙이 비표준 | 🟡 | 웹 검색으로 최신 MCP 스펙 확인, 표준 준수 여부 검증 |
 | 하이브리드 아키텍처 복잡도 | 🟡 | 명확한 Port 분리로 관리 |
 
 ---
