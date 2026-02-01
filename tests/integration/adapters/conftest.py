@@ -16,11 +16,13 @@
 
 import os
 import tempfile
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import pytest_asyncio
+from dependency_injector import providers
 from fastapi.testclient import TestClient
 
 from src.adapters.inbound.http.app import create_app
@@ -94,16 +96,17 @@ def mock_mcp_toolset_in_ci():
         yield
 
 
-@pytest.fixture
-def authenticated_client(temp_data_dir: Path) -> Iterator[TestClient]:
+@pytest_asyncio.fixture
+async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]:
     """
     인증된 TestClient 인스턴스 (공통 fixture)
 
     특징:
     - 테스트용 토큰 주입
-    - 독립 스토리지 (임시 디렉토리)
+    - 독립 스토리지 (임시 데이터 디렉토리)
     - Lifespan 이벤트 트리거 (SQLite 초기화)
     - X-Extension-Token 헤더 자동 추가
+    - Container override로 테스트용 storage 주입
     """
     # 테스트용 토큰 주입
     token_provider.reset(TEST_TOKEN)
@@ -117,12 +120,46 @@ def authenticated_client(temp_data_dir: Path) -> Iterator[TestClient]:
     container.settings().storage.data_dir = str(temp_data_dir)
     container.settings().llm.default_model = "openai/gpt-4o-mini"
 
+    # CRITICAL FIX: db_path가 올바른 temp_data_dir을 가리키도록 storage를 재생성
+    # Callable provider는 lazy evaluation이 아니므로 명시적으로 오버라이드 필요
+    from src.adapters.outbound.storage.sqlite_conversation_storage import (
+        SqliteConversationStorage,
+    )
+    from src.adapters.outbound.storage.sqlite_usage import SqliteUsageStorage
+
+    # Override providers with correct paths
+    conv_db_path = str(temp_data_dir / "agenthub.db")
+    usage_db_path = str(temp_data_dir / "usage.db")
+
+    container.conversation_storage.override(
+        providers.Singleton(SqliteConversationStorage, db_path=conv_db_path)
+    )
+    container.usage_storage.override(providers.Singleton(SqliteUsageStorage, db_path=usage_db_path))
+
     # Context manager로 lifespan 트리거
     with TestClient(app) as test_client:
         # 모든 요청에 인증 헤더 추가
         test_client.headers.update({"X-Extension-Token": TEST_TOKEN})
+
+        # Storage 초기화 (override된 인스턴스)
+        conv_storage = container.conversation_storage()
+        usage_storage = container.usage_storage()
+        orchestrator = container.orchestrator_adapter()
+
+        # 비동기 초기화
+        await conv_storage.initialize()
+        await usage_storage.initialize()
+        await orchestrator.initialize()
+
         yield test_client
 
+        # Cleanup: 연결 종료
+        await conv_storage.close()
+        await usage_storage.close()
+        await orchestrator.close()
+
     # Cleanup
+    container.conversation_storage.reset_override()
+    container.usage_storage.reset_override()
     container.reset_singletons()
     container.unwire()

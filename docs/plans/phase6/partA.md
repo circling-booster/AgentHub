@@ -385,7 +385,21 @@ class CostService:
 - Extension은 `/api/usage/budget` 주기적 폴링 (30초마다)
 - 경고 상태일 때 Sidepanel 상단에 배너 표시
 
+
+
 **테스트:** 10개 (엔티티 3 + 서비스 3 + API 2 + 콜백 2)
+
+
+
+
+**TDD(SKILLS 호출) 순서(순수 UI 를 제외):**
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
+
+
 
 **DoD:**
 - [ ] LLM 호출 시 비용 자동 기록
@@ -459,6 +473,16 @@ async def test_concurrent_tool_calls_cache_consistency():
     # 모든 결과가 동일한지 검증 (캐시 일관성)
     ...
 ```
+
+
+
+**TDD(SKILLS 호출) 순서(순수 UI 를 제외):**
+1.  **Immutable Tests**: Never modify a failing test to make it pass. You must fix the implementation. Updating tests is allowed ONLY when requirements explicitly change.
+2.  **Strict Red-Green-Refactor**: Follow the cycle rigorously. During the 'Refactor' phase, improve structure only—never alter behavior.
+3.  **Boundary Mocking Only**: Mock only external boundaries (DB, HTTP, Time, Random). NEVER mock core domain logic or algorithms.
+
+
+
 
 **DoD:**
 - [ ] 3개 Chaos 시나리오 통과

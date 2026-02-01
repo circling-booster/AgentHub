@@ -16,8 +16,10 @@ from src.adapters.outbound.storage.json_endpoint_storage import JsonEndpointStor
 from src.adapters.outbound.storage.sqlite_conversation_storage import (
     SqliteConversationStorage,
 )
+from src.adapters.outbound.storage.sqlite_usage import SqliteUsageStorage
 from src.config.settings import Settings
 from src.domain.services.conversation_service import ConversationService
+from src.domain.services.cost_service import CostService
 from src.domain.services.gateway_service import GatewayService
 from src.domain.services.health_monitor_service import HealthMonitorService
 from src.domain.services.orchestrator_service import OrchestratorService
@@ -44,6 +46,11 @@ class Container(containers.DeclarativeContainer):
         db_path=providers.Callable(
             lambda s: f"{s.storage.data_dir}/{s.storage.database}", settings
         ),
+    )
+
+    usage_storage = providers.Singleton(
+        SqliteUsageStorage,
+        db_path=providers.Callable(lambda s: f"{s.storage.data_dir}/usage.db", settings),
     )
 
     # ADK Adapters
@@ -105,4 +112,11 @@ class Container(containers.DeclarativeContainer):
         toolset=dynamic_toolset,
         a2a_client=a2a_client_adapter,
         check_interval_seconds=settings.provided.health_check.interval_seconds,
+    )
+
+    # Cost Service (Phase 6 Part A Step 3)
+    cost_service = providers.Factory(
+        CostService,
+        usage_port=usage_storage,
+        monthly_budget_usd=settings.provided.cost.monthly_budget_usd,
     )

@@ -16,6 +16,18 @@ class DomainException(Exception):
 
 
 # ============================================================
+# Cost 관련 예외
+# ============================================================
+
+
+class BudgetExceededError(DomainException):
+    """예산 초과 (110% hard limit)"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.BUDGET_EXCEEDED)
+
+
+# ============================================================
 # Endpoint 관련 예외
 # ============================================================
 

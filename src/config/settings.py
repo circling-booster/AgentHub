@@ -68,6 +68,15 @@ class GatewaySettings(BaseModel):
     fallback_enabled: bool = True  # Fallback 서버 전환 활성화
 
 
+class CostSettings(BaseModel):
+    """비용 추적 설정 (Phase 6 Part A Step 3)"""
+
+    monthly_budget_usd: float = 100.0  # 월별 예산 (USD)
+    warning_threshold: float = 0.9  # 90%: 경고
+    critical_threshold: float = 1.0  # 100%: 심각
+    hard_limit_threshold: float = 1.1  # 110%: 차단
+
+
 class Settings(BaseSettings):
     """AgentHub 애플리케이션 설정"""
 
@@ -85,6 +94,7 @@ class Settings(BaseSettings):
     mcp: McpSettings = Field(default_factory=McpSettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
     gateway: GatewaySettings = Field(default_factory=GatewaySettings)
+    cost: CostSettings = Field(default_factory=CostSettings)
 
     # API 키 (환경변수에서만, 플랫 필드 유지)
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")

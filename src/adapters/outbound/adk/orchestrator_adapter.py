@@ -600,6 +600,54 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         self._workflows.pop(workflow_id, None)
         logger.info(f"Workflow agent removed: {workflow_id}")
 
+    async def _call_llm_with_retry(self, message: str, max_retries: int = 3) -> dict:
+        """
+        LLM API 호출 with Exponential Backoff Retry (Chaos 테스트용)
+
+        Args:
+            message: User message
+            max_retries: Maximum retry attempts (default: 3)
+
+        Returns:
+            LiteLLM completion response dict
+
+        Raises:
+            LlmRateLimitError: Rate limit exceeded after max retries
+        """
+        import asyncio
+
+        from litellm.exceptions import RateLimitError
+
+        from src.domain.exceptions import LlmRateLimitError
+
+        attempt = 0
+        while attempt <= max_retries:
+            try:
+                # litellm.completion 호출 (비동기)
+                response = await asyncio.to_thread(
+                    litellm.completion,
+                    model=self._model_name,
+                    messages=[{"role": "user", "content": message}],
+                )
+                return response
+            except RateLimitError as e:
+                attempt += 1
+                if attempt > max_retries:
+                    # 최대 재시도 초과
+                    raise LlmRateLimitError(
+                        f"LLM rate limit exceeded after {max_retries} retries"
+                    ) from e
+
+                # Exponential backoff: 1s, 2s, 4s, ...
+                delay = 2 ** (attempt - 1)
+                logger.warning(
+                    f"Rate limit hit, retrying in {delay}s (attempt {attempt}/{max_retries})"
+                )
+                await asyncio.sleep(delay)
+
+        # 도달 불가 (while 조건이 보장)
+        raise RuntimeError("Unexpected retry loop exit")
+
     async def close(self) -> None:
         """리소스 정리
 

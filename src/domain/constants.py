@@ -35,5 +35,8 @@ class ErrorCode:
     # Gateway 관련 에러
     RATE_LIMIT_EXCEEDED = "RateLimitExceededError"
 
+    # Cost 관련 에러
+    BUDGET_EXCEEDED = "BudgetExceededError"
+
     # 기타
     UNKNOWN = "UnknownError"

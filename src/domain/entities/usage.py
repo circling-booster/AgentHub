@@ -5,6 +5,38 @@ from datetime import datetime
 
 
 @dataclass
+class BudgetStatus:
+    """
+    예산 상태 엔티티
+
+    월별 예산 대비 현재 지출 상태를 추적하며,
+    경고 수준에 따라 API 호출 허용 여부를 판단합니다.
+    """
+
+    monthly_budget: float  # 월 예산 (USD)
+    current_spending: float  # 현재 지출 (USD)
+    usage_percentage: float  # 사용률 (%)
+    alert_level: str  # "safe" | "warning" | "critical" | "blocked"
+    can_proceed: bool  # API 호출 허용 여부
+
+    def get_alert_message(self) -> str:
+        """경고 수준에 따른 메시지 반환"""
+        if self.alert_level == "warning":
+            return (
+                f"Budget at {self.usage_percentage:.1f}% "
+                f"(${self.current_spending:.2f}/${self.monthly_budget:.2f})"
+            )
+        elif self.alert_level == "critical":
+            return (
+                f"Budget exceeded: {self.usage_percentage:.1f}% "
+                f"(${self.current_spending:.2f}/${self.monthly_budget:.2f})"
+            )
+        elif self.alert_level == "blocked":
+            return "Budget hard limit reached. API calls blocked."
+        return "Budget within safe limits"
+
+
+@dataclass
 class Usage:
     """
     LLM 호출 사용량 엔티티

@@ -106,6 +106,8 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
    - **A2A Protocol**: MUST implement based on A2A 0.3 specification (gRPC transport, Security Cards when ADK supports)
    - **Custom Extensions**: MUST isolate in Plugin System to prevent vendor lock-in and ensure protocol upgradability
 
+8. **TEST SERVERS & ENDPOINTS**
+   - YOU SHOULD BE SPECIFIC. @tests/README.md
 ---
 
 ## 🚫 Critical Don'ts
