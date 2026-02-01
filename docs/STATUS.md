@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-02-01 (Phase 5 Part E Step 14 Complete)
-> **Current Phase:** Phase 5 Part E Step 14 Complete (Workflow Domain Entities)
+> **Last Updated:** 2026-02-01 (Phase 5 Part E Complete)
+> **Current Phase:** Phase 5 Part E Complete (ADK Workflow Agents)
 > **Active Branch:** `feature/phase-5`
 
 ---
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 99% (Phase 5 Part E Step 14 Complete) |
+| **Overall Progress** | 100% (Phase 5 Complete) |
 | **Backend Coverage** | 91% (Target: 90%) |
 | **Backend Tests** | 493 passed / 506 collected (pytest) |
 | **Extension Tests** | 232 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 5 Part E Step 14 Complete (2026-02-01) |
+| **Last Milestone** | Phase 5 Complete (2026-02-01) |
 
 ---
 
@@ -37,7 +37,7 @@
 | **Phase 5 Part B** | **✅ Complete** | **100%** | **MCP Authentication (AuthConfig, Header/API Key, OAuth 2.1 Flow)** |
 | **Phase 5 Part C** | **✅ Complete** | **100%** | **Content Script + Page Context Toggle (30 Extension tests, 7 Backend tests)** |
 | **Phase 5 Part D** | **✅ Complete** | **100%** | **Test Infrastructure (Server Startup Validation, Dynamic Ports, litellm Logging Fix)** |
-| **Phase 5 Part E** | **🚧 In Progress** | **25%** | **ADK Workflow Agents (Step 14/4 Complete: Workflow Entities)** |
+| **Phase 5 Part E** | **✅ Complete** | **100%** | **ADK Workflow Agents (SequentialAgent, ParallelAgent, Workflow API, 6 tests)** |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
 
@@ -506,6 +506,67 @@ File "litellm/litellm_core_utils/logging_worker.py", line 422, in _safe_log
 
 ---
 
+## 🎯 Phase 5 Part E 완료 요약
+
+**완료 일자:** 2026-02-01
+**결과:** ADK Workflow Agents 완전 통합 (SequentialAgent + ParallelAgent + Workflow API + 6 tests)
+
+### 완료된 Steps (13-16)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **13** | ADK Workflow Agent Spike Test | 1 integration test | ✅ |
+| **14** | Workflow 도메인 엔티티 + OrchestratorAdapter | 28 tests (12 entity + 5 event + 7 unit + 4 integration) | ✅ |
+| **15** | Workflow REST API + Extension UI | - (Step 15 별도 커밋 완료) | ✅ |
+| **16** | ParallelAgent 통합 테스트 + SSE 검증 | 6 tests (4 parallel + 2 SSE) | ✅ |
+
+### 핵심 성과
+
+- ✅ **SequentialAgent 지원**: Echo → Math 순차 실행 워크플로우
+- ✅ **ParallelAgent 지원**: Echo + Math 병렬 실행 (동시성 테스트 완료)
+- ✅ **Workflow SSE 스트리밍**: workflow_start → step_start → step_complete → workflow_complete 이벤트
+- ✅ **State Isolation**: 병렬 agent 간 output_key 격리 검증
+- ✅ **Re-parenting 버그 수정**: 워크플로우마다 새로운 RemoteA2aAgent 인스턴스
+- ✅ **도메인 순수성**: Workflow/WorkflowStep 엔티티 순수 Python (외부 의존성 없음)
+- ✅ **ADR-10 작성**: ADK Workflow Agents 도입 결정 기록
+- ✅ **테스트 품질**: 34 tests 추가 (28 Step 14 + 6 Step 16)
+- ✅ **커버리지 유지**: 91% (목표 90% 초과)
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+### 구현 파일
+
+**도메인:**
+- `src/domain/entities/workflow.py`: Workflow, WorkflowStep
+- `src/domain/entities/stream_chunk.py`: workflow 이벤트 (4개)
+- `src/domain/exceptions.py`: WorkflowNotFoundError
+- `src/domain/ports/outbound/orchestrator_port.py`: workflow 메서드 (3개)
+
+**Adapter:**
+- `src/adapters/outbound/adk/orchestrator_adapter.py`: SequentialAgent/ParallelAgent 구현
+
+**테스트:**
+- `tests/unit/domain/entities/test_workflow.py`: 12 tests
+- `tests/unit/adapters/test_workflow_orchestrator.py`: 7 tests
+- `tests/integration/adapters/test_workflow_integration.py`: 4 tests
+- `tests/integration/adapters/test_workflow_agent_spike.py`: 1 test
+- `tests/integration/adapters/test_parallel_workflow.py`: 6 tests (NEW)
+
+### 테스트 결과
+
+- **Step 13**: 1 test (Spike - SequentialAgent + RemoteA2aAgent 호환성 검증)
+- **Step 14**: 28 tests (12 entity + 5 event + 7 unit + 4 integration)
+- **Step 16**: 6 tests (4 parallel + 2 SSE execution)
+- **Total**: 499 passed, 2 skipped, 23 deselected
+- **Regression**: 0 (모든 기존 테스트 통과)
+- **Coverage**: 91% (목표 90% 초과)
+
+### 다음 단계
+
+- [ ] Phase 6: MCP Advanced + Plugin System + Production Hardening
+- [ ] Phase 7: Polish + stdio Transport + MCP Standards + i18n
+
+---
+
 ## 🎯 Phase 5 Part E Step 14 완료 요약
 
 **완료 일자:** 2026-02-01
@@ -608,6 +669,9 @@ else:
 
 ## 📅 Recent Milestones
 
+- **2026-02-01**: Phase 5 Complete - ADK Workflow Agents + MCP Auth + Content Script (499 Backend tests, 91% coverage)
+- **2026-02-01**: Phase 5 Part E Complete - ADK Workflow Agents (SequentialAgent, ParallelAgent, 34 tests)
+- **2026-02-01**: Phase 5 Part E Step 16 - ParallelAgent integration tests + SSE execution (6 tests)
 - **2026-02-01**: Phase 5 Part E Step 14 Complete - Workflow Domain Entities (Workflow/WorkflowStep, StreamChunk events, OrchestratorAdapter, 28 tests, 493 total)
 - **2026-02-01**: Phase 5 Part D Complete - Test Infrastructure (Server Startup Validation, Dynamic Ports, litellm Logging Fix, 9 tests, 461 total)
 - **2026-02-01**: Phase 5 Part C Complete - Content Script + Page Context Toggle (37 tests, 232 Extension / 451 Backend)
@@ -628,25 +692,25 @@ else:
 
 ---
 
-## ⚡ Next Actions (Phase 5)
+## ⚡ Next Actions (Phase 6)
 
-### Phase 5: Verification + Core Connectivity
+### Phase 5: Verification + Core Connectivity ✅ 완료
 
 | Part | Steps | 초점 | 상태 |
 |:----:|:-----:|------|:----:|
 | **A** | 1-4 | A2A Verification & Test Agents | ✅ 완료 |
-| **B** | 5-8 | MCP Server Authentication (Headers + OAuth 2.1) | 📋 예정 |
-| **C** | 9-10 | Content Script (Page Context Toggle) | 📋 예정 |
-| **D** | 11-12 | Test Infrastructure Enhancement | 📋 예정 |
-| **E** | 13-16 | ADK Workflow Agents (SequentialAgent, ParallelAgent) | 📋 예정 |
+| **B** | 5-8 | MCP Server Authentication (Headers + OAuth 2.1) | ✅ 완료 |
+| **C** | 9-10 | Content Script (Page Context Toggle) | ✅ 완료 |
+| **D** | 11-12 | Test Infrastructure Enhancement | ✅ 완료 |
+| **E** | 13-16 | ADK Workflow Agents (SequentialAgent, ParallelAgent) | ✅ 완료 |
 
-### 실행 우선순위
+### 완료 요약
 
-1. **Part A (P0):** ✅ 완료 — A2A 단일 위임 검증
-2. **Part B (P1):** MCP 서버 인증 — API Key, Header, OAuth 2.1 지원
-3. **Part C (P2):** Content Script — 페이지 컨텍스트 토글
-4. **Part D (Support):** 테스트 인프라 강화
-5. **Part E (P2):** ADK Workflow Agents — SequentialAgent/ParallelAgent로 Multi-step Delegation
+1. **Part A (P0):** ✅ 완료 — A2A 단일 위임 검증 (11 tests)
+2. **Part B (P1):** ✅ 완료 — MCP 서버 인증 (API Key, Header, OAuth 2.1, 24 tests)
+3. **Part C (P2):** ✅ 완료 — Content Script + Page Context Toggle (37 tests)
+4. **Part D (Support):** ✅ 완료 — Test Infrastructure Enhancement (9 tests)
+5. **Part E (P2):** ✅ 완료 — ADK Workflow Agents (SequentialAgent, ParallelAgent, 34 tests)
 
 **📋 Detailed Plans:**
 - [phase5.0.md](plans/phase5/phase5.0.md) (Master Plan)
