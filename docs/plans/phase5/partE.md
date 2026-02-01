@@ -276,6 +276,7 @@ POST   /api/workflows/{id}/execute      # Workflow 실행 (SSE 스트리밍)
 **테스트 시나리오:**
 1. **Sequential E2E**: Extension → Workflow 생성 → Echo→Math 순차 실행 → UI에 결과 표시
 2. **Parallel E2E**: Echo + Math 병렬 실행 → 결과 병합 → UI에 표시
+3. **Workflow SSE Execution** (Step 15에서 deferred): 실제 A2A 에이전트와 함께 Workflow 실행 SSE 스트리밍 검증
 
 **TDD(SKILLS 호출) 순서(기재되지 않아도 구현 전 테스트 작성 필수):**
 1. RED: `test_parallel_workflow_execution` (2 tests)
@@ -289,6 +290,7 @@ POST   /api/workflows/{id}/execute      # Workflow 실행 (SSE 스트리밍)
 - [ ] ParallelAgent로 2개 에이전트 병렬 실행
 - [ ] State isolation 확인 (각 agent 별도 output_key)
 - [ ] E2E: Extension → Workflow API → Agent 실행 → 결과 표시
+- [ ] Step 15 deferred test: Workflow SSE 실행 스트리밍 검증 (실제 A2A 에이전트 사용)
 - [ ] Coverage >= 90% 유지
 
 ---
