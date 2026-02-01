@@ -1,7 +1,7 @@
 # AgentHub Project Status
 
-> **Last Updated:** 2026-02-01 (Phase 5 Part D Complete)
-> **Current Phase:** Phase 5 Part D Complete (Test Infrastructure Enhancement)
+> **Last Updated:** 2026-02-01 (Phase 5 Part E Step 14 Complete)
+> **Current Phase:** Phase 5 Part E Step 14 Complete (Workflow Domain Entities)
 > **Active Branch:** `feature/phase-5`
 
 ---
@@ -10,12 +10,12 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall Progress** | 99% (Phase 5 Part D Complete) |
+| **Overall Progress** | 99% (Phase 5 Part E Step 14 Complete) |
 | **Backend Coverage** | 91% (Target: 90%) |
-| **Backend Tests** | 461 passed / 476 collected (pytest) |
+| **Backend Tests** | 493 passed / 506 collected (pytest) |
 | **Extension Tests** | 232 tests (Vitest) |
 | **E2E Tests** | 7 scenarios (Playwright) |
-| **Last Milestone** | Phase 5 Part D Complete (2026-02-01) |
+| **Last Milestone** | Phase 5 Part E Step 14 Complete (2026-02-01) |
 
 ---
 
@@ -37,7 +37,7 @@
 | **Phase 5 Part B** | **✅ Complete** | **100%** | **MCP Authentication (AuthConfig, Header/API Key, OAuth 2.1 Flow)** |
 | **Phase 5 Part C** | **✅ Complete** | **100%** | **Content Script + Page Context Toggle (30 Extension tests, 7 Backend tests)** |
 | **Phase 5 Part D** | **✅ Complete** | **100%** | **Test Infrastructure (Server Startup Validation, Dynamic Ports, litellm Logging Fix)** |
-| Phase 5 Part E | 📋 Planned | 0% | ADK Workflow Agents (SequentialAgent, ParallelAgent) |
+| **Phase 5 Part E** | **🚧 In Progress** | **25%** | **ADK Workflow Agents (Step 14/4 Complete: Workflow Entities)** |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
 
@@ -506,6 +506,87 @@ File "litellm/litellm_core_utils/logging_worker.py", line 422, in _safe_log
 
 ---
 
+## 🎯 Phase 5 Part E Step 14 완료 요약
+
+**완료 일자:** 2026-02-01
+**결과:** Workflow 도메인 엔티티 + OrchestratorAdapter 확장 완료 (TDD Red-Green-Refactor)
+
+### 완료된 Sub-Steps (14-1 ~ 14-3)
+
+| Step | 내용 | 테스트 | 상태 |
+|:----:|------|:------:|:----:|
+| **14-1** | Workflow 도메인 엔티티 구현 | 12 entity tests | ✅ |
+| **14-2** | StreamChunk 이벤트 확장 | 5 event tests | ✅ |
+| **14-3** | OrchestratorAdapter 확장 | 7 unit + 4 integration tests | ✅ |
+
+### 핵심 성과
+
+- ✅ **Workflow 도메인 엔티티**: Workflow, WorkflowStep (순수 Python, 외부 의존성 없음)
+- ✅ **StreamChunk 이벤트**: workflow_start, workflow_step_start, workflow_step_complete, workflow_complete
+- ✅ **OrchestratorPort 확장**: create_workflow_agent, execute_workflow, remove_workflow_agent
+- ✅ **SequentialAgent/ParallelAgent 지원**: ADK 워크플로우 에이전트 네이티브 통합
+- ✅ **Re-parenting 버그 수정**: 워크플로우마다 새로운 RemoteA2aAgent 인스턴스 생성
+- ✅ **WorkflowNotFoundError**: ErrorCode.WORKFLOW_NOT_FOUND 상수 추가
+- ✅ **테스트 품질**: 28 tests 추가 (12 entity + 5 event + 7 unit + 4 integration)
+- ✅ **커버리지 유지**: 91% (목표 90% 초과)
+- ✅ **Regression 0**: 493 passed, 2 skipped, 11 deselected
+- ✅ **TDD 준수**: Red-Green-Refactor 사이클 엄격히 따름
+
+### 구현 파일
+
+- `src/domain/entities/workflow.py`: Workflow, WorkflowStep 엔티티
+- `src/domain/entities/stream_chunk.py`: 워크플로우 이벤트 팩토리 메서드 (4개)
+- `src/domain/exceptions.py`: WorkflowNotFoundError 추가
+- `src/domain/constants.py`: ErrorCode.WORKFLOW_NOT_FOUND 추가
+- `src/domain/ports/outbound/orchestrator_port.py`: 워크플로우 메서드 (3개)
+- `src/adapters/outbound/adk/orchestrator_adapter.py`: 워크플로우 구현 (SequentialAgent/ParallelAgent)
+- `tests/unit/fakes/fake_orchestrator.py`: 워크플로우 시뮬레이션
+
+### 테스트 파일
+
+- `tests/unit/domain/entities/test_workflow.py`: 12 tests (엔티티 생성, 동등성, 기본값)
+- `tests/unit/domain/entities/test_stream_chunk.py`: +5 tests (워크플로우 이벤트)
+- `tests/unit/adapters/test_workflow_orchestrator.py`: 7 tests (create, execute, remove, validation)
+- `tests/integration/adapters/test_workflow_integration.py`: 4 tests (Echo → Math 시퀀셜, 라이프사이클, 검증)
+
+### 테스트 결과
+
+- **Total**: 493 passed, 2 skipped, 11 deselected, 90 warnings
+- **New Tests**: 28 tests (12 entity + 5 event + 7 unit + 4 integration)
+- **Regression**: 0 (모든 기존 테스트 통과)
+- **Integration Test**: Echo → Math 시퀀셜 워크플로우 성공 ✅
+
+### 기술적 해결책
+
+**Re-parenting 에러 수정:**
+```python
+# Before: self._sub_agents 재사용 → re-parenting 에러
+# After: 워크플로우마다 새로운 RemoteA2aAgent 생성
+sub_agents = []
+for step in workflow.steps:
+    url = self._a2a_urls[step.agent_endpoint_id]
+    remote_agent = RemoteA2aAgent(
+        name=f"a2a_{step.agent_endpoint_id}".replace("-", "_"),
+        agent_card=agent_card_url,
+    )
+    sub_agents.append(remote_agent)
+```
+
+**워크플로우 생성:**
+```python
+if workflow.workflow_type == "sequential":
+    workflow_agent = SequentialAgent(name=normalized_name, sub_agents=sub_agents)
+else:
+    workflow_agent = ParallelAgent(name=normalized_name, sub_agents=sub_agents)
+```
+
+### Deferred Features → Step 15-16
+
+- **Step 15**: Workflow API Endpoint (POST /api/workflows, GET, DELETE, POST /execute)
+- **Step 16**: ParallelAgent 통합 테스트 (동시 실행 검증)
+
+---
+
 ## 🧪 Test Coverage Summary
 
 | Component | Coverage | Target | Status |
@@ -515,8 +596,9 @@ File "litellm/litellm_core_utils/logging_worker.py", line 422, in _safe_log
 | MCP Integration | 88% | 70% | ✅ |
 | A2A Integration | 90.18% | 80% | ✅ |
 | Phase 4 Part A | 90.18% | 90% | ✅ |
-| Extension (Vitest) | 197 tests | - | ✅ |
-| Backend (pytest) | 400 passed / 402 total | - | ✅ |
+| Phase 5 Part E | 91% | 90% | ✅ |
+| Extension (Vitest) | 232 tests | - | ✅ |
+| Backend (pytest) | 493 passed / 506 total | - | ✅ |
 | E2E Tests (Playwright) | 7 scenarios | - | ✅ |
 | E2E Tests (Manual) | 10 passed, 2 skipped | - | ✅ 수동검증 완료 |
 
@@ -526,11 +608,11 @@ File "litellm/litellm_core_utils/logging_worker.py", line 422, in _safe_log
 
 ## 📅 Recent Milestones
 
+- **2026-02-01**: Phase 5 Part E Step 14 Complete - Workflow Domain Entities (Workflow/WorkflowStep, StreamChunk events, OrchestratorAdapter, 28 tests, 493 total)
 - **2026-02-01**: Phase 5 Part D Complete - Test Infrastructure (Server Startup Validation, Dynamic Ports, litellm Logging Fix, 9 tests, 461 total)
 - **2026-02-01**: Phase 5 Part C Complete - Content Script + Page Context Toggle (37 tests, 232 Extension / 451 Backend)
 - **2026-02-01**: Phase 5 Part B Complete - MCP Authentication (AuthConfig, OAuth 2.1 Flow, 24 tests)
 - **2026-02-01**: Phase 5 Part A Complete - A2A Verification (Wiring, Math Agent, Full Flow, 11 tests, 91% coverage)
-- **2026-02-01**: Phase 5 Part E Planned - ADK Workflow Agents (SequentialAgent, ParallelAgent, ADR-10)
 - **2026-01-31**: Phase 5-7 Plans Created - Priority-based restructuring (15 plan files, ADR-5~8)
 - **2026-02-01**: ADR-9 - LangGraph=A2A, Plugin=개별 도구만 (Phase 6C/8 범위 명확화)
 - **2026-02-01**: Phase 4 Part A-D Complete - Critical Fixes + Observability + Dynamic Intelligence + Reliability (91% coverage, 389 tests)
