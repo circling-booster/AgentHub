@@ -9,7 +9,6 @@ Google ADK-based MCP + A2A Integrated Agent System
 | Item | Details |
 |------|---------|
 | **Purpose** | Integrate MCP/A2A tools via Chrome Extension in local environment |
-| **Language** | Python 3.10+ (Backend) + TypeScript (Extension) |
 | **Architecture** | Hexagonal (Ports and Adapters) |
 | **Agent Framework** | Google ADK 1.23.0+ with LiteLLM |
 | **Default Model** | `openai/gpt-4o-mini` |
@@ -64,28 +63,6 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 
 **Environment:** Set API keys in `.env` file (ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY)
 
-### Automated Workflow (Hooks)
-
-- **PostToolUse Hook**: Auto ruff formatting after code changes
-- **Stop Hook**: Run unit tests on response completion (`pytest tests/unit/ -q --tb=line -x`)
-- **UserPromptSubmit Hook**: Full test + coverage verification on commit/pr/push (`pytest tests/ --cov=src --cov-fail-under=80 -q`)
-- **Git pre-commit hook**: Block direct commits to main branch
-- **GitHub Actions**: Block PRs with <80% coverage
-
-**Note:** All pytest hooks use token-optimized options (`-q --tb=line -x`) to minimize Claude Code context consumption.
-
-Details: `.claude/settings.json` and `.github/workflows/ci.yml`
-
----
-
-## ⚠️ Critical Constraints & Solutions
-
-| Constraint | Solution |
-|------------|----------|
-| MCPToolset.get_tools() is async | Async Factory Pattern (FastAPI startup initialization) |
-| SQLite concurrent writes | WAL mode + write lock |
-| Google Built-in Tools (SearchTool, etc.) | Gemini-only → Replace with MCP servers |
-
 ---
 
 ## 🔐 Key Principles
@@ -117,6 +94,7 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
    - YOU MUST NOT implement any entity, service, or adapter without writing tests FIRST
    - Follow Red-Green-Refactor cycle: failing test → minimal implementation → refactoring
    - Code without tests cannot be committed/PR'd
+   - **Treat Tests as Immutable Specifications**: A failure indicates a bug in the implementation, not the test. Only modify tests if the user confirms a requirement change.
 
 6. **MCP Transport**
    - Streamable HTTP preferred (2025 recommendation)
@@ -158,12 +136,6 @@ Details: `.claude/settings.json` and `.github/workflows/ci.yml`
 ---
 
 ## 🧪 Test Strategy (TDD + Hexagonal)
-
-| Phase | Test Type | Target | Coverage Goal |
-|-------|-----------|--------|---------------|
-| Phase 1 | Unit | Domain Layer | 80% |
-| Phase 2 | Integration | MCP Adapter, API | 70% |
-| Phase 3 | E2E | Full Stack | Critical Path |
 
 **TDD Principles:**
 - Follow Red-Green-Refactor cycle strictly

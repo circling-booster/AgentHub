@@ -35,6 +35,7 @@
 | **Phase 4 Part D** | **✅ Complete** | **100%** | **Reliability & Scale (A2A Health, Defer Loading)** |
 | **Phase 5 Part A** | **✅ Complete** | **100%** | **A2A Verification (Wiring, Echo, Math Agent, Full Flow)** |
 | Phase 5 Part B-D | 📋 Planned | 0% | MCP Auth, Content Script, Test Infra |
+| Phase 5 Part E | 📋 Planned | 0% | ADK Workflow Agents (SequentialAgent, ParallelAgent) |
 | Phase 6 | 📋 Planned | 0% | MCP Advanced + Plugin System + Production Hardening |
 | Phase 7 | 📋 Planned | 0% | Polish + stdio Transport + MCP Standards + i18n |
 
@@ -306,11 +307,12 @@
 - `tests/integration/adapters/test_a2a_math_agent.py`: 4 tests
 - `tests/integration/adapters/test_a2a_full_flow.py`: 3 tests
 
-### Deferred Features (Phase 6+)
+### Deferred Features → Phase 5 Part E로 이관
 
-- **Multi-step A2A Delegation**: LLM이 복합 과업을 분해하여 여러 에이전트에 순차/병렬 위임
-- **연기 이유**: Phase 5 Part A는 단일 에이전트 위임 검증에 집중
-- **구현 시점**: Phase 6 이후 (A2A Advanced 기능)
+- **Multi-step A2A Delegation**: ADK SequentialAgent/ParallelAgent 네이티브 도입
+- **이관 위치**: Phase 5 Part E (Steps 13-16)
+- **계획 문서**: [partE.md](plans/phase5/partE.md)
+- **ADR-10**: ADK Workflow Agents 도입 결정 기록
 
 ---
 
@@ -334,6 +336,7 @@
 
 ## 📅 Recent Milestones
 
+- **2026-02-01**: Phase 5 Part E Planned - ADK Workflow Agents (SequentialAgent, ParallelAgent, ADR-10)
 - **2026-02-01**: Phase 5 Part A Complete - A2A Verification (Wiring, Math Agent, Full Flow, 11 tests, 91% coverage)
 - **2026-01-31**: Phase 5-7 Plans Created - Priority-based restructuring (15 plan files, ADR-5~8)
 - **2026-02-01**: ADR-9 - LangGraph=A2A, Plugin=개별 도구만 (Phase 6C/8 범위 명확화)
@@ -356,21 +359,23 @@
 
 | Part | Steps | 초점 | 상태 |
 |:----:|:-----:|------|:----:|
-| **A** | 1-4 | A2A Verification & Test Agents | 📋 예정 |
+| **A** | 1-4 | A2A Verification & Test Agents | ✅ 완료 |
 | **B** | 5-8 | MCP Server Authentication (Headers + OAuth 2.1) | 📋 예정 |
 | **C** | 9-10 | Content Script (Page Context Toggle) | 📋 예정 |
 | **D** | 11-12 | Test Infrastructure Enhancement | 📋 예정 |
+| **E** | 13-16 | ADK Workflow Agents (SequentialAgent, ParallelAgent) | 📋 예정 |
 
 ### 실행 우선순위
 
-1. **Part A (P0):** A2A 위임 검증 — LLM이 A2A 에이전트를 인식/사용하는지 진단 및 수정
+1. **Part A (P0):** ✅ 완료 — A2A 단일 위임 검증
 2. **Part B (P1):** MCP 서버 인증 — API Key, Header, OAuth 2.1 지원
 3. **Part C (P2):** Content Script — 페이지 컨텍스트 토글
 4. **Part D (Support):** 테스트 인프라 강화
+5. **Part E (P2):** ADK Workflow Agents — SequentialAgent/ParallelAgent로 Multi-step Delegation
 
 **📋 Detailed Plans:**
 - [phase5.0.md](plans/phase5/phase5.0.md) (Master Plan)
-- [phase5.0-partA.md](plans/phase5/partA.md) | [partB](plans/phase5/partB.md) | [partC](plans/phase5/partC.md) | [partD](plans/phase5/partD.md)
+- [partA](plans/phase5/partA.md) | [partB](plans/phase5/partB.md) | [partC](plans/phase5/partC.md) | [partD](plans/phase5/partD.md) | [partE](plans/phase5/partE.md)
 
 ### Phase 6-7 Overview
 

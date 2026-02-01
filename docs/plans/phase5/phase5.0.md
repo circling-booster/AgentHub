@@ -3,8 +3,8 @@
 > **상태:** 📋 Planned
 > **선행 조건:** Phase 4 Part A-D Complete (91% coverage, 389 backend tests, 197 extension tests)
 > **목표:** A2A 에이전트 작동 검증, MCP 서버 인증(Headers + OAuth 2.1), Content Script, 테스트 인프라 강화
-> **분할:** Part A-D (개별 파일)
-> **예상 테스트:** ~45 신규 (backend + extension)
+> **분할:** Part A-E (개별 파일)
+> **예상 테스트:** ~77 신규 (backend + extension)
 
 ---
 
@@ -43,6 +43,7 @@
 | B | [partB.md](partB.md) | 5-8 | MCP Server Authentication | P1 |
 | C | [partC.md](partC.md) | 9-10 | Content Script (Page Context) | P2 |
 | D | [partD.md](partD.md) | 11-12 | Test Infrastructure Enhancement | Support |
+| E | [partE.md](partE.md) | 13-16 | ADK Workflow Agents (SequentialAgent, ParallelAgent) | P2 |
 
 ---
 
@@ -62,6 +63,10 @@
 | 10 | Sidepanel Toggle + Context Injection | C |
 | 11 | Server Startup Validation | D |
 | 12 | Dynamic Test Port Configuration | D |
+| 13 | ADK Workflow Agent API 검증 (Spike Test) | E |
+| 14 | WorkflowAgent 도메인 엔티티 + Orchestrator 확장 | E |
+| 15 | Workflow API Endpoint + Extension UI | E |
+| 16 | ParallelAgent 지원 + E2E 시나리오 | E |
 
 ---
 
@@ -73,10 +78,13 @@ Part A (A2A Verification) ─── 최우선, 단독 시작
 Part B (MCP Auth) ─── Part A 이후 (A2A 작동 확인 후)
 Part C (Content Script) ─── Part A 이후 (Part B와 병렬 가능)
 Part D (Test Infra) ─── Part A 이후 (Part B/C와 병렬 가능)
+  ↓
+Part E (Workflow Agents) ─── Part A 이후 (B-D와 병렬 가능, 순서상 마지막)
 ```
 
 **병렬화 옵션:**
-- Part A 완료 후: Part B + C + D 모두 병렬 실행 가능 (상호 독립)
+- Part A 완료 후: Part B + C + D + E 모두 병렬 실행 가능 (상호 독립)
+- Part E는 A2A 에이전트(Part A) 결과에 의존하므로 Part A 완료 필수
 
 ---
 
@@ -103,6 +111,9 @@ Part D (Test Infra) ─── Part A 이후 (Part B/C와 병렬 가능)
 - [ ] Content Script: 페이지 컨텍스트 추출 동작
 - [ ] Sidepanel에서 페이지 컨텍스트 토글 ON/OFF 동작
 - [ ] 서버 시작 검증 테스트 통과
+- [ ] SequentialAgent로 2+ 에이전트 순차 실행
+- [ ] ParallelAgent로 2+ 에이전트 병렬 실행
+- [ ] Workflow CRUD API + Extension UI 동작
 
 ### 품질
 
@@ -115,7 +126,7 @@ Part D (Test Infra) ─── Part A 이후 (Part B/C와 병렬 가능)
 
 - [ ] `docs/STATUS.md` 업데이트
 - [ ] `docs/roadmap.md` Phase 5 상태 반영
-- [ ] Phase 5 Part A-D 완료 상태 체크
+- [ ] Phase 5 Part A-E 완료 상태 체크
 
 ---
 
@@ -140,6 +151,8 @@ Part D (Test Infra) ─── Part A 이후 (Part B/C와 병렬 가능)
 | ADK StreamableHTTPConnectionParams에 headers 미지원 | 🟡 | httpx 커스텀 transport 또는 MCP Python SDK 직접 사용 |
 | OAuth melon MCP 서버 접근 불가 | 🟡 | Mock OAuth provider로 대체 테스트 |
 | LangGraph 의존성 추가 영향 | 🟢 | test fixture에만 한정, 프로덕션 코드에 영향 없음 |
+| SequentialAgent + RemoteA2aAgent 비호환 | 🔴 | Step 13 Spike로 조기 발견. 대안: LlmAgent wrapper |
+| ADK Workflow Agent API 변경 | 🟡 | 구현 전 웹 검색으로 최신 API 확인 |
 
 ---
 

@@ -90,10 +90,11 @@ gantt
     Part D: Reliability & Scale    :done, p4d, after p4c, 4d
 
     section Phase 5: Verification + Core Connectivity
-    Part A: A2A Verification       :crit, p5a, after p4d, 5d
+    Part A: A2A Verification       :done, p5a, after p4d, 5d
     Part B: MCP Authentication     :p5b, after p5a, 7d
     Part C: Content Script         :p5c, after p5a, 4d
     Part D: Test Infrastructure    :p5d, after p5a, 3d
+    Part E: Workflow Agents        :p5e, after p5d, 6d
 
     section Phase 6: MCP Advanced + Plugin + Hardening
     Part A: Gateway + Cost + Chaos :p6a, after p5b, 7d
@@ -527,9 +528,9 @@ app.add_middleware(
 
 ### Phase 5: Verification + Core Connectivity
 
-**📋 상세 플랜:** [phase5.0.md](plans/phase5/phase5.0.md) (Master + [Part A](plans/phase5/partA.md) ~ [Part D](plans/phase5/partD.md))
+**📋 상세 플랜:** [phase5.0.md](plans/phase5/phase5.0.md) (Master + [Part A](plans/phase5/partA.md) ~ [Part E](plans/phase5/partE.md))
 
-**목표:** A2A 검증, MCP 인증, Content Script, 테스트 인프라
+**목표:** A2A 검증, MCP 인증, Content Script, 테스트 인프라, ADK Workflow Agents
 
 | Part | Focus | Steps | Priority |
 |:----:|-------|:-----:|:--------:|
@@ -537,6 +538,7 @@ app.add_middleware(
 | **B** | MCP Server Authentication (Headers + OAuth 2.1) | 5-8 | P1 |
 | **C** | Content Script (Page Context Toggle) | 9-10 | P2 |
 | **D** | Test Infrastructure Enhancement | 11-12 | Support |
+| **E** | ADK Workflow Agents (SequentialAgent, ParallelAgent) | 13-16 | P2 |
 
 **✅ DoD:** [phase5.0.md](plans/phase5/phase5.0.md) 참조
 
@@ -766,6 +768,7 @@ This roadmap provides the **overall Phase plan and architecture**. For **current
 | Phase 5.0 Part B | [phase5.0-partB.md](plans/phase5/partB.md) | 📋 예정 |
 | Phase 5.0 Part C | [phase5.0-partC.md](plans/phase5/partC.md) | 📋 예정 |
 | Phase 5.0 Part D | [phase5.0-partD.md](plans/phase5/partD.md) | 📋 예정 |
+| Phase 5.0 Part E | [phase5.0-partE.md](plans/phase5/partE.md) | 📋 예정 |
 | Phase 6.0 (Master) | [phase6.0.md](plans/phase6/phase6.0.md) | 📋 예정 |
 | Phase 6.0 Part A~D | [phase6.0-partA.md](plans/phase6/partA.md) ~ [partD](plans/phase6/partD.md) | 📋 예정 |
 | Phase 7.0 (Master) | [phase7.0.md](plans/phase7/phase7.0.md) | 📋 예정 |
