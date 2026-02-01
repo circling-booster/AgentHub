@@ -85,9 +85,12 @@ parallel = ParallelAgent(
 - Workflow 정의 API 추가로 API surface 증가
 
 ### 후속 조치
-- [ ] Phase 5 Part E Step 13: Spike Test로 SequentialAgent + RemoteA2aAgent 호환성 검증
-- [ ] 비호환 시 대안 설계 (LlmAgent wrapper)
-- [ ] Phase 5 Part E Steps 14-16: 도메인 엔티티, API, Extension UI, E2E 구현
+- [x] Phase 5 Part E Step 13: Spike Test로 SequentialAgent + RemoteA2aAgent 호환성 검증 (2026-02-01 완료)
+- [x] Phase 5 Part E Steps 14-16: 도메인 엔티티, API, Extension UI, 통합 테스트 구현 (2026-02-01 완료)
+  - Step 14: Workflow 도메인 엔티티 + OrchestratorAdapter (28 tests)
+  - Step 15: Workflow REST API + Extension UI
+  - Step 16: ParallelAgent 통합 테스트 + SSE execution (6 tests)
+- [x] ADR-11 작성: Workflow Agent Spike 결과 기록
 
 ## 관련 문서
 
