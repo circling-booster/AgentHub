@@ -117,7 +117,6 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 | Use EventSource (SSE) | POST SSE requires fetch ReadableStream |
 | Write implementation code without tests | TDD required: write tests first (Red-Green-Refactor) |
 | Skip Refactoring steps | TDD required: Ensure behavior is preserved while improving structure. |
-| PR without tests | CI blocks if coverage <80% |
 
 ---
 
