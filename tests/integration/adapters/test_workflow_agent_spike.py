@@ -15,6 +15,8 @@ RESULTS:
 - ⏸️ ParallelAgent: Requires further investigation
 """
 
+import uuid
+
 import pytest
 from google.adk.agents import ParallelAgent, SequentialAgent
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
@@ -35,15 +37,24 @@ def create_user_message(text: str) -> types.Content:
     )
 
 
-async def create_session_and_runner(agent):
-    """Helper to create session and runner for testing"""
+async def create_session_and_runner(agent, session_id: str | None = None):
+    """Helper to create session and runner for testing
+
+    Args:
+        agent: The agent to run
+        session_id: Optional session ID. If None, generates unique ID.
+    """
     session_service = InMemorySessionService()
+
+    # Generate unique session ID for each test
+    if session_id is None:
+        session_id = f"test_session_{uuid.uuid4().hex[:8]}"
 
     # Create session first
     await session_service.create_session(
         app_name="workflow_spike_test",
         user_id="test_user",
-        session_id="test_session",
+        session_id=session_id,
     )
 
     runner = Runner(
@@ -52,7 +63,7 @@ async def create_session_and_runner(agent):
         session_service=session_service,
     )
 
-    return runner, session_service
+    return runner, session_service, session_id
 
 
 # ============================================================
@@ -110,13 +121,13 @@ class TestSequentialAgentWithRemoteA2a:
         )
 
         # Create session and runner
-        runner, _ = await create_session_and_runner(sequential)
+        runner, _, session_id = await create_session_and_runner(sequential)
 
         # Execute
         messages = []
         async for message in runner.run_async(
             user_id="test_user",
-            session_id="test_session",
+            session_id=session_id,
             new_message=create_user_message("First echo 'Hello', then calculate 5+3"),
         ):
             messages.append(message)
@@ -137,12 +148,12 @@ class TestSequentialAgentWithRemoteA2a:
             sub_agents=[echo_remote_agent, math_remote_agent],
         )
 
-        runner, _ = await create_session_and_runner(sequential)
+        runner, _, session_id = await create_session_and_runner(sequential)
 
         messages = []
         async for message in runner.run_async(
             user_id="test_user",
-            session_id="test_session",
+            session_id=session_id,
             new_message=create_user_message("Echo 'Start', then multiply 7*6"),
         ):
             messages.append(message)
@@ -176,12 +187,12 @@ class TestParallelAgentWithRemoteA2a:
             sub_agents=[echo_remote_agent, math_remote_agent],
         )
 
-        runner, _ = await create_session_and_runner(parallel)
+        runner, _, session_id = await create_session_and_runner(parallel)
 
         messages = []
         async for message in runner.run_async(
             user_id="test_user",
-            session_id="test_session",
+            session_id=session_id,
             new_message=create_user_message("Echo 'Parallel' and calculate 12*12"),
         ):
             messages.append(message)
@@ -218,12 +229,12 @@ class TestSequentialAgentStateSharing:
             sub_agents=[echo_remote_agent, math_remote_agent],
         )
 
-        runner, session_service = await create_session_and_runner(sequential)
+        runner, session_service, session_id = await create_session_and_runner(sequential)
 
         messages = []
         async for message in runner.run_async(
             user_id="test_user",
-            session_id="test_session",
+            session_id=session_id,
             new_message=create_user_message("Echo 'SharedTest', calculate 100+200"),
         ):
             messages.append(message)
@@ -232,7 +243,7 @@ class TestSequentialAgentStateSharing:
         session = await session_service.get_session(
             app_name="workflow_spike_test",
             user_id="test_user",
-            session_id="test_session",
+            session_id=session_id,
         )
         assert session is not None, "Expected session to be created"
 

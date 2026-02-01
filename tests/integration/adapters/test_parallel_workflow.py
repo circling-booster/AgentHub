@@ -133,7 +133,7 @@ class TestParallelWorkflowExecution:
             )
 
             # Creating workflow should fail if agent doesn't exist
-            with pytest.raises(KeyError):  # Expected: KeyError from missing endpoint
+            with pytest.raises(RuntimeError):  # Expected: RuntimeError from orchestrator validation
                 await orchestrator.create_workflow_agent(workflow)
 
         finally:
