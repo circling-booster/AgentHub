@@ -4,7 +4,7 @@
  *
  * Runs in the context of web pages to extract page context information.
  */
-import { defineContentScript } from 'wxt/sandbox';
+import { defineContentScript } from 'wxt/utils/define-content-script';
 import { extractPageContext } from '@/lib/content-extract';
 import { MessageType } from '@/lib/content-messaging';
 import type { GetPageContextResponse } from '@/lib/content-messaging';
