@@ -253,13 +253,15 @@ def a2a_math_agent():
 )
 def mcp_synapse_server():
     """
-    Synapse MCP Server subprocess fixture (port 9000).
+    Synapse MCP Server subprocess fixture (다중 포트 모드).
 
     로컬 환경에서만 자동 실행 (autouse).
     CI 환경에서는 mock_mcp_toolset_in_ci가 대신 동작.
 
-    Automatically starts the Synapse server before tests
-    and terminates it after the session ends.
+    Automatically starts the Synapse server with --multi flag:
+    - Port 9000: No auth (backward-compatible)
+    - Port 9001: API Key auth (X-API-Key header)
+    - Port 9002: OAuth 2.0 (Authorization: Bearer <token>)
 
     Returns:
         Base URL of the MCP server (http://127.0.0.1:9000/mcp)
@@ -286,10 +288,20 @@ def mcp_synapse_server():
         except (httpx.ConnectError, httpx.TimeoutException):
             pytest.fail(f"Port {port} in use but server not responding")
 
-    # Synapse subprocess 시작
+    # 다중 포트 환경변수 설정
+    env = os.environ.copy()
+    env["SYNAPSE_PORTS"] = "9000,9001,9002"
+    env["SYNAPSE_PORT_9000_AUTH"] = "none"
+    env["SYNAPSE_PORT_9001_AUTH"] = "apikey"
+    env["SYNAPSE_PORT_9001_API_KEYS"] = '["test-key-1","test-key-2"]'
+    env["SYNAPSE_PORT_9002_AUTH"] = "oauth"
+    env["SYNAPSE_PORT_9002_OAUTH_ISSUER"] = "https://mock-issuer.example.com"
+
+    # Synapse subprocess 시작 (다중 포트 모드)
     proc = subprocess.Popen(
-        [sys.executable, "-m", "synapse"],
+        [sys.executable, "-m", "synapse", "--multi"],
         cwd=str(synapse_dir),  # Synapse 디렉토리에서 실행
+        env=env,  # 환경변수 전달
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -317,7 +329,7 @@ def mcp_synapse_server():
             error_msg += f"STDOUT:\n{stdout}\n"
         pytest.fail(error_msg)
 
-    print(f"\n✓ Synapse MCP Server started: {mcp_url}")
+    print(f"\n✓ Synapse MCP Server started (multi-port): {mcp_url} (9000-9002)")
 
     yield mcp_url
 

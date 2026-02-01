@@ -17,6 +17,7 @@ from google.adk.tools.mcp_tool.mcp_toolset import (
 )
 
 from src.config.settings import Settings
+from src.domain.entities.auth_config import AuthConfig
 from src.domain.entities.endpoint import Endpoint, EndpointType
 from src.domain.entities.tool import Tool
 
@@ -235,7 +236,7 @@ class DynamicToolset(BaseToolset):
         if endpoint.type != EndpointType.MCP:
             raise ValueError("Endpoint type must be MCP")
 
-        toolset = await self._create_mcp_toolset(endpoint.url)
+        toolset = await self._create_mcp_toolset(endpoint.url, endpoint.auth_config)
 
         # 연결 테스트 및 도구 목록 조회
         adk_tools = await toolset.get_tools()
@@ -289,7 +290,9 @@ class DynamicToolset(BaseToolset):
             for t in adk_tools
         ]
 
-    async def _create_mcp_toolset(self, url: str) -> MCPToolset:
+    async def _create_mcp_toolset(
+        self, url: str, auth_config: AuthConfig | None = None
+    ) -> MCPToolset:
         """
         MCP Toolset 생성 (Streamable HTTP 우선, SSE 폴백)
 
@@ -298,6 +301,7 @@ class DynamicToolset(BaseToolset):
 
         Args:
             url: MCP 서버 URL
+            auth_config: 인증 설정 (선택적)
 
         Returns:
             MCPToolset 인스턴스
@@ -305,12 +309,16 @@ class DynamicToolset(BaseToolset):
         Raises:
             ConnectionError: 모든 transport 시도 실패
         """
+        # 인증 헤더 생성
+        headers = auth_config.get_auth_headers() if auth_config else {}
+
         # 1. Streamable HTTP 시도 (권장)
         try:
             toolset = MCPToolset(
                 connection_params=StreamableHTTPConnectionParams(
                     url=url,
                     timeout=120,
+                    headers=headers,
                 ),
             )
             # 연결 테스트
@@ -326,6 +334,7 @@ class DynamicToolset(BaseToolset):
                 connection_params=SseConnectionParams(
                     url=url,
                     timeout=120,
+                    headers=headers,
                 ),
             )
             await toolset.get_tools()

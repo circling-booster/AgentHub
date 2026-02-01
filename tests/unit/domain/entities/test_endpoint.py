@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.domain.entities.auth_config import AuthConfig
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointStatus, EndpointType
 from src.domain.entities.tool import Tool
@@ -171,3 +172,65 @@ class TestEndpoint:
 
         # Then
         assert endpoint.agent_card is None
+
+    def test_endpoint_auth_config_defaults_to_none(self):
+        """
+        Given: Endpoint 생성
+        When: auth_config를 지정하지 않으면
+        Then: None
+        """
+        # When
+        endpoint = Endpoint(url="https://example.com/mcp", type=EndpointType.MCP)
+
+        # Then
+        assert endpoint.auth_config is None
+
+    def test_endpoint_with_api_key_auth(self):
+        """
+        Given: API Key 인증 설정
+        When: Endpoint에 auth_config 설정
+        Then: auth_config 필드가 저장됨
+        """
+        # Given
+        auth = AuthConfig(
+            auth_type="api_key",
+            api_key="my-secret-key",
+            api_key_header="X-API-Key",
+            api_key_prefix="",
+        )
+
+        # When
+        endpoint = Endpoint(
+            url="https://example.com/mcp",
+            type=EndpointType.MCP,
+            auth_config=auth,
+        )
+
+        # Then
+        assert endpoint.auth_config is not None
+        assert endpoint.auth_config.auth_type == "api_key"
+        assert endpoint.auth_config.api_key == "my-secret-key"
+
+    def test_endpoint_with_oauth2_auth(self):
+        """
+        Given: OAuth 2.0 인증 설정
+        When: Endpoint에 auth_config 설정
+        Then: auth_config 필드가 저장됨
+        """
+        # Given
+        auth = AuthConfig(
+            auth_type="oauth2",
+            oauth2_access_token="access-token-xyz",
+        )
+
+        # When
+        endpoint = Endpoint(
+            url="https://example.com/mcp",
+            type=EndpointType.MCP,
+            auth_config=auth,
+        )
+
+        # Then
+        assert endpoint.auth_config is not None
+        assert endpoint.auth_config.auth_type == "oauth2"
+        assert endpoint.auth_config.oauth2_access_token == "access-token-xyz"

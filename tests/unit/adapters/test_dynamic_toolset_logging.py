@@ -85,7 +85,7 @@ async def test_add_mcp_server_logs_endpoint_url_and_tool_count(caplog):
     mock_mcp.get_tools = AsyncMock(return_value=mock_tools)
     mock_mcp.close = AsyncMock()
 
-    async def mock_create_mcp(url):
+    async def mock_create_mcp(url, auth_config=None):
         return mock_mcp
 
     toolset._create_mcp_toolset = mock_create_mcp
@@ -121,7 +121,7 @@ async def test_remove_mcp_server_logs_removed_tool_count(caplog):
     mock_mcp.get_tools = AsyncMock(return_value=mock_tools)
     mock_mcp.close = AsyncMock()
 
-    async def mock_create_mcp(url):
+    async def mock_create_mcp(url, auth_config=None):
         return mock_mcp
 
     toolset._create_mcp_toolset = mock_create_mcp
