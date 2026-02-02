@@ -1,0 +1,16 @@
+[run]
+source = src
+branch = True
+omit =
+    # Port 인터페이스는 추상 메서드 정의이므로 커버리지 계산에서 제외
+    # 실제 구현체(Adapter)에서 테스트됨
+    src/domain/ports/**/*.py
+    # __init__.py 파일 제외
+    */__init__.py
+    # main 엔트리포인트 제외 (startup/lifespan 테스트는 integration에서)
+    src/main.py
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False

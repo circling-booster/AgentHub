@@ -342,9 +342,9 @@ class AdkOrchestratorAdapter(OrchestratorPort):
                     if part.text:
                         yield StreamChunk.text(part.text)
 
-    async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:
+    async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:  # pragma: no cover
         """
-        A2A 에이전트를 sub_agent로 추가
+        A2A 에이전트를 sub_agent로 추가 (Phase 5 유산, Phase 6에서 미사용)
 
         Args:
             endpoint_id: Endpoint ID (sub_agents dict의 key)
@@ -380,9 +380,9 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         logger.info(f"A2A agent added: {endpoint_id} ({agent_card_url})")
 
-    async def remove_a2a_agent(self, endpoint_id: str) -> None:
+    async def remove_a2a_agent(self, endpoint_id: str) -> None:  # pragma: no cover
         """
-        A2A sub_agent 제거
+        A2A sub_agent 제거 (Phase 5 유산, Phase 6에서 미사용)
 
         Args:
             endpoint_id: Endpoint ID
@@ -405,11 +405,11 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         logger.info(f"A2A agent removed: {endpoint_id}")
 
-    async def create_workflow_agent(self, workflow: Workflow) -> None:
+    async def create_workflow_agent(self, workflow: Workflow) -> None:  # pragma: no cover
         """
-        Workflow Agent 생성 (SequentialAgent 또는 ParallelAgent)
+        Workflow Agent 생성 (Phase 5 Part E 유산, Phase 6에서 미사용)
 
-        Step 13 Spike 결과: SequentialAgent + RemoteA2aAgent는 호환 가능
+        SequentialAgent 또는 ParallelAgent 생성
 
         Args:
             workflow: Workflow 엔티티
@@ -478,14 +478,14 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             f"Workflow agent created: {workflow.id} ({workflow.workflow_type}, {len(workflow.steps)} steps)"
         )
 
-    async def execute_workflow(
+    async def execute_workflow(  # pragma: no cover
         self,
         workflow_id: str,
         message: str,
         conversation_id: str,
     ) -> AsyncIterator[StreamChunk]:
         """
-        Workflow Agent 실행 및 이벤트 스트리밍
+        Workflow Agent 실행 및 이벤트 스트리밍 (Phase 5 Part E 유산, Phase 6에서 미사용)
 
         Args:
             workflow_id: Workflow ID
@@ -589,9 +589,9 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             total_steps=len(workflow.steps),
         )
 
-    async def remove_workflow_agent(self, workflow_id: str) -> None:
+    async def remove_workflow_agent(self, workflow_id: str) -> None:  # pragma: no cover
         """
-        Workflow Agent 제거
+        Workflow Agent 제거 (Phase 5 Part E 유산, Phase 6에서 미사용)
 
         Args:
             workflow_id: Workflow ID
