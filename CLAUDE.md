@@ -108,7 +108,17 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 
 모든 문서는 [@docs/MAP.md](docs/MAP.md)에서 시작합니다. MAP.md는 전체 구조의 "메타 지도"이며, 각 섹션의 README.md가 상세 지도(Sub-Map) 역할을 합니다.
 
+**Planning Hierarchy:**
+```
+Plan > Phase > Step
+```
+
+- **Plan**: 하나의 독립적인 개발 주기/마일스톤 (예: `07_hybrid_dual`)
+- **Phase**: Plan 내부의 아키텍처 레이어 단위 (예: `01_domain_entities.md`)
+- **Step**: Phase 내부의 구현 단계 (예: Step 1.1, 1.2, 1.3)
+
 **자주 참조:**
+- **Planning 구조**: [@docs/project/planning/README.md](docs/project/planning/README.md)
 - **현재 작업**: [@docs/project/planning/active/README.md](docs/project/planning/active/README.md)
 - **테스트 가이드**: [@tests/README.md](tests/README.md)
 
@@ -131,17 +141,17 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 
 | 트리거 | 업데이트 파일 |
 |--------|--------------|
-| Phase 완료 | `active/README.md` → `completed/README.md`, 폴더 이동 |
+| Plan 완료 | `active/README.md` → `completed/README.md`, 폴더 이동 |
 | Coverage 변경 | `tests/README.md` 수치 업데이트 |
 | src/ 구조 변경 | 이 파일의 Directory Structure |
 | docs/ 구조 변경 | `docs/MAP.md` Directory Structure |
 | ADR 추가 | `docs/project/decisions/{category}/README.md` |
 
-**Phase Transition Checklist:**
-1. `active/XX_phase/` → `completed/XX_phase/` 이동
-2. `completed/README.md` 테이블에 완료 Phase 추가
-3. `active/README.md` 다음 Phase 정보로 업데이트
-4. Git 커밋: `docs: complete phase XX`
+**Plan Transition Checklist:**
+1. `active/NN_plan/` → `completed/NN_plan/` 이동
+2. `completed/README.md` 테이블에 완료 Plan 추가
+3. `active/README.md` 다음 Plan 정보로 업데이트
+4. Git 커밋: `docs: complete plan NN`
 
 ---
 

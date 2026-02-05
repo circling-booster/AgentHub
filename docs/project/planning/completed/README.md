@@ -1,13 +1,13 @@
 # Completed Planning
 
-완료된 Phase 문서 인덱스.
+완료된 Plan 문서 인덱스.
 
 ---
 
-## 완료된 Phase 목록
+## 완료된 Plan 목록
 
-| Phase | 제목 | 요약 | 완료일 |
-|-------|------|------|--------|
+| Plan | 제목 | 요약 | 완료일 |
+|------|------|------|--------|
 | 0 | Project Setup | 프로젝트 구조, 헥사고날 아키텍처 설정 | 2025-12 |
 | 1 | Domain Core | Entity, Service, Port 정의 | 2025-12 |
 | 2 | Security & Storage | Token 인증, SQLite 저장소 | 2026-01 |
@@ -20,32 +20,75 @@
 
 ---
 
-## Phase별 주요 성과
+## Plan별 주요 성과
 
-### Phase 0-1: Foundation
+### Plan 0-1: Foundation
 - 헥사고날 아키텍처 수립
 - Domain Entity 정의 (Agent, Tool, Endpoint, Conversation)
 - Port 인터페이스 설계
 
-### Phase 2: Security
+### Plan 2: Security
 - Token 기반 인증 구현
 - SQLite WAL 모드 저장소
 - Extension-Server Handshake
 
-### Phase 3: Protocol Integration
+### Plan 3: Protocol Integration
 - MCP Streamable HTTP 클라이언트
 - A2A Client/Server 이중 역할
 - Chrome Extension Sidepanel
 
-### Phase 4: Production Features
+### Plan 4: Production Features
 - SSE 이벤트 타입 확장
 - LLM 호출 추적 및 로깅
 - 도구 실행 재시도 로직
 
-### Phase 5: Enterprise
+### Plan 5: Enterprise
 - OAuth 2.0 인증
 - 다중 MCP 서버 지원
 - Defer Loading (MAX_ACTIVE_TOOLS 100)
+
+---
+
+## 📐 구조 변경 내역
+
+### Plan 1-6: Part 기반 구조 (레거시)
+
+```
+NN_phaseN/
+├─ phaseN.0.md          # Phase 개요
+├─ partA.md             # Part A (Steps 1-4)
+├─ partB.md             # Part B (Steps 5-7)
+└─ ...
+
+계층: Phase > Part > Step
+```
+
+**특징:**
+- Part 단위로 파일 분할
+- 하나의 Part 파일에 여러 Step 포함
+- 파일 크기 큼 (예: partA.md = 580줄)
+
+### Plan 7+: Phase 기반 구조 (현재 표준)
+
+```
+NN_descriptive_name/
+├─ README.md                    # Plan 개요
+├─ 01_phase_name.md            # Phase 1 (Steps 1.1, 1.2, ...)
+├─ 02_phase_name.md            # Phase 2
+└─ ...
+
+계층: Plan > Phase > Step
+```
+
+**특징:**
+- Phase 단위로 파일 분할 (1 Phase = 1 File)
+- 헥사고날 아키텍처 레이어와 정렬
+- 파일 크기 최적화 (예: 01_domain_entities.md = 277줄)
+- AI 토큰 효율성 향상
+
+**전환 시점:** Plan 7 (07_hybrid_dual)부터 적용
+
+**표준 문서:** [../README.md](../README.md) - Planning 구조 상세 설명
 
 ---
 
