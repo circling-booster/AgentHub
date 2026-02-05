@@ -204,3 +204,7 @@ data/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Temporary test scripts
+test_*.py
+=*.*
