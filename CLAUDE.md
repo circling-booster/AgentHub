@@ -18,8 +18,6 @@ Google ADK-based MCP + A2A Integrated Agent System
 Chrome Extension → AgentHub API (localhost:8000) → MCP Servers / A2A Agents
 ```
 
-**Current Status:** See [@docs/project/planning/active/README.md](docs/project/planning/active/README.md) for real-time progress and next actions.
-
 ---
 
 ## 📁 Directory Structure
@@ -90,6 +88,7 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 
 5. **TEST SERVERS & ENDPOINTS**
    - YOU SHOULD BE SPECIFIC. @tests/README.md
+
 ---
 
 ## 🚫 Critical Don'ts
@@ -123,6 +122,26 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 - Pytest optimization: `-q --tb=line -x` (95% token reduction)
 
 **Full Details:** [@tests/README.md](tests/README.md) (구조, 전략, 마커, 옵션, 리소스)
+
+---
+
+## 🔄 Document Maintenance
+
+**트리거별 업데이트 필수 파일:**
+
+| 트리거 | 업데이트 파일 |
+|--------|--------------|
+| Phase 완료 | `active/README.md` → `completed/README.md`, 폴더 이동 |
+| Coverage 변경 | `tests/README.md` 수치 업데이트 |
+| src/ 구조 변경 | 이 파일의 Directory Structure |
+| docs/ 구조 변경 | `docs/MAP.md` Directory Structure |
+| ADR 추가 | `docs/project/decisions/{category}/README.md` |
+
+**Phase Transition Checklist:**
+1. `active/XX_phase/` → `completed/XX_phase/` 이동
+2. `completed/README.md` 테이블에 완료 Phase 추가
+3. `active/README.md` 다음 Phase 정보로 업데이트
+4. Git 커밋: `docs: complete phase XX`
 
 ---
 
