@@ -11,7 +11,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config.container import Container
 
 from .exceptions import register_exception_handlers
-from .routes import a2a, a2a_card, auth, chat, conversations, health, mcp, oauth, workflow
+from .routes import (
+    a2a,
+    a2a_card,
+    auth,
+    chat,
+    conversations,
+    health,
+    mcp,
+    oauth,
+    usage,
+    workflow,
+)
 from .security import ExtensionAuthMiddleware
 
 logger = logging.getLogger(__name__)
@@ -47,6 +58,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await conv_storage.initialize()
     logger.info("SQLite conversation storage initialized")
 
+    usage_storage = container.usage_storage()
+    await usage_storage.initialize()
+    logger.info("SQLite usage storage initialized")
+
     # Orchestrator 초기화 (Async Factory Pattern)
     orchestrator = container.orchestrator_adapter()
     await orchestrator.initialize()
@@ -67,6 +82,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await orchestrator.close()
     logger.info("Orchestrator closed")
     await conv_storage.close()
+    await usage_storage.close()
     logger.info("Storage connections closed")
 
 
@@ -125,6 +141,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router)
     app.include_router(conversations.router)
     app.include_router(workflow.router)  # Workflow Management
+    app.include_router(usage.router)  # Usage & Cost Tracking
 
     return app
 

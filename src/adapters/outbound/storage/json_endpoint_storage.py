@@ -54,29 +54,31 @@ class JsonEndpointStorage(EndpointStoragePort):
             await self._write_json(data)
 
     async def get_endpoint(self, endpoint_id: str) -> "Endpoint | None":
-        """엔드포인트 조회"""
-        data = await self._read_json()
-        endpoint_data = data.get(endpoint_id)
+        """엔드포인트 조회 (읽기 중 쓰기 방지)"""
+        async with self._write_lock:
+            data = await self._read_json()
+            endpoint_data = data.get(endpoint_id)
 
-        if endpoint_data is None:
-            return None
+            if endpoint_data is None:
+                return None
 
-        return self._deserialize_endpoint(endpoint_data)
+            return self._deserialize_endpoint(endpoint_data)
 
     async def list_endpoints(
         self,
         type_filter: str | None = None,
     ) -> list["Endpoint"]:
-        """엔드포인트 목록 조회"""
-        data = await self._read_json()
-        endpoints = [self._deserialize_endpoint(ep_data) for ep_data in data.values()]
+        """엔드포인트 목록 조회 (읽기 중 쓰기 방지)"""
+        async with self._write_lock:
+            data = await self._read_json()
+            endpoints = [self._deserialize_endpoint(ep_data) for ep_data in data.values()]
 
-        if type_filter:
-            # type_filter를 EndpointType enum으로 변환
-            filter_type = EndpointType(type_filter.lower())
-            endpoints = [ep for ep in endpoints if ep.type == filter_type]
+            if type_filter:
+                # type_filter를 EndpointType enum으로 변환
+                filter_type = EndpointType(type_filter.lower())
+                endpoints = [ep for ep in endpoints if ep.type == filter_type]
 
-        return endpoints
+            return endpoints
 
     async def delete_endpoint(self, endpoint_id: str) -> bool:
         """엔드포인트 삭제"""
@@ -107,7 +109,12 @@ class JsonEndpointStorage(EndpointStoragePort):
             return True
 
     async def _read_json(self) -> dict:
-        """JSON 파일 읽기 (비동기 래핑)"""
+        """
+        JSON 파일 읽기 (비동기 래핑)
+
+        Note: 이 메서드는 이미 Lock을 획득한 컨텍스트에서 호출됩니다.
+        (save_endpoint, delete_endpoint, update_endpoint_status, get_endpoint, list_endpoints)
+        """
 
         def _read():
             if not self._json_file.exists():

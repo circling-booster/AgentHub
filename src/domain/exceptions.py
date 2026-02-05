@@ -16,6 +16,18 @@ class DomainException(Exception):
 
 
 # ============================================================
+# Cost 관련 예외
+# ============================================================
+
+
+class BudgetExceededError(DomainException):
+    """예산 초과 (110% hard limit)"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.BUDGET_EXCEEDED)
+
+
+# ============================================================
 # Endpoint 관련 예외
 # ============================================================
 
@@ -69,6 +81,13 @@ class ToolLimitExceededError(DomainException):
     """활성 도구 수가 제한을 초과함"""
 
     pass
+
+
+class RateLimitExceededError(DomainException):
+    """Rate Limit 초과 (Gateway Token Bucket)"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.RATE_LIMIT_EXCEEDED)
 
 
 # ============================================================

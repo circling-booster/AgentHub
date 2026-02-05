@@ -190,6 +190,21 @@ node_modules/
 
 # WXT Extension build output
 .output/
+.wxt/
 
 # AgentHub data directory (SQLite DB, endpoints.json)
 data/
+
+# IDE / Editor (선택적)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Temporary test scripts
+test_*.py
+=*.*

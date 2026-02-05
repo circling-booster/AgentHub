@@ -58,6 +58,25 @@ class ObservabilitySettings(BaseModel):
     log_format: str = "text"  # "text" or "json" (Step 7)
 
 
+class GatewaySettings(BaseModel):
+    """Gateway 설정 (Phase 6 Part A Step 2)"""
+
+    rate_limit_rps: float = 5.0  # 초당 요청 제한
+    burst_size: int = 10  # Token Bucket capacity
+    circuit_failure_threshold: int = 5  # Circuit Breaker 실패 임계값
+    circuit_recovery_timeout: float = 60.0  # Circuit Breaker 복구 대기 시간 (초)
+    fallback_enabled: bool = True  # Fallback 서버 전환 활성화
+
+
+class CostSettings(BaseModel):
+    """비용 추적 설정 (Phase 6 Part A Step 3)"""
+
+    monthly_budget_usd: float = 100.0  # 월별 예산 (USD)
+    warning_threshold: float = 0.9  # 90%: 경고
+    critical_threshold: float = 1.0  # 100%: 심각
+    hard_limit_threshold: float = 1.1  # 110%: 차단
+
+
 class Settings(BaseSettings):
     """AgentHub 애플리케이션 설정"""
 
@@ -74,6 +93,8 @@ class Settings(BaseSettings):
     health_check: HealthCheckSettings = Field(default_factory=HealthCheckSettings)
     mcp: McpSettings = Field(default_factory=McpSettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
+    gateway: GatewaySettings = Field(default_factory=GatewaySettings)
+    cost: CostSettings = Field(default_factory=CostSettings)
 
     # API 키 (환경변수에서만, 플랫 필드 유지)
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")

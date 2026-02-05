@@ -342,9 +342,9 @@ class AdkOrchestratorAdapter(OrchestratorPort):
                     if part.text:
                         yield StreamChunk.text(part.text)
 
-    async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:
+    async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:  # pragma: no cover
         """
-        A2A 에이전트를 sub_agent로 추가
+        A2A 에이전트를 sub_agent로 추가 (Phase 5 유산, Phase 6에서 미사용)
 
         Args:
             endpoint_id: Endpoint ID (sub_agents dict의 key)
@@ -380,9 +380,9 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         logger.info(f"A2A agent added: {endpoint_id} ({agent_card_url})")
 
-    async def remove_a2a_agent(self, endpoint_id: str) -> None:
+    async def remove_a2a_agent(self, endpoint_id: str) -> None:  # pragma: no cover
         """
-        A2A sub_agent 제거
+        A2A sub_agent 제거 (Phase 5 유산, Phase 6에서 미사용)
 
         Args:
             endpoint_id: Endpoint ID
@@ -405,11 +405,11 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 
         logger.info(f"A2A agent removed: {endpoint_id}")
 
-    async def create_workflow_agent(self, workflow: Workflow) -> None:
+    async def create_workflow_agent(self, workflow: Workflow) -> None:  # pragma: no cover
         """
-        Workflow Agent 생성 (SequentialAgent 또는 ParallelAgent)
+        Workflow Agent 생성 (Phase 5 Part E 유산, Phase 6에서 미사용)
 
-        Step 13 Spike 결과: SequentialAgent + RemoteA2aAgent는 호환 가능
+        SequentialAgent 또는 ParallelAgent 생성
 
         Args:
             workflow: Workflow 엔티티
@@ -478,14 +478,14 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             f"Workflow agent created: {workflow.id} ({workflow.workflow_type}, {len(workflow.steps)} steps)"
         )
 
-    async def execute_workflow(
+    async def execute_workflow(  # pragma: no cover
         self,
         workflow_id: str,
         message: str,
         conversation_id: str,
     ) -> AsyncIterator[StreamChunk]:
         """
-        Workflow Agent 실행 및 이벤트 스트리밍
+        Workflow Agent 실행 및 이벤트 스트리밍 (Phase 5 Part E 유산, Phase 6에서 미사용)
 
         Args:
             workflow_id: Workflow ID
@@ -589,9 +589,9 @@ class AdkOrchestratorAdapter(OrchestratorPort):
             total_steps=len(workflow.steps),
         )
 
-    async def remove_workflow_agent(self, workflow_id: str) -> None:
+    async def remove_workflow_agent(self, workflow_id: str) -> None:  # pragma: no cover
         """
-        Workflow Agent 제거
+        Workflow Agent 제거 (Phase 5 Part E 유산, Phase 6에서 미사용)
 
         Args:
             workflow_id: Workflow ID
@@ -599,6 +599,54 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         self._workflow_agents.pop(workflow_id, None)
         self._workflows.pop(workflow_id, None)
         logger.info(f"Workflow agent removed: {workflow_id}")
+
+    async def _call_llm_with_retry(self, message: str, max_retries: int = 3) -> dict:
+        """
+        LLM API 호출 with Exponential Backoff Retry (Chaos 테스트용)
+
+        Args:
+            message: User message
+            max_retries: Maximum retry attempts (default: 3)
+
+        Returns:
+            LiteLLM completion response dict
+
+        Raises:
+            LlmRateLimitError: Rate limit exceeded after max retries
+        """
+        import asyncio
+
+        from litellm.exceptions import RateLimitError
+
+        from src.domain.exceptions import LlmRateLimitError
+
+        attempt = 0
+        while attempt <= max_retries:
+            try:
+                # litellm.completion 호출 (비동기)
+                response = await asyncio.to_thread(
+                    litellm.completion,
+                    model=self._model_name,
+                    messages=[{"role": "user", "content": message}],
+                )
+                return response
+            except RateLimitError as e:
+                attempt += 1
+                if attempt > max_retries:
+                    # 최대 재시도 초과
+                    raise LlmRateLimitError(
+                        f"LLM rate limit exceeded after {max_retries} retries"
+                    ) from e
+
+                # Exponential backoff: 1s, 2s, 4s, ...
+                delay = 2 ** (attempt - 1)
+                logger.warning(
+                    f"Rate limit hit, retrying in {delay}s (attempt {attempt}/{max_retries})"
+                )
+                await asyncio.sleep(delay)
+
+        # 도달 불가 (while 조건이 보장)
+        raise RuntimeError("Unexpected retry loop exit")
 
     async def close(self) -> None:
         """리소스 정리

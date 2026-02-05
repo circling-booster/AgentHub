@@ -6,21 +6,6 @@
 
 ---
 
-## Development Status
-
-**Current Phase:** Phase 4 Part A-D Complete → Part E 예정
-
-**Quick Status:**
-- ✅ Phase 0-3: Complete (Domain Core, Security, MCP, Extension, A2A Integration, E2E)
-- ✅ Phase 4 Part A-D: Complete (StreamChunk, Observability, Dynamic Intelligence, Reliability)
-- 📋 Phase 4 Part E: Planned (Production Hardening)
-
-**📊 [→ View Detailed Status Dashboard](docs/STATUS.md)**
-
-See [docs/roadmap.md](docs/roadmap.md) for overall roadmap and [docs/STATUS.md](docs/STATUS.md) for current progress.
-
----
-
 ## 주요 기능
 
 | 기능 | 설명 |
@@ -29,19 +14,6 @@ See [docs/roadmap.md](docs/roadmap.md) for overall roadmap and [docs/STATUS.md](
 | **동적 등록** | UI에서 MCP 서버 / A2A 에이전트 URL 추가/제거 (재시작 불필요) |
 | **다중 LLM 지원** | Claude, GPT-4, Gemini 등 100+ LLM 지원 (LiteLLM) |
 | **MCP + A2A 통합** | 도구(MCP)와 에이전트(A2A) 프로토콜 네이티브 지원 |
-
-### Phase 4 주요 기능 (Part A-D 완료)
-
-| 기능 | 설명 |
-|------|------|
-| **StreamChunk SSE 이벤트** | tool_call, tool_result, agent_transfer 이벤트 타입 확장 |
-| **에러 코드 상수화** | Backend ↔ Extension 타입 안전성 보장 |
-| **LLM 호출 로깅** | 모델명, 토큰 수, 지연시간 자동 추적 |
-| **도구 호출 추적** | SQLite DB 저장 + API 조회 (`/api/conversations/{id}/tool-calls`) |
-| **동적 시스템 프롬프트** | 등록된 MCP 도구/A2A 에이전트 정보를 instruction에 자동 포함 |
-| **도구 실행 재시도** | Exponential backoff로 일시적 에러 자동 재시도 |
-| **A2A Health Check** | A2A 에이전트 상태 모니터링 |
-| **Defer Loading** | 대규모 도구 지원 (MAX_ACTIVE_TOOLS 100) |
 
 ---
 

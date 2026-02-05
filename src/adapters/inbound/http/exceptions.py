@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from src.domain.exceptions import (
+    BudgetExceededError,
     ConversationNotFoundError,
     DomainException,
     DuplicateEndpointError,
@@ -32,12 +33,14 @@ class ErrorResponse(BaseModel):
 EXCEPTION_STATUS_MAP: dict[type[DomainException], int] = {
     # 400 Bad Request
     DuplicateEndpointError: status.HTTP_400_BAD_REQUEST,
+    # 401 Unauthorized
+    LlmAuthenticationError: status.HTTP_401_UNAUTHORIZED,
+    # 403 Forbidden
+    BudgetExceededError: status.HTTP_403_FORBIDDEN,
     # 404 Not Found
     EndpointNotFoundError: status.HTTP_404_NOT_FOUND,
     ToolNotFoundError: status.HTTP_404_NOT_FOUND,
     ConversationNotFoundError: status.HTTP_404_NOT_FOUND,
-    # 401 Unauthorized
-    LlmAuthenticationError: status.HTTP_401_UNAUTHORIZED,
     # 429 Too Many Requests
     LlmRateLimitError: status.HTTP_429_TOO_MANY_REQUESTS,
     # 502 Bad Gateway

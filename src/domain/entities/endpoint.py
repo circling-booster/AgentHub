@@ -36,6 +36,7 @@ class Endpoint:
         tools: 제공하는 도구 목록 (MCP only)
         agent_card: A2A Agent Card 정보 (A2A only)
         auth_config: 인증 설정 (선택적, MCP 서버용)
+        fallback_url: Fallback 서버 URL (선택적, Circuit Breaker OPEN 시 전환)
 
     Example:
         >>> endpoint = Endpoint(
@@ -57,6 +58,7 @@ class Endpoint:
     tools: list["Tool"] = field(default_factory=list)
     agent_card: dict[str, Any] | None = None
     auth_config: "AuthConfig | None" = None
+    fallback_url: str | None = None
 
     def __post_init__(self) -> None:
         """생성 후 URL 유효성 검증 및 이름 자동 설정"""

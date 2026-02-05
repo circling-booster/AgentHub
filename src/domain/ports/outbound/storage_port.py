@@ -25,7 +25,7 @@ class ConversationStoragePort(ABC):
     """
 
     @abstractmethod
-    async def save_conversation(self, conversation: "Conversation") -> None:
+    async def save_conversation(self, conversation: "Conversation") -> None:  # pragma: no cover
         """
         대화 저장/갱신
 
@@ -35,7 +35,9 @@ class ConversationStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def get_conversation(self, conversation_id: str) -> "Conversation | None":
+    async def get_conversation(
+        self, conversation_id: str
+    ) -> "Conversation | None":  # pragma: no cover
         """
         대화 조회
 
@@ -48,7 +50,7 @@ class ConversationStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def list_conversations(
+    async def list_conversations(  # pragma: no cover
         self,
         limit: int = 20,
         offset: int = 0,
@@ -66,7 +68,7 @@ class ConversationStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def delete_conversation(self, conversation_id: str) -> bool:
+    async def delete_conversation(self, conversation_id: str) -> bool:  # pragma: no cover
         """
         대화 삭제
 
@@ -79,7 +81,7 @@ class ConversationStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def save_message(self, message: "Message") -> None:
+    async def save_message(self, message: "Message") -> None:  # pragma: no cover
         """
         메시지 저장
 
@@ -89,7 +91,7 @@ class ConversationStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def get_messages(
+    async def get_messages(  # pragma: no cover
         self,
         conversation_id: str,
         limit: int | None = None,
@@ -129,7 +131,7 @@ class ConversationStoragePort(ABC):
         return conversation
 
     @abstractmethod
-    async def save_tool_call(
+    async def save_tool_call(  # pragma: no cover
         self,
         message_id: str,
         tool_call: "ToolCall",
@@ -147,7 +149,7 @@ class ConversationStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def get_tool_calls(
+    async def get_tool_calls(  # pragma: no cover
         self,
         conversation_id: str,
     ) -> list["ToolCall"]:
@@ -178,7 +180,7 @@ class EndpointStoragePort(ABC):
     """
 
     @abstractmethod
-    async def save_endpoint(self, endpoint: "Endpoint") -> None:
+    async def save_endpoint(self, endpoint: "Endpoint") -> None:  # pragma: no cover
         """
         엔드포인트 저장/갱신
 
@@ -188,7 +190,7 @@ class EndpointStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def get_endpoint(self, endpoint_id: str) -> "Endpoint | None":
+    async def get_endpoint(self, endpoint_id: str) -> "Endpoint | None":  # pragma: no cover
         """
         엔드포인트 조회
 
@@ -201,7 +203,7 @@ class EndpointStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def list_endpoints(
+    async def list_endpoints(  # pragma: no cover
         self,
         type_filter: str | None = None,
     ) -> list["Endpoint"]:
@@ -217,7 +219,7 @@ class EndpointStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def delete_endpoint(self, endpoint_id: str) -> bool:
+    async def delete_endpoint(self, endpoint_id: str) -> bool:  # pragma: no cover
         """
         엔드포인트 삭제
 
@@ -230,7 +232,7 @@ class EndpointStoragePort(ABC):
         pass
 
     @abstractmethod
-    async def update_endpoint_status(
+    async def update_endpoint_status(  # pragma: no cover
         self,
         endpoint_id: str,
         status: str,
