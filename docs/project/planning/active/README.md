@@ -9,7 +9,7 @@
 | 항목 | 상태 |
 |------|------|
 | **Plan** | 07 - Hybrid-Dual Architecture |
-| **Branch** | `feature/phase-6` |
+| **Branch** | `feature/plan-07-hybrid-dual` |
 | **목표** | ADK Track + SDK Track 병행 구현 |
 
 ---
