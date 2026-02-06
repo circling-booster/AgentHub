@@ -162,7 +162,7 @@ class TestChatStreaming:
 class TestChatStreamingGET:
     """GET /api/chat/stream - EventSource 지원"""
 
-    def test_chat_stream_get_basic(self, authenticated_client):
+    def test_chat_stream_get_basic(self, authenticated_client, mock_litellm):
         """
         Given: Query parameters로 메시지 전달
         When: GET /api/chat/stream 호출
@@ -187,7 +187,7 @@ class TestChatStreamingGET:
             assert len(events) >= 1
             assert events[-1]["type"] == "done"
 
-    def test_chat_stream_get_with_conversation_id(self, authenticated_client):
+    def test_chat_stream_get_with_conversation_id(self, authenticated_client, mock_litellm):
         """
         Given: conversation_id를 query param으로 전달
         When: GET /api/chat/stream 호출
