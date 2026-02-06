@@ -162,14 +162,24 @@ class TestChatStreaming:
 class TestChatStreamingGET:
     """GET /api/chat/stream - EventSource 지원"""
 
-    def test_chat_stream_get_basic(self, authenticated_client):
+    @pytest.mark.llm
+    def test_chat_stream_get_basic(self, authenticated_client, request):
         """
         Given: Query parameters로 메시지 전달
         When: GET /api/chat/stream 호출
         Then: 200 OK, SSE 스트리밍 응답
         """
-        # Given: Query parameters (conversation_id 생략 - Optional)
-        params = {"message": "Say hello"}
+        if not request.config.getoption("--run-llm"):
+            pytest.skip("LLM 테스트는 --run-llm 옵션 필요 (비용 발생)")
+
+        # Given: 대화 생성 후 Query parameters
+        conv_response = authenticated_client.post(
+            "/api/conversations", json={"title": "LLM GET Test"}
+        )
+        assert conv_response.status_code == 201
+        conv_id = conv_response.json()["id"]
+
+        params = {"message": "Say hello", "conversation_id": conv_id}
 
         # When: GET 요청 (스트리밍)
         with authenticated_client.stream("GET", "/api/chat/stream", params=params) as response:
@@ -187,15 +197,19 @@ class TestChatStreamingGET:
             assert len(events) >= 1
             assert events[-1]["type"] == "done"
 
-    def test_chat_stream_get_with_conversation_id(self, authenticated_client):
+    @pytest.mark.llm
+    def test_chat_stream_get_with_conversation_id(self, authenticated_client, request):
         """
         Given: conversation_id를 query param으로 전달
         When: GET /api/chat/stream 호출
         Then: 200 OK
         """
+        if not request.config.getoption("--run-llm"):
+            pytest.skip("LLM 테스트는 --run-llm 옵션 필요 (비용 발생)")
+
         # Given: 대화 생성
         conv_response = authenticated_client.post(
-            "/api/conversations", json={"title": "Test"}
+            "/api/conversations", json={"title": "LLM GET Test with Conv ID"}
         )
         assert conv_response.status_code == 201
         conv_id = conv_response.json()["id"]
