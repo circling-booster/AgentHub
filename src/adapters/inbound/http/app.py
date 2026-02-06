@@ -28,6 +28,40 @@ from .security import ExtensionAuthMiddleware
 logger = logging.getLogger(__name__)
 
 
+def get_cors_config(dev_mode: bool) -> dict:
+    """
+    CORS 설정 반환 (Phase 3 Refactor)
+
+    Args:
+        dev_mode: DEV_MODE 활성화 여부
+
+    Returns:
+        CORSMiddleware에 전달할 설정 딕셔너리
+
+    Security:
+        - DEV_MODE: localhost + Extension 허용, credentials=True
+        - 프로덕션: Extension만 허용, credentials=False
+    """
+    base_config = {
+        "allow_origin_regex": r"^chrome-extension://[a-zA-Z0-9_-]+$",
+        "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["X-Extension-Token", "Content-Type"],
+    }
+
+    if dev_mode:
+        # DEV_MODE: localhost 허용
+        base_config["allow_origins"] = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
+        base_config["allow_credentials"] = True
+    else:
+        # 프로덕션: Extension만
+        base_config["allow_credentials"] = False
+
+    return base_config
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """애플리케이션 수명 주기 관리
@@ -123,13 +157,11 @@ def create_app() -> FastAPI:
     # 이유: CORS가 outermost여야 403 에러 응답에도 CORS 헤더가 포함됨.
     # 그래야 브라우저가 CORS 에러 대신 실제 403 상태를 볼 수 있음.
     app.add_middleware(ExtensionAuthMiddleware)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origin_regex=r"^chrome-extension://[a-zA-Z0-9_-]+$",
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
-        allow_headers=["X-Extension-Token", "Content-Type"],
-        allow_credentials=False,
-    )
+
+    # Phase 3: 조건부 CORS 설정 (DEV_MODE에 따라 localhost 허용)
+    settings = container.settings()
+    cors_config = get_cors_config(settings.dev_mode)
+    app.add_middleware(CORSMiddleware, **cors_config)
 
     # 라우터 등록
     app.include_router(auth.router)
@@ -142,6 +174,13 @@ def create_app() -> FastAPI:
     app.include_router(conversations.router)
     app.include_router(workflow.router)  # Workflow Management
     app.include_router(usage.router)  # Usage & Cost Tracking
+
+    # DEV_MODE 전용 테스트 유틸리티 (Phase 1)
+    if settings.dev_mode:
+        from .routes import test_utils
+
+        app.include_router(test_utils.router)
+        logger.warning("DEV_MODE: Test utilities enabled at /test/*")
 
     return app
 

@@ -8,6 +8,7 @@ AgentHub 개발을 위한 실전 가이드입니다. 구현 방법, 레시피, �
 
 | 폴더 | 설명 |
 |------|------|
+| **playground/** | Playground 사용 가이드 (백엔드 API 수동 테스트, SSE 디버깅) |
 | **extension/** | Chrome Extension 개발 가이드 (컴포넌트 추가, API 호출, 디버깅) |
 | **implementation/** | 일반 구현 레시피 (Entity, Service, Port, Adapter 작성 체크리스트) |
 | **standards/** | 외부 표준 통합 가이드 (MCP, A2A, ADK 구현 방법) |
@@ -25,4 +26,4 @@ AgentHub 개발을 위한 실전 가이드입니다. 구현 방법, 레시피, �
 
 ---
 
-*Last Updated: 2026-02-05*
+*Last Updated: 2026-02-06*

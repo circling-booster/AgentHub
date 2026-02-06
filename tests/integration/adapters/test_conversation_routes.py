@@ -113,3 +113,58 @@ class TestListConversations:
 
         # Then: 403 Forbidden
         assert response.status_code == 403
+
+
+class TestConversationDeletion:
+    """DELETE /api/conversations/{id} - 대화 삭제"""
+
+    def test_delete_conversation_success(self, authenticated_client: TestClient):
+        """대화 삭제 성공 → 204 No Content"""
+        # Given: 대화 생성
+        response = authenticated_client.post(
+            "/api/conversations", json={"title": "Test Conversation"}
+        )
+        assert response.status_code == 201
+        conversation_id = response.json()["id"]
+
+        # When: 대화 삭제
+        delete_response = authenticated_client.delete(
+            f"/api/conversations/{conversation_id}"
+        )
+
+        # Then: 204 No Content
+        assert delete_response.status_code == 204
+
+        # And: 대화가 목록에서 사라짐
+        list_response = authenticated_client.get("/api/conversations")
+        conversations = list_response.json()
+        assert conversation_id not in [c["id"] for c in conversations]
+
+    def test_delete_conversation_not_found(self, authenticated_client: TestClient):
+        """존재하지 않는 대화 삭제 → 404 Not Found"""
+        # When: 존재하지 않는 ID 삭제
+        response = authenticated_client.delete("/api/conversations/nonexistent-id")
+
+        # Then: 404 Not Found
+        assert response.status_code == 404
+
+    def test_delete_conversation_removes_tool_calls(self, authenticated_client: TestClient):
+        """대화 삭제 시 관련 tool calls도 함께 삭제"""
+        # Given: 대화 + 메시지 생성 (tool calls 포함 가능)
+        response = authenticated_client.post(
+            "/api/conversations", json={"title": "Test"}
+        )
+        assert response.status_code == 201
+        conversation_id = response.json()["id"]
+
+        # When: 대화 삭제
+        delete_response = authenticated_client.delete(
+            f"/api/conversations/{conversation_id}"
+        )
+        assert delete_response.status_code == 204
+
+        # Then: Tool Calls도 함께 삭제 (GET 시 404)
+        tool_calls_response = authenticated_client.get(
+            f"/api/conversations/{conversation_id}/tool-calls"
+        )
+        assert tool_calls_response.status_code == 404

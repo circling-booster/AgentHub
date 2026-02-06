@@ -3,7 +3,9 @@
 환경변수 > .env > YAML > 기본값 우선순위로 설정 로드.
 """
 
-from pydantic import BaseModel, Field
+import warnings
+
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -95,6 +97,22 @@ class Settings(BaseSettings):
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
     gateway: GatewaySettings = Field(default_factory=GatewaySettings)
     cost: CostSettings = Field(default_factory=CostSettings)
+
+    # Phase 1: DEV_MODE support
+    dev_mode: bool = False  # DEV_MODE=true 시 개발 모드 활성화
+
+    @field_validator("dev_mode")
+    @classmethod
+    def warn_if_dev_mode_enabled(cls, v: bool) -> bool:
+        """DEV_MODE 활성화 시 경고"""
+        if v:
+            warnings.warn(
+                "DEV_MODE is enabled. This should ONLY be used in local development. "
+                "NEVER deploy with DEV_MODE=true to production!",
+                UserWarning,
+                stacklevel=2,
+            )
+        return v
 
     # API 키 (환경변수에서만, 플랫 필드 유지)
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")

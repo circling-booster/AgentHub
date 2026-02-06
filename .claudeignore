@@ -114,3 +114,14 @@ yarn.lock
 uv.lock
 poetry.lock
 Pipfile.lock
+
+# Playground Test Artifacts
+tests/manual/playground/coverage/
+e2e_test_output.txt
+tests/manual/reproduce_*.js
+tests/manual/reproduce_*.py
+
+# Planning Docs (temporary/work-in-progress)
+docs/project/planning/active/*/05.3_*
+docs/project/planning/active/*/06.1_*
+docs/project/planning/active/*/06.2_*

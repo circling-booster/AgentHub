@@ -5,17 +5,21 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-# 테스트용 상수 (secrets.token_urlsafe(32)와 동일한 길이: 43 characters)
-TEST_EXTENSION_TOKEN = "test-extension-token-1234567890abcdefghijkl"
+# 테스트용 상수 (DRY: adapters/conftest.py TEST_TOKEN과 통합)
+TEST_EXTENSION_TOKEN = "test-extension-token"
 
 
 @pytest.fixture(scope="session")
 def mcp_test_server_url():
     """MCP 테스트 서버 URL (로컬 Synapse)
 
-    Usage: SYNAPSE_PORT=9000 python -m synapse
+    Usage: MCP_TEST_PORT=9000 python -m synapse
+    Env var: MCP_TEST_PORT (default: 9000)
     """
-    return "http://127.0.0.1:9000/mcp"
+    import os
+
+    port = int(os.environ.get("MCP_TEST_PORT", "9000"))
+    return f"http://127.0.0.1:{port}/mcp"
 
 
 @pytest.fixture

@@ -102,11 +102,33 @@ Phase 7: UI                    (Extension)
 planned/ → active/ → completed/
 ```
 
-**Phase 완료 시:**
+**Plan 완료 시:**
 1. `active/NN_plan/` → `completed/NN_plan/` 이동
 2. `completed/README.md` 테이블에 완료 Plan 추가
 3. `active/README.md` 다음 Plan 정보로 업데이트
 4. Git 커밋: `docs: complete plan NN`
+
+**Phase 완료 시:**
+1. Plan README.md의 Implementation Phases 테이블에서 Status를 🔄 → ✅로 변경
+2. Git 커밋: `docs: complete phase N - {phase_name}`
+
+---
+
+## 📝 Template Usage
+
+새 Plan 시작 시 [TEMPLATE.md](TEMPLATE.md)를 사용하세요.
+
+**사용 방법:**
+1. TEMPLATE.md를 `active/NN_descriptive_name/README.md`로 복사
+2. `{placeholder}` 값을 실제 값으로 치환
+3. Implementation Phases 테이블 업데이트 (Phase 수, 이름, 레이어)
+4. Architecture Diagram 및 Features 작성
+
+**Phase Progress Tracking:**
+- 각 Phase의 Status는 Implementation Phases 테이블에서 관리
+- Phase 시작: ⏸️ → 🔄
+- Phase 완료: 🔄 → ✅
+- 항상 1개의 Phase만 🔄 상태 유지
 
 ---
 

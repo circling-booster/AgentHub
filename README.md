@@ -99,6 +99,31 @@ uvicorn src.main:app --host localhost --port 8000
 cd extension && npm run dev
 ```
 
+### Playground (수동 테스트)
+
+백엔드 API를 브라우저에서 직접 테스트할 수 있는 Playground를 제공합니다.
+
+```powershell
+# Terminal 1: 백엔드 서버 (DEV_MODE 활성화)
+$env:DEV_MODE="true"; uvicorn src.main:app --host localhost --port 8000
+
+# Terminal 2: Playground 정적 서버
+cd tests/manual/playground; python -m http.server 3000
+
+# 브라우저에서 접속: http://localhost:3000
+```
+
+**주요 기능:**
+- Health Check 상태 확인
+- Chat SSE 스트리밍 테스트
+- MCP 서버 등록/해제 및 도구 조회
+- A2A 에이전트 등록/해제
+- Conversations CRUD 및 Tool Calls 이력
+- Usage & Budget 관리
+- Workflow 실행 및 SSE 스트리밍
+
+**참고:** Playground는 DEV_MODE에서만 동작하며, 프로덕션 환경에서는 사용할 수 없습니다.
+
 ### 사용 방법
 
 #### 1. Chrome Extension 로드

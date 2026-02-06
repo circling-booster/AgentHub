@@ -157,3 +157,76 @@ class TestChatStreaming:
         assert len(events2) >= 1
         assert events1[-1]["type"] == "done"
         assert events2[-1]["type"] == "done"
+
+
+class TestChatStreamingGET:
+    """GET /api/chat/stream - EventSource 지원"""
+
+    def test_chat_stream_get_basic(self, authenticated_client):
+        """
+        Given: Query parameters로 메시지 전달
+        When: GET /api/chat/stream 호출
+        Then: 200 OK, SSE 스트리밍 응답
+        """
+        # Given: Query parameters (conversation_id 생략 - Optional)
+        params = {"message": "Say hello"}
+
+        # When: GET 요청 (스트리밍)
+        with authenticated_client.stream("GET", "/api/chat/stream", params=params) as response:
+            # Then: 200 OK, SSE 헤더
+            assert response.status_code == status.HTTP_200_OK
+            assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
+
+            # SSE 이벤트 파싱
+            events = []
+            for line in response.iter_lines():
+                if line.startswith("data: "):
+                    events.append(json.loads(line[6:]))
+
+            # 최소 1개 이벤트 수신 (done 이벤트)
+            assert len(events) >= 1
+            assert events[-1]["type"] == "done"
+
+    def test_chat_stream_get_with_conversation_id(self, authenticated_client):
+        """
+        Given: conversation_id를 query param으로 전달
+        When: GET /api/chat/stream 호출
+        Then: 200 OK
+        """
+        # Given: 대화 생성
+        conv_response = authenticated_client.post(
+            "/api/conversations", json={"title": "Test"}
+        )
+        assert conv_response.status_code == 201
+        conv_id = conv_response.json()["id"]
+
+        # Given: Query parameters with conversation_id
+        params = {"message": "Hello", "conversation_id": conv_id}
+
+        # When: GET 요청
+        with authenticated_client.stream("GET", "/api/chat/stream", params=params) as response:
+            # Then: 200 OK
+            assert response.status_code == status.HTTP_200_OK
+
+            # SSE 이벤트 파싱
+            events = []
+            for line in response.iter_lines():
+                if line.startswith("data: "):
+                    events.append(json.loads(line[6:]))
+
+            assert len(events) >= 1
+
+    def test_chat_stream_get_empty_message_validation(self, authenticated_client):
+        """
+        Given: 빈 메시지
+        When: GET /api/chat/stream 호출
+        Then: 422 Validation Error
+        """
+        # Given: 빈 메시지
+        params = {"message": ""}
+
+        # When: GET 요청
+        response = authenticated_client.get("/api/chat/stream", params=params)
+
+        # Then: 422 Unprocessable Entity
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

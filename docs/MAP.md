@@ -36,6 +36,7 @@ docs/
 │   │       ├── adapters/            # 어댑터 구현체
 │   │       └── patterns/            # 디자인 패턴
 │   ├── guides/                      # 구현 가이드
+│   │   ├── playground/              # Playground 사용 및 API 테스트
 │   │   ├── extension/               # Extension 개발
 │   │   ├── implementation/          # 코드 작성 패턴
 │   │   ├── standards/               # 프로토콜 표준 검증
@@ -79,6 +80,7 @@ docs/
 | 목적 | 경로 |
 |------|------|
 | 아키텍처 이해 | [developers/architecture/](developers/architecture/) |
+| Playground 사용 | [developers/guides/playground/](developers/guides/playground/) |
 | 테스트 작성 | [developers/testing/](developers/testing/) |
 | 구현 패턴 | [developers/guides/implementation/](developers/guides/implementation/) |
 | 배포/설정 | [operators/deployment/](operators/deployment/) |

@@ -15,6 +15,7 @@ TDD \+ 헥사고날 아키텍처 기반 테스트 전략을 위한 가이드 문
 | **Fake Adapter 위치** | tests/unit/fakes/ |
 | **최소 커버리지** | 80% (CI 강제, 현재: 89.90%) |
 | **테스트 수 확인** | pytest \--co \-q |
+| **Playground (JS) 테스트** | cd tests/manual/playground && npm test |
 
 ## **📚 Documentation Index**
 

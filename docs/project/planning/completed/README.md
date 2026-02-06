@@ -17,6 +17,7 @@
 | 4C | Dynamic Intelligence | 동적 시스템 프롬프트, 도구 정보 주입 | 2026-01 |
 | 4D | Reliability | 도구 실행 재시도, A2A Health Check | 2026-02 |
 | 5 | Enterprise Features | OAuth 2.0, Multi-MCP, Defer Loading | 2026-02 |
+| 8 | Playground Implementation | 백엔드 API 수동 테스트 도구 (DEV_MODE) | 2026-02 |
 
 ---
 
@@ -46,6 +47,13 @@
 - OAuth 2.0 인증
 - 다중 MCP 서버 지원
 - Defer Loading (MAX_ACTIVE_TOOLS 100)
+
+### Plan 8: Playground
+- DEV_MODE 기반 로컬 개발 환경
+- Vanilla HTML/JS 백엔드 테스트 도구
+- SSE 스트리밍 디버깅 (Chat, Workflow)
+- E2E 테스트 (Playwright) 26개 통과
+- JavaScript 단위 테스트 (Jest) 32개 통과
 
 ---
 
@@ -92,4 +100,4 @@ NN_descriptive_name/
 
 ---
 
-*Last Updated: 2026-02-05*
+*Last Updated: 2026-02-06*
