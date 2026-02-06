@@ -392,8 +392,13 @@ def mcp_synapse_server():
     Returns:
         Base URL of the MCP server (http://127.0.0.1:{port}/mcp)
     """
-    # Synapse 프로젝트 경로
-    synapse_dir = Path(r"C:\Users\sungb\Documents\GitHub\MCP_SERVER\MCP_Streamable_HTTP")
+    # Synapse 프로젝트 경로 (환경변수 또는 기본값)
+    synapse_dir = Path(
+        os.environ.get(
+            "SYNAPSE_DIR",
+            str(Path.home() / "Documents" / "GitHub" / "MCP_SERVER" / "MCP_Streamable_HTTP"),
+        )
+    )
 
     if not synapse_dir.exists():
         pytest.skip(f"Synapse project not found: {synapse_dir}")
@@ -437,7 +442,7 @@ def mcp_synapse_server():
 
     # Health check: MCP 엔드포인트 응답 대기
     start_time = time.time()
-    health_timeout = 15
+    health_timeout = 30  # Synapse 서버 시작 시간 여유 확보 (10-15초 소요)
     while time.time() - start_time < health_timeout:
         try:
             response = httpx.get(base_url, timeout=2.0)

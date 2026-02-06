@@ -8,7 +8,7 @@ import logging
 from uuid import uuid4
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
 from src.adapters.inbound.http.schemas.workflow import (
@@ -16,6 +16,7 @@ from src.adapters.inbound.http.schemas.workflow import (
     ExecuteWorkflowRequest,
     WorkflowResponse,
     WorkflowStepSchema,
+    WorkflowStreamEvent,
 )
 from src.config.container import Container
 from src.domain.entities.workflow import Workflow, WorkflowStep
@@ -122,6 +123,118 @@ async def list_workflows():
     ]
 
 
+# NOTE: 리터럴 라우트("/execute")는 동적 라우트("/{workflow_id}") 앞에 정의해야 함
+# FastAPI는 첫 번째 매칭 라우트를 사용하므로, 순서가 중요
+@router.get("/execute")
+@inject
+async def execute_workflow_get(
+    http_request: Request,
+    name: str = Query(..., description="Workflow name"),
+    steps: str = Query(..., description="JSON-encoded steps array"),
+    message: str = Query(default="Execute workflow", description="Workflow message"),
+    conversation_id: str | None = Query(None, description="Conversation ID (optional)"),
+    orchestrator: OrchestratorPort = Depends(Provide[Container.orchestrator_adapter]),
+):
+    """
+    Workflow 실행 (GET - EventSource 지원)
+
+    Args:
+        http_request: FastAPI Request 객체
+        name: Workflow 이름
+        steps: JSON 인코딩된 steps 배열
+        message: 실행 메시지
+        conversation_id: 대화 ID (optional)
+        orchestrator: OrchestratorPort
+
+    Returns:
+        SSE 스트리밍 응답
+
+    Note:
+        임시 workflow를 생성하고 즉시 실행합니다 (EventSource는 GET만 지원)
+    """
+    try:
+        # 1. Parse steps JSON
+        steps_data = json.loads(steps)
+
+        # 2. Create temporary workflow
+        workflow_id = str(uuid4())
+        workflow = Workflow(
+            id=workflow_id,
+            name=name,
+            workflow_type="sequential",  # Default to sequential
+            description=f"Temporary workflow: {name}",
+            steps=[
+                WorkflowStep(
+                    agent_endpoint_id=step.get("agent_endpoint_id", ""),
+                    output_key=step.get("output_key", ""),
+                    instruction=step.get("instruction", ""),
+                )
+                for step in steps_data
+            ],
+        )
+
+        # 3. Store temporarily
+        _workflows[workflow_id] = workflow
+
+        # 4. Create workflow agent
+        await orchestrator.create_workflow_agent(workflow)
+
+        # 5. Execute workflow
+        async def generate():
+            try:
+                # Generate conversation_id if not provided
+                conv_id = conversation_id or str(uuid4())
+
+                async for chunk in orchestrator.execute_workflow(
+                    workflow_id=workflow_id,
+                    message=message,
+                    conversation_id=conv_id,
+                ):
+                    # Check if client disconnected
+                    if await http_request.is_disconnected():
+                        logger.info(f"Client disconnected, stopping workflow: {workflow_id}")
+                        break
+
+                    # Convert StreamChunk to SSE event
+                    event = WorkflowStreamEvent.from_stream_chunk(chunk, workflow_id)
+                    event_data = event.model_dump(exclude_none=True)
+                    yield f"data: {json.dumps(event_data)}\n\n"
+
+                # Send done event
+                yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+            except WorkflowNotFoundError as e:
+                logger.error(f"Workflow not found: {e}")
+                yield f"data: {json.dumps({'type': 'error', 'code': 'WORKFLOW_NOT_FOUND', 'message': str(e)})}\n\n"
+
+            except Exception as e:
+                logger.error(f"Workflow execution error: {e}", exc_info=True)
+                yield f"data: {json.dumps({'type': 'error', 'code': 'WORKFLOW_EXECUTION_ERROR', 'message': str(e)})}\n\n"
+
+            finally:
+                # Clean up temporary workflow
+                if workflow_id in _workflows:
+                    del _workflows[workflow_id]
+                    logger.info(f"Temporary workflow cleaned up: {workflow_id}")
+
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid JSON in steps parameter: {e}")
+
+    except Exception as e:
+        logger.error(f"Failed to create workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{workflow_id}", response_model=WorkflowResponse)
 async def get_workflow(workflow_id: str):
     """
@@ -223,17 +336,8 @@ async def execute_workflow(
                     break
 
                 # Convert StreamChunk to SSE event
-                event_data = {
-                    "type": chunk.event_type,
-                    "workflow_id": workflow_id,
-                }
-
-                # Add event-specific data
-                if chunk.content:
-                    event_data["content"] = chunk.content
-                if chunk.metadata:
-                    event_data.update(chunk.metadata)
-
+                event = WorkflowStreamEvent.from_stream_chunk(chunk, workflow_id)
+                event_data = event.model_dump(exclude_none=True)
                 yield f"data: {json.dumps(event_data)}\n\n"
 
             # Send done event

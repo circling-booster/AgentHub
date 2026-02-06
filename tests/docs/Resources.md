@@ -11,7 +11,8 @@
 
 **로컬 MCP 서버 프로젝트 위치:**
 
-C:\\Users\\sungb\\Documents\\GitHub\\MCP\_SERVER\\MCP\_Streamable\_HTTP
+Configurable via `SYNAPSE_DIR` environment variable.
+**Default:** `~/Documents/GitHub/MCP_SERVER/MCP_Streamable_HTTP`
 
 **Multi-port 설정:**
 

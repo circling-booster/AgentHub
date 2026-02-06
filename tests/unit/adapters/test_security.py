@@ -85,7 +85,16 @@ class TestExtensionAuthMiddleware:
             yield mock
 
     @pytest.fixture
-    def middleware(self, mock_token_provider):
+    def mock_settings(self):
+        """Settings Mock - DEV_MODE를 False로 설정하여 토큰 검증 강제"""
+        mock_settings_instance = Mock()
+        mock_settings_instance.dev_mode = False
+        with patch("src.config.settings.Settings") as mock_settings_cls:
+            mock_settings_cls.return_value = mock_settings_instance
+            yield mock_settings_instance
+
+    @pytest.fixture
+    def middleware(self, mock_token_provider, mock_settings):
         """Middleware 인스턴스"""
         from adapters.inbound.http.security import ExtensionAuthMiddleware
 

@@ -179,6 +179,7 @@ tests/unit/fakes/
 
 ## 다음 단계
 
+- **Playground 사용**: [guides/playground/](guides/playground/) - 백엔드 API 수동 테스트 도구
 - **아키텍처 이해**: [architecture/](architecture/) - 시스템 레이어와 데이터 플로우
 - **테스트 작성**: [testing/](testing/) - TDD 철학과 Fake Adapter 패턴
 - **기여하기**: [workflows/](workflows/) - Git 워크플로우와 CI/CD

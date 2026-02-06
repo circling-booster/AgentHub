@@ -4,10 +4,13 @@ Zero-Trust 보안 원칙:
 1. Token Handshake: 서버 시작 시 난수 토큰 생성, Extension만 교환
 2. Middleware 검증: 모든 /api/* 요청에 X-Extension-Token 헤더 필수
 3. CORS 제한: chrome-extension:// Origin만 허용
+
+Phase 2 추가: DEV_MODE + localhost Origin 시 토큰 검증 우회
 """
 
 import secrets
 from typing import ClassVar
+from urllib.parse import urlparse
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -54,12 +57,46 @@ def get_extension_token() -> str:
     return token_provider.get_token()
 
 
+def is_localhost_origin(origin: str | None) -> bool:
+    """
+    Origin이 localhost인지 확인 (Phase 2 Refactor)
+
+    Args:
+        origin: HTTP Origin 헤더 값
+
+    Returns:
+        True if hostname is exactly "localhost" or starts with "127.0.0.1"
+
+    Security:
+        - HTTPS는 제외 (프로덕션 환경 모방 방지)
+        - hostname을 정확히 파싱하여 부분 매칭 방지
+          (예: "http://localhost.example.com"은 False)
+        - None/빈 문자열/잘못된 URL은 False 반환
+    """
+    if not origin:
+        return False
+
+    try:
+        parsed = urlparse(origin)
+        # HTTP만 허용 (HTTPS 제외)
+        if parsed.scheme != "http":
+            return False
+
+        hostname = parsed.hostname or ""
+        # hostname이 정확히 "localhost"이거나 "127.0.0.1"로 시작하는 경우만 True
+        return hostname == "localhost" or hostname.startswith("127.0.0.1")
+    except (ValueError, AttributeError):
+        return False
+
+
 class ExtensionAuthMiddleware(BaseHTTPMiddleware):
     """
     Chrome Extension 인증 미들웨어
 
     모든 /api/* 요청에 X-Extension-Token 헤더 검증.
     토큰 불일치 시 403 Forbidden 반환하여 Drive-by RCE 공격 차단.
+
+    Phase 2: DEV_MODE + localhost Origin 시 토큰 검증 우회
     """
 
     # 인증 제외 경로 (Public endpoints)
@@ -87,6 +124,17 @@ class ExtensionAuthMiddleware(BaseHTTPMiddleware):
 
         # API 경로는 토큰 검증 필수
         if path.startswith("/api/"):
+            # Phase 2: DEV_MODE + localhost Origin 시 토큰 검증 우회
+            from src.config.settings import Settings
+
+            settings = Settings()
+
+            if settings.dev_mode:
+                origin = request.headers.get("origin")
+                # DEV_MODE: localhost 요청은 Origin 없어도 허용 (EventSource 지원)
+                if origin is None or is_localhost_origin(origin):
+                    return await call_next(request)  # Skip auth for dev playground
+
             token = request.headers.get("X-Extension-Token")
             if token != get_extension_token():
                 return JSONResponse(

@@ -12,6 +12,7 @@ Google ADK-based MCP + A2A Integrated Agent System
 | **Architecture** | Hexagonal (Ports and Adapters) |
 | **Agent Framework** | Google ADK 1.23.0+ with LiteLLM |
 | **Default Model** | `openai/gpt-4o-mini` |
+| **Development Platform** | Windows (requires `.venv` activation) |
 
 **Core Flow:**
 ```
@@ -48,6 +49,9 @@ tests/                # TDD (80% coverage target)
 ## 🚀 Quick Start
 
 ```bash
+# Activate virtual environment (Windows)
+.venv\Scripts\activate
+
 # Server
 uvicorn src.main:app --host localhost --port 8000
 
@@ -89,6 +93,11 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 5. **TEST SERVERS & ENDPOINTS**
    - YOU SHOULD BE SPECIFIC. @tests/README.md
 
+6. **Test Environment Isolation**
+   - Tests MUST NOT depend on `.env` for test-specific config (use `monkeypatch.setenv()`)
+   - App creation in fixtures: use `create_app()`, never `from src.main import app`
+   - Machine-specific paths: use env vars with `Path.home()` fallback
+
 ---
 
 ## 🚫 Critical Don'ts
@@ -98,7 +107,11 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 | Import ADK/FastAPI in Domain Layer | Violates hexagonal architecture |
 | Write implementation code without tests | TDD required: write tests first (Red-Green-Refactor) |
 | Skip Refactoring steps | TDD required: Ensure behavior is preserved while improving structure. |
+| Write technical debt, spaghetti code, or temporary workarounds | All code must be clean, maintainable, and production-ready from the start |
 | Hardcode test endpoints/ports in CLAUDE.md | Violates DRY principle, creates sync burden. Use @tests/README.md reference. |
+| Use Windows path separators (\) in Git Bash | Git Bash requires forward slashes (/) for paths, not backslashes (\) |
+| Run pytest/uvicorn without activating .venv | Required dependencies (pytest-playwright, FastAPI, etc.) are only in virtual environment |
+| Hardcode paths/ports in test code | Use env vars with defaults: `os.environ.get("KEY", "default")` |
 
 ---
 
@@ -108,7 +121,17 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 
 모든 문서는 [@docs/MAP.md](docs/MAP.md)에서 시작합니다. MAP.md는 전체 구조의 "메타 지도"이며, 각 섹션의 README.md가 상세 지도(Sub-Map) 역할을 합니다.
 
+**Planning Hierarchy:**
+```
+Plan > Phase > Step
+```
+
+- **Plan**: 하나의 독립적인 개발 주기/마일스톤 (예: `07_hybrid_dual`)
+- **Phase**: Plan 내부의 아키텍처 레이어 단위 (예: `01_domain_entities.md`)
+- **Step**: Phase 내부의 구현 단계 (예: Step 1.1, 1.2, 1.3)
+
 **자주 참조:**
+- **Planning 구조**: [@docs/project/planning/README.md](docs/project/planning/README.md)
 - **현재 작업**: [@docs/project/planning/active/README.md](docs/project/planning/active/README.md)
 - **테스트 가이드**: [@tests/README.md](tests/README.md)
 
@@ -127,21 +150,34 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 
 ## 🔄 Document Maintenance
 
-**트리거별 업데이트 필수 파일:**
+### Quick Reference: 문서 동기화
 
-| 트리거 | 업데이트 파일 |
-|--------|--------------|
-| Phase 완료 | `active/README.md` → `completed/README.md`, 폴더 이동 |
-| Coverage 변경 | `tests/README.md` 수치 업데이트 |
-| src/ 구조 변경 | 이 파일의 Directory Structure |
-| docs/ 구조 변경 | `docs/MAP.md` Directory Structure |
-| ADR 추가 | `docs/project/decisions/{category}/README.md` |
+| 변경 사항 | 업데이트 대상 |
+|-----------|--------------|
+| **src/ 구조** | `CLAUDE.md` Directory Structure |
+| **docs/ 구조** | `docs/MAP.md` Directory Structure |
+| **Coverage** | `tests/README.md` 수치 |
+| **ADR 추가** | `docs/project/decisions/{category}/README.md` |
 
-**Phase Transition Checklist:**
-1. `active/XX_phase/` → `completed/XX_phase/` 이동
-2. `completed/README.md` 테이블에 완료 Phase 추가
-3. `active/README.md` 다음 Phase 정보로 업데이트
-4. Git 커밋: `docs: complete phase XX`
+### Plan Lifecycle
+
+**Plan Start Checklist:**
+1. 새 Plan 폴더 생성: `docs/project/planning/active/NN_descriptive_name/`
+2. `active/README.md` "Current Work" 업데이트 (Plan 번호, Branch, 목표)
+3. Git branch 생성: `git checkout -b feature/plan-NN-descriptive-name`
+4. Plan README.md에 현재 상황 기록 (Coverage, 완료 기능, 이슈)
+
+**Plan Transition (완료 시):**
+1. `completed/README.md`에 완료 Plan 추가
+2. `active/README.md` 다음 Plan으로 업데이트
+3. Git 커밋: `docs: complete plan NN`
+
+### Phase Lifecycle
+
+**Phase Workflow (매 Phase 반복):**
+1. **시작**: Plan README.md Status ⏸️ → 🔄
+2. **완료**: Status 🔄 → ✅
+3. **Rule**: 항상 1개 Phase만 🔄 유지
 
 ---
 

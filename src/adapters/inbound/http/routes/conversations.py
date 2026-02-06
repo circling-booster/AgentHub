@@ -4,7 +4,7 @@
 """
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.adapters.inbound.http.schemas.conversations import (
     ConversationResponse,
@@ -78,3 +78,31 @@ async def get_tool_calls(
         }
         for tc in tool_calls
     ]
+
+
+@router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+async def delete_conversation(
+    conversation_id: str,
+    conversation_service: ConversationService = Depends(Provide[Container.conversation_service]),
+):
+    """
+    대화 삭제
+
+    Args:
+        conversation_id: 대화 ID
+        conversation_service: ConversationService (DI)
+
+    Returns:
+        204 No Content
+
+    Raises:
+        HTTPException(404): 대화를 찾을 수 없음
+    """
+    # 대화 삭제 (존재 여부 확인 포함)
+    success = await conversation_service.delete_conversation(conversation_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Conversation {conversation_id} not found",
+        )

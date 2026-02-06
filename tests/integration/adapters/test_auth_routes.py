@@ -27,7 +27,8 @@ class TestAuthTokenEndpoint:
         data = response.json()
         assert "token" in data
         assert isinstance(data["token"], str)
-        assert len(data["token"]) >= 43
+        # Token length: TEST_EXTENSION_TOKEN = "test-extension-token" (20 chars)
+        assert len(data["token"]) >= 20
 
     def test_invalid_origin_returns_403(self, client):
         """웹 Origin으로 요청 시 403 반환 (Drive-by RCE 방지)"""

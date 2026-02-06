@@ -31,8 +31,12 @@ def _wait_for_health(url: str, timeout: int = 10) -> bool:
 
 @pytest.fixture(scope="session")
 def server_url():
-    """테스트 서버 URL"""
-    return "http://localhost:8000"
+    """테스트 서버 URL (환경변수 기반)
+
+    Env var: E2E_SERVER_PORT (default: 8000)
+    """
+    port = int(os.environ.get("E2E_SERVER_PORT", "8000"))
+    return f"http://localhost:{port}"
 
 
 @pytest.fixture(scope="session")
@@ -55,9 +59,21 @@ def server_process():
 
     NOTE: auth.py의 _token_issued 전역 상태는 서버 재시작 시 자동 리셋됨.
     별도 처리 불필요.
+
+    Env var: E2E_SERVER_PORT (default: 8000)
     """
+    port = int(os.environ.get("E2E_SERVER_PORT", "8000"))
     proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "src.main:app", "--host", "localhost", "--port", "8000"],
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "src.main:app",
+            "--host",
+            "localhost",
+            "--port",
+            str(port),
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         cwd=Path(__file__).parent.parent.parent,  # Repository root
@@ -65,7 +81,7 @@ def server_process():
     )
 
     # Wait for server to be ready
-    if not _wait_for_health("http://localhost:8000/health", timeout=10):
+    if not _wait_for_health(f"http://localhost:{port}/health", timeout=10):
         proc.terminate()
         proc.wait(timeout=5)
         raise RuntimeError("Server failed to start within 10 seconds")

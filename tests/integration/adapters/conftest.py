@@ -30,13 +30,16 @@ from src.adapters.inbound.http.security import token_provider
 
 # 테스트용 상수
 TEST_TOKEN = "test-extension-token"
-MCP_TEST_URL = "http://127.0.0.1:9000/mcp"  # 로컬 MCP 테스트 서버 (기본, 무인증)
+
+# MCP 테스트 서버 URL (환경변수 기반)
+_mcp_port = int(os.environ.get("MCP_TEST_PORT", "9000"))
+MCP_TEST_URL = f"http://127.0.0.1:{_mcp_port}/mcp"  # 로컬 MCP 테스트 서버 (기본, 무인증)
 
 # Phase 5-B: 다중 포트 인증 테스트용 URL (Synapse --multi)
 MCP_AUTH_TEST_URLS = {
-    "no_auth": "http://127.0.0.1:9000/mcp",  # 무인증 (기본)
-    "api_key": "http://127.0.0.1:9001/mcp",  # API Key 인증
-    "oauth": "http://127.0.0.1:9002/mcp",  # OAuth 2.0 인증
+    "no_auth": f"http://127.0.0.1:{_mcp_port}/mcp",  # 무인증 (기본)
+    "api_key": f"http://127.0.0.1:{_mcp_port + 1}/mcp",  # API Key 인증
+    "oauth": f"http://127.0.0.1:{_mcp_port + 2}/mcp",  # OAuth 2.0 인증
 }
 
 
@@ -62,7 +65,8 @@ def mock_mcp_toolset_in_ci():
 
     실제 MCP 서버 실행:
     ```bash
-    cd C:\\Users\\sungb\\Documents\\GitHub\\MCP_SERVER\\MCP_Streamable_HTTP
+    # Synapse 프로젝트 위치: SYNAPSE_DIR 환경변수 또는 ~/Documents/GitHub/MCP_SERVER/MCP_Streamable_HTTP
+    cd $SYNAPSE_DIR  # (또는 직접 경로 지정)
 
     # 단일 포트 (기본, 무인증)
     python -m synapse  # Port 9000

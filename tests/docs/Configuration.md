@@ -10,7 +10,8 @@
 | A2A Echo Agent | **9003** | A2A\_ECHO\_PORT | A2A 기본 테스트 |
 | A2A Math Agent | dynamic | (자동 할당) | A2A 수학 테스트 |
 | Chaos MCP Server | 9999 | MCP\_CHAOS\_PORT | Chaos 테스트 |
-| AgentHub API (E2E) | 8000 | \- | E2E Playwright |
+| AgentHub API (E2E) | 8000 | E2E\_SERVER\_PORT | E2E Playwright Backend |
+| Playground Static | 3000 | E2E\_STATIC\_PORT | E2E Playground Frontend |
 
 **포트 충돌 방지:**
 
@@ -65,5 +66,39 @@ asyncio\_mode \= "auto"
 
 **효과:**
 
-* async def test\_\*() 형식의 테스트를 자동으로 비동기 테스트로 인식  
+* async def test\_\*() 형식의 테스트를 자동으로 비동기 테스트로 인식
 * @pytest.mark.asyncio 데코레이터가 불필요해짐 (기존 코드 호환)
+
+## **🌍 Environment Variables**
+
+| 환경변수 | 기본값 | 설명 |
+| :---- | :---- | :---- |
+| MCP\_TEST\_PORT | 9000 | MCP 테스트 서버 포트 |
+| E2E\_SERVER\_PORT | 8000 | E2E 백엔드 서버 포트 |
+| E2E\_STATIC\_PORT | 3000 | E2E Playground Static 서버 포트 |
+| SYNAPSE\_DIR | ~/Documents/GitHub/MCP\_SERVER/MCP\_Streamable\_HTTP | Synapse MCP 서버 경로 |
+
+**Usage:**
+```bash
+# Port override
+MCP_TEST_PORT=8888 pytest tests/integration
+
+# Custom Synapse path
+SYNAPSE_DIR=/custom/path pytest tests/integration
+```
+
+## **🧪 Playground JavaScript Tests**
+
+**Location:** `tests/manual/playground/tests/`
+**Framework:** Jest
+**Command:**
+```bash
+cd tests/manual/playground
+npm test
+```
+
+**Test files:**
+- api-client.test.js (API 호출 모듈)
+- sse-handler.test.js (SSE 스트리밍)
+- ui-components.test.js (UI 렌더링)
+- main.test.js (통합)

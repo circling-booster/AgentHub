@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentHub Playground</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>AgentHub Playground</h1>
+        <div class="health-indicator" data-testid="health-indicator" data-status="loading">
+            <span>●</span> <span id="health-status">Checking...</span>
+            <span data-testid="health-error" style="display: none;"></span>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="chat" data-testid="tab-chat">Chat</button>
+        <button class="tab-btn" data-tab="mcp" data-testid="tab-mcp">MCP</button>
+        <button class="tab-btn" data-tab="a2a" data-testid="tab-a2a">A2A</button>
+        <button class="tab-btn" data-tab="conversations" data-testid="tab-conversations">Conversations</button>
+        <button class="tab-btn" data-tab="usage" data-testid="tab-usage">Usage</button>
+        <button class="tab-btn" data-tab="workflow" data-testid="tab-workflow">Workflow</button>
+    </nav>
+
+    <!-- Tab Contents -->
+    <main class="tab-content">
+        <!-- Chat Tab -->
+        <div id="chat-tab" class="tab-pane active">
+            <div class="two-panel">
+                <!-- Left: Chat UI -->
+                <div class="chat-panel">
+                    <div class="chat-messages" data-testid="chat-messages">
+                        <!-- 메시지는 JS로 동적 생성 (Phase 5) -->
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <input type="text" data-testid="chat-input" placeholder="Type a message..." />
+                        <button data-testid="chat-send-btn">Send</button>
+                    </div>
+                </div>
+
+                <!-- Right: SSE Log -->
+                <div class="sse-log-panel">
+                    <h3>SSE Events</h3>
+                    <pre data-testid="sse-log"></pre>
+                    <div data-testid="sse-status">disconnected</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MCP Tab -->
+        <div id="mcp-tab" class="tab-pane">
+            <div class="form-group">
+                <input type="text" data-testid="mcp-name-input" placeholder="Server Name" />
+                <input type="text" data-testid="mcp-url-input" placeholder="Server URL" />
+                <button data-testid="mcp-register-btn">Register</button>
+            </div>
+            <div class="server-list" data-testid="mcp-server-list">
+                <!-- 서버 카드는 JS로 동적 생성 (Phase 5) -->
+            </div>
+        </div>
+
+        <!-- A2A Tab -->
+        <div id="a2a-tab" class="tab-pane">
+            <div class="form-group">
+                <input type="text" data-testid="a2a-name-input" placeholder="Agent Name" />
+                <input type="text" data-testid="a2a-url-input" placeholder="Agent URL" />
+                <button data-testid="a2a-register-btn">Register</button>
+            </div>
+            <div class="agent-list" data-testid="a2a-agent-list">
+                <!-- 에이전트 카드는 JS로 동적 생성 (Phase 5) -->
+            </div>
+        </div>
+
+        <!-- Conversations Tab -->
+        <div id="conversations-tab" class="tab-pane">
+            <button data-testid="conversation-create-btn">Create Conversation</button>
+            <div class="conversation-list" data-testid="conversation-list">
+                <!-- 대화 목록은 JS로 동적 생성 (Phase 5) -->
+            </div>
+        </div>
+
+        <!-- Usage Tab -->
+        <div id="usage-tab" class="tab-pane">
+            <div data-testid="usage-summary">
+                <!-- Usage 요약은 JS로 동적 생성 (Phase 5) -->
+            </div>
+            <div class="form-group">
+                <input type="number" data-testid="budget-input" placeholder="Budget ($)" />
+                <button data-testid="budget-set-btn">Set Budget</button>
+            </div>
+            <div data-testid="budget-display"></div>
+        </div>
+
+        <!-- Workflow Tab -->
+        <div id="workflow-tab" class="tab-pane">
+            <div class="form-group">
+                <input type="text" data-testid="workflow-name-input" placeholder="Workflow Name" />
+                <textarea data-testid="workflow-steps-input" placeholder='["step1", "step2"]'></textarea>
+                <button data-testid="workflow-execute-btn">Execute</button>
+            </div>
+            <div data-testid="workflow-result"></div>
+        </div>
+    </main>
+
+    <!-- JavaScript 모듈 (Phase 5 완료) -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -233,3 +233,69 @@ class TestWorkflowExecution:
         )
 
         assert response.status_code == 404
+
+
+class TestWorkflowExecuteGET:
+    """GET /api/workflows/execute - EventSource 지원"""
+
+    def test_execute_workflow_get_route_matching(self, authenticated_client: TestClient):
+        """
+        Given: Query parameters로 workflow 정보 전달
+        When: GET /api/workflows/execute 호출
+        Then: 라우트가 /execute로 매칭됨 (/{workflow_id}로 매칭되지 않음)
+
+        Note:
+            이 테스트는 라우트 순서 문제를 검증합니다.
+            - 404 "Workflow not found": 실패 (/{workflow_id}로 잘못 매칭)
+            - 500 "Agent not registered": 성공 (라우트 매칭 성공, orchestrator 에러)
+            - 200: 성공 (완전한 동작)
+        """
+        # Given: Workflow 정보 (임시 생성)
+        steps = [
+            {
+                "agent_endpoint_id": "test-agent",
+                "output_key": "result",
+                "instruction": "Test instruction",
+            }
+        ]
+        params = {
+            "name": "Temp Workflow",
+            "steps": json.dumps(steps),
+        }
+
+        # When: GET 요청
+        response = authenticated_client.get("/api/workflows/execute", params=params)
+
+        # Then: 라우트가 /execute로 매칭됨
+        # 404 "Workflow not found"는 /{workflow_id}로 잘못 매칭된 경우
+        if response.status_code == 404:
+            error_detail = response.json().get("detail", "")
+            assert "Workflow not found" not in error_detail, (
+                "Route matched /{workflow_id} instead of /execute. "
+                "Literal routes must be defined before dynamic routes."
+            )
+
+        # 500은 orchestrator 에러 (라우트 매칭은 성공)
+        # 200은 완전한 성공
+        assert response.status_code in (200, 500), (
+            f"Unexpected status code: {response.status_code}. "
+            f"Response: {response.text}"
+        )
+
+    def test_execute_workflow_get_invalid_json(self, authenticated_client: TestClient):
+        """
+        Given: 잘못된 JSON 형식의 steps
+        When: GET /api/workflows/execute 호출
+        Then: 422 Unprocessable Entity
+        """
+        # Given: 잘못된 JSON
+        params = {
+            "name": "Temp Workflow",
+            "steps": "invalid-json",
+        }
+
+        # When: GET 요청
+        response = authenticated_client.get("/api/workflows/execute", params=params)
+
+        # Then: 422 Validation Error (JSON 파싱 실패)
+        assert response.status_code == 422
