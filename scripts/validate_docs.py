@@ -17,16 +17,15 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
 
 
 class DocValidator:
     def __init__(self, root: Path):
         self.root = root
         self.docs_dir = root / "docs"
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
-        self.info: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
+        self.info: list[str] = []
 
     def validate_all(self) -> bool:
         """Run all validation checks. Returns True if all passed."""

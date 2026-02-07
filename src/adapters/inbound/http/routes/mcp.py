@@ -123,6 +123,14 @@ async def list_mcp_servers(
             type=endpoint.type,
             enabled=endpoint.enabled,
             registered_at=endpoint.registered_at,
+            tools=[
+                ToolResponse(
+                    name=tool.name,
+                    description=tool.description,
+                    input_schema=tool.input_schema,
+                )
+                for tool in endpoint.tools
+            ],
         )
         for endpoint in endpoints
     ]

@@ -57,33 +57,24 @@ class TestDualTrack:
         # 2. ADK에게 Synapse 도구 사용 지시
         # (summarize 도구가 sampling을 요청한다고 가정)
         response = authenticated_client.post(
-            "/api/chat",
+            "/api/chat/stream",
             json={
                 "message": "Summarize the latest news using Synapse",
-                "conversation_id": "test-conv-dual-track",
+                "conversation_id": None,  # 자동 생성
             },
         )
         assert response.status_code == 200
 
-        # 3. SSE 스트림에서 sampling_request 이벤트 확인
-        # (이 테스트는 E2E Playwright로 구현하는 것이 더 적절)
-        # Integration 레벨에서는 로그나 SamplingService 상태로 확인
+        # 3. SSE 스트림 응답 확인 (기본 검증)
+        # SSE 스트림이므로 text/event-stream content-type 확인
+        assert "text/event-stream" in response.headers.get("content-type", "")
 
-        # 4. Sampling 요청 목록 확인
-        response = authenticated_client.get("/api/sampling/requests")
-        requests = response.json()["requests"]
-        # Sampling 요청이 생성되었는지 확인 (실제 Synapse 동작에 따라 달라질 수 있음)
-        # assert len(requests) > 0
-        # sampling_request = requests[0]
-
-        # 5. Approve (LLM 호출 + 시그널)
-        # response = authenticated_client.post(
-        #     f"/api/sampling/requests/{sampling_request['id']}/approve"
-        # )
-        # assert response.status_code == 200
-
-        # 6. ADK가 최종 응답 반환
-        # (실제로는 chat SSE를 구독하여 확인해야 함)
+        # 4. Sampling 검증은 E2E 테스트로 연기
+        # Integration 레벨에서는 다음을 검증할 수 없음:
+        # - SSE 이벤트 스트림 파싱
+        # - Sampling 요청 생성 타이밍
+        # - LLM 호출 및 응답
+        # 이러한 검증은 tests/e2e/playwright로 구현 예정
 
     async def test_sampling_callback_timeout_sends_sse(
         self, authenticated_client, synapse_url

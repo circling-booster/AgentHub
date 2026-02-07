@@ -29,10 +29,13 @@ pytest tests/unit/
 
 ### **고급 명령어**
 
-\# LLM 테스트 포함  
+\# LLM 테스트 포함
 pytest \--run-llm \-v
 
-\# 커버리지 리포트  
+\# Dual-Track 통합 테스트 (Synapse + LLM, Phase 5)
+pytest tests/integration/test\_dual\_track.py \-m "local\_mcp and llm" \-v
+
+\# 커버리지 리포트
 pytest \--cov=src \--cov-report=html
 
 \# 병렬 실행 (pytest-xdist)  
