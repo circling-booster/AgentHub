@@ -165,6 +165,74 @@ src/adapters/outbound/oauth/
 └── oauth_adapter.py
 ```
 
+### MCP Client Adapter
+
+**McpClientPort** 구현 (SDK Track):
+
+| 기능 | 설명 |
+|------|------|
+| **MCP 서버 연결** | Streamable HTTP Transport (AsyncExitStack) |
+| **Resources** | 리소스 목록 조회 및 읽기 |
+| **Prompts** | 프롬프트 목록 조회 및 렌더링 |
+| **콜백 변환** | Domain Protocol ↔ MCP SDK 타입 변환 |
+
+**콜백 변환 로직:**
+- **Sampling:** Domain `SamplingCallback` → MCP SDK `SamplingFnT`
+  - `types.CreateMessageRequestParams` → Domain dict → `types.CreateMessageResult`
+- **Elicitation:** Domain `ElicitationCallback` → MCP SDK `ElicitationFnT`
+  - `types.ElicitRequestParams` → Domain dict → `types.ElicitResult`
+
+```
+src/adapters/outbound/mcp/
+├── __init__.py
+├── mcp_client_adapter.py   # McpClientPort 구현
+└── README.md               # Component 문서
+```
+
+**상세:** [src/adapters/outbound/mcp/README.md](../../../../src/adapters/outbound/mcp/README.md)
+
+### SSE Adapters
+
+**EventBroadcastPort, HitlNotificationPort** 구현:
+
+| Component | 역할 |
+|-----------|------|
+| **SseBroker** | SSE 이벤트 브로드캐스터 (Pub/Sub 패턴) |
+| **HitlNotificationAdapter** | HITL 알림 SSE 전송 |
+
+**Pub/Sub 패턴:**
+```
+         broadcast()
+              │
+              ▼
+        ┌──────────┐
+        │SseBroker │
+        │  (Pub)   │
+        └──────────┘
+         │   │   │
+         ▼   ▼   ▼
+      Queue Queue Queue
+         │   │   │
+         ▼   ▼   ▼
+     Client Client Client
+```
+
+**HITL Notification Flow:**
+1. MCP 서버 Sampling/Elicitation 요청
+2. McpClientAdapter 콜백 → Domain 형식 변환
+3. HitlNotificationAdapter → SSE 이벤트 브로드캐스트
+4. 모든 SSE 클라이언트(Extension, Playground)가 알림 수신
+
+```
+src/adapters/outbound/sse/
+├── __init__.py
+├── broker.py                        # EventBroadcastPort 구현
+├── hitl_notification_adapter.py     # HitlNotificationPort 구현
+└── README.md                        # Component 문서
+```
+
+**상세:** [src/adapters/outbound/sse/README.md](../../../../src/adapters/outbound/sse/README.md)
+
 ---
 
 ## Adapter 구현 원칙
@@ -291,8 +359,17 @@ src/adapters/
     │   └── json_endpoint_storage.py
     ├── a2a/            # A2A Client
     │   └── a2a_client_adapter.py
-    └── oauth/          # OAuth
-        └── oauth_adapter.py
+    ├── oauth/          # OAuth
+    │   └── oauth_adapter.py
+    ├── mcp/            # MCP Client (SDK Track)
+    │   ├── __init__.py
+    │   ├── mcp_client_adapter.py
+    │   └── README.md
+    └── sse/            # SSE Event Broadcasting
+        ├── __init__.py
+        ├── broker.py
+        ├── hitl_notification_adapter.py
+        └── README.md
 ```
 
 ---
