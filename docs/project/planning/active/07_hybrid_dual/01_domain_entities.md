@@ -1,231 +1,522 @@
-# Phase 1: Domain Entities (TDD)
+# Phase 1: Domain Entities
 
 ## 개요
 
-SDK Track에서 사용할 Domain Entity들을 TDD로 구현합니다.
+SDK Track에 필요한 Domain Entity를 정의합니다. 순수 Python으로 작성하며 외부 라이브러리에 의존하지 않습니다.
 
-**TDD 순서:**
-1. 테스트 파일 먼저 작성 (Red)
-2. 최소 구현으로 테스트 통과 (Green)
-3. 리팩토링 (Refactor)
+**TDD Required:** ✅ 각 엔티티 작성 전 테스트 먼저 작성
 
 ---
 
-## Step 1.1: 새 엔티티 생성
-
-| 파일 | 목적 |
-|------|------|
-| `src/domain/entities/resource.py` | MCP Resource 메타데이터 + ResourceContent |
-| `src/domain/entities/prompt_template.py` | Prompt 템플릿 + PromptArgument |
-| `src/domain/entities/sampling_request.py` | Sampling HITL 요청 (상태머신) |
-| `src/domain/entities/elicitation_request.py` | Elicitation HITL 요청 |
-
-### 테스트 파일 (먼저 작성!)
-
-- `tests/unit/domain/entities/test_resource.py`
-- `tests/unit/domain/entities/test_prompt_template.py`
-- `tests/unit/domain/entities/test_sampling_request.py`
-- `tests/unit/domain/entities/test_elicitation_request.py`
-
----
-
-### Resource 엔티티
+## Step 1.1: Resource 엔티티
 
 **파일:** `src/domain/entities/resource.py`
 
+**테스트 먼저 작성:** `tests/unit/domain/entities/test_resource.py`
+
+### 테스트 시나리오
+
 ```python
+# tests/unit/domain/entities/test_resource.py
+
+from src.domain.entities.resource import Resource, ResourceContent
+
+class TestResource:
+    def test_resource_creation_with_required_fields(self):
+        """리소스 생성 - 필수 필드"""
+        resource = Resource(
+            uri="file:///test.txt",
+            name="Test File",
+        )
+        assert resource.uri == "file:///test.txt"
+        assert resource.name == "Test File"
+        assert resource.description == ""
+        assert resource.mime_type == ""
+
+    def test_resource_creation_with_all_fields(self):
+        """리소스 생성 - 모든 필드"""
+        resource = Resource(
+            uri="file:///test.txt",
+            name="Test File",
+            description="Test description",
+            mime_type="text/plain",
+        )
+        assert resource.mime_type == "text/plain"
+
+class TestResourceContent:
+    def test_text_content_creation(self):
+        """텍스트 콘텐츠 생성"""
+        content = ResourceContent(
+            uri="file:///test.txt",
+            text="Hello, World!",
+            mime_type="text/plain",
+        )
+        assert content.text == "Hello, World!"
+        assert content.blob is None
+
+    def test_blob_content_creation(self):
+        """바이너리 콘텐츠 생성"""
+        content = ResourceContent(
+            uri="file:///image.png",
+            blob=b"\x89PNG...",
+            mime_type="image/png",
+        )
+        assert content.blob == b"\x89PNG..."
+        assert content.text is None
+```
+
+### 구현
+
+```python
+# src/domain/entities/resource.py
+
+"""Resource 엔티티
+
+MCP Resource를 표현합니다. 순수 Python으로 작성됩니다.
+"""
+
 from dataclasses import dataclass
-from typing import Any
 
-@dataclass
+
+@dataclass(frozen=True, slots=True)
 class Resource:
-    """MCP Resource 메타데이터
+    """
+    MCP Resource 메타데이터
 
-    순수 Python으로 작성됩니다. 외부 라이브러리에 의존하지 않습니다.
+    MCP 서버가 제공하는 리소스의 메타 정보를 표현합니다.
 
     Attributes:
-        uri: 리소스 URI (예: "file:///path/to/file.txt")
-        name: 사람이 읽을 수 있는 이름
-        description: 설명 (선택)
+        uri: 리소스 URI (file://, http://, custom://)
+        name: 리소스 이름
+        description: 리소스 설명 (선택)
         mime_type: MIME 타입 (선택)
     """
+
     uri: str
     name: str
     description: str = ""
     mime_type: str = ""
 
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "uri": self.uri,
-            "name": self.name,
-            "description": self.description,
-            "mime_type": self.mime_type,
-        }
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ResourceContent:
-    """Resource 콘텐츠
+    """
+    MCP Resource 콘텐츠
+
+    리소스의 실제 내용을 표현합니다.
+    텍스트 또는 바이너리 중 하나만 가집니다.
 
     Attributes:
         uri: 리소스 URI
-        text: 텍스트 콘텐츠 (text/* MIME)
-        blob: 바이너리 콘텐츠 (base64, 다른 MIME)
-        mime_type: 콘텐츠 MIME 타입
+        text: 텍스트 콘텐츠 (text 리소스)
+        blob: 바이너리 콘텐츠 (blob 리소스)
+        mime_type: MIME 타입
     """
+
     uri: str
     text: str | None = None
-    blob: str | None = None  # base64 encoded
+    blob: bytes | None = None
     mime_type: str = ""
-
-    def to_dict(self) -> dict[str, Any]:
-        result = {"uri": self.uri, "mime_type": self.mime_type}
-        if self.text is not None:
-            result["text"] = self.text
-        if self.blob is not None:
-            result["blob"] = self.blob
-        return result
 ```
-
-**테스트 시나리오:**
-1. `Resource` 생성 - 필수 필드만
-2. `Resource` 생성 - 모든 필드
-3. `ResourceContent.to_dict()` - text 콘텐츠
-4. `ResourceContent.to_dict()` - blob 콘텐츠
 
 ---
 
-### SamplingRequest 엔티티 (상태머신)
+## Step 1.2: PromptTemplate 엔티티
+
+**파일:** `src/domain/entities/prompt_template.py`
+
+**테스트 먼저 작성:** `tests/unit/domain/entities/test_prompt_template.py`
+
+### 테스트 시나리오
+
+```python
+# tests/unit/domain/entities/test_prompt_template.py
+
+from src.domain.entities.prompt_template import PromptArgument, PromptTemplate
+
+class TestPromptArgument:
+    def test_required_argument_creation(self):
+        """필수 인자 생성"""
+        arg = PromptArgument(name="name", required=True, description="User name")
+        assert arg.name == "name"
+        assert arg.required is True
+        assert arg.description == "User name"
+
+    def test_optional_argument_creation(self):
+        """선택 인자 생성"""
+        arg = PromptArgument(name="age", required=False)
+        assert arg.required is False
+        assert arg.description == ""
+
+class TestPromptTemplate:
+    def test_template_without_arguments(self):
+        """인자 없는 템플릿 생성"""
+        template = PromptTemplate(
+            name="greeting",
+            description="Simple greeting",
+        )
+        assert template.name == "greeting"
+        assert template.arguments == []
+
+    def test_template_with_arguments(self):
+        """인자 있는 템플릿 생성"""
+        args = [
+            PromptArgument(name="name", required=True),
+            PromptArgument(name="age", required=False),
+        ]
+        template = PromptTemplate(
+            name="user_profile",
+            description="User profile prompt",
+            arguments=args,
+        )
+        assert len(template.arguments) == 2
+        assert template.arguments[0].name == "name"
+```
+
+### 구현
+
+```python
+# src/domain/entities/prompt_template.py
+
+"""PromptTemplate 엔티티
+
+MCP Prompt Template을 표현합니다. 순수 Python으로 작성됩니다.
+"""
+
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True, slots=True)
+class PromptArgument:
+    """
+    Prompt 템플릿 인자
+
+    Attributes:
+        name: 인자 이름
+        required: 필수 여부
+        description: 인자 설명
+    """
+
+    name: str
+    required: bool = True
+    description: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class PromptTemplate:
+    """
+    MCP Prompt 템플릿
+
+    MCP 서버가 제공하는 프롬프트 템플릿을 표현합니다.
+
+    Attributes:
+        name: 템플릿 이름
+        description: 템플릿 설명
+        arguments: 템플릿 인자 목록
+    """
+
+    name: str
+    description: str = ""
+    arguments: list[PromptArgument] = field(default_factory=list)
+```
+
+---
+
+## Step 1.3: SamplingRequest 엔티티
 
 **파일:** `src/domain/entities/sampling_request.py`
 
+**테스트 먼저 작성:** `tests/unit/domain/entities/test_sampling_request.py`
+
+### 테스트 시나리오
+
 ```python
+# tests/unit/domain/entities/test_sampling_request.py
+
+from datetime import datetime, timezone
+from src.domain.entities.sampling_request import SamplingRequest, SamplingStatus
+
+class TestSamplingRequest:
+    def test_create_pending_request(self):
+        """대기 중인 요청 생성"""
+        request = SamplingRequest(
+            id="req-123",
+            endpoint_id="mcp-server-1",
+            messages=[{"role": "user", "content": "test"}],
+            max_tokens=1024,
+        )
+        assert request.status == SamplingStatus.PENDING
+        assert request.llm_result is None
+        assert isinstance(request.created_at, datetime)
+
+    def test_create_with_optional_fields(self):
+        """선택 필드 포함 생성"""
+        request = SamplingRequest(
+            id="req-123",
+            endpoint_id="mcp-server-1",
+            messages=[{"role": "user", "content": "test"}],
+            model_preferences={"model": "gpt-4"},
+            system_prompt="You are helpful",
+            max_tokens=2048,
+        )
+        assert request.model_preferences == {"model": "gpt-4"}
+        assert request.system_prompt == "You are helpful"
+        assert request.max_tokens == 2048
+
+    def test_datetime_uses_timezone_aware(self):
+        """datetime이 timezone-aware인지 확인"""
+        request = SamplingRequest(
+            id="req-123",
+            endpoint_id="mcp-server-1",
+            messages=[],
+        )
+        assert request.created_at.tzinfo is not None
+
+    def test_rejection_reason_defaults_empty(self):
+        """거부 사유가 기본값으로 빈 문자열인지 확인"""
+        request = SamplingRequest(
+            id="req-123",
+            endpoint_id="mcp-server-1",
+            messages=[{"role": "user", "content": "test"}],
+        )
+        assert request.rejection_reason == ""
+```
+
+### 구현
+
+```python
+# src/domain/entities/sampling_request.py
+
+"""SamplingRequest 엔티티
+
+MCP Sampling 요청을 표현합니다. 순수 Python으로 작성됩니다.
+"""
+
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
 from typing import Any
-from src.domain.entities.enums import SamplingStatus
+
+
+class SamplingStatus(str, Enum):
+    """Sampling 요청 상태"""
+
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    TIMED_OUT = "timed_out"
+
 
 @dataclass
 class SamplingRequest:
-    """Sampling HITL 요청
+    """
+    MCP Sampling 요청
 
-    상태 전이: PENDING → APPROVED → COMPLETED
-                     └→ REJECTED
+    MCP 서버가 LLM 호출을 요청할 때 사용됩니다.
 
     Attributes:
-        id: 요청 고유 ID
-        endpoint_id: MCP 서버 엔드포인트 ID
-        messages: 샘플링할 메시지 목록
-        status: 현재 상태
+        id: 요청 ID
+        endpoint_id: MCP 엔드포인트 ID
+        messages: LLM 메시지 목록
+        model_preferences: 모델 선호도 (선택)
+        system_prompt: 시스템 프롬프트 (선택)
+        max_tokens: 최대 토큰 수
+        status: 요청 상태
         llm_result: LLM 응답 결과 (승인 후)
-        created_at: 생성 시각
+        rejection_reason: 거부 사유 (거부 시)
+        created_at: 생성 시각 (UTC)
     """
+
     id: str
     endpoint_id: str
     messages: list[dict[str, Any]]
     model_preferences: dict[str, Any] | None = None
     system_prompt: str | None = None
-    max_tokens: int = 1000
+    max_tokens: int = 1024
     status: SamplingStatus = SamplingStatus.PENDING
     llm_result: dict[str, Any] | None = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
-
-    def approve(self, llm_result: dict[str, Any]) -> None:
-        """요청 승인 및 결과 저장"""
-        if self.status != SamplingStatus.PENDING:
-            raise ValueError(f"Cannot approve request in status {self.status}")
-        self.status = SamplingStatus.COMPLETED
-        self.llm_result = llm_result
-
-    def reject(self) -> None:
-        """요청 거부"""
-        if self.status != SamplingStatus.PENDING:
-            raise ValueError(f"Cannot reject request in status {self.status}")
-        self.status = SamplingStatus.REJECTED
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
-            "endpoint_id": self.endpoint_id,
-            "messages": self.messages,
-            "status": self.status.value,
-            "created_at": self.created_at.isoformat(),
-        }
+    rejection_reason: str = ""
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 ```
-
-**테스트 시나리오:**
-1. 생성 시 기본 상태 PENDING
-2. `approve()` - PENDING → COMPLETED, llm_result 저장
-3. `reject()` - PENDING → REJECTED
-4. 잘못된 상태에서 approve/reject → ValueError
 
 ---
 
-## Step 1.2: Enums 추가
+## Step 1.4: ElicitationRequest 엔티티
 
-**파일:** `src/domain/entities/enums.py` (기존 파일에 추가)
+**파일:** `src/domain/entities/elicitation_request.py`
+
+**테스트 먼저 작성:** `tests/unit/domain/entities/test_elicitation_request.py`
+
+### 테스트 시나리오
 
 ```python
-class SamplingStatus(str, Enum):
-    """Sampling 요청 상태
+# tests/unit/domain/entities/test_elicitation_request.py
 
-    Attributes:
-        PENDING: 대기 중 (HITL 승인 필요)
-        COMPLETED: 완료 (LLM 응답 완료)
-        REJECTED: 거부됨
-    """
-    PENDING = "pending"
-    COMPLETED = "completed"
-    REJECTED = "rejected"
+from src.domain.entities.elicitation_request import (
+    ElicitationAction,
+    ElicitationRequest,
+    ElicitationStatus,
+)
+
+class TestElicitationRequest:
+    def test_create_pending_request(self):
+        """대기 중인 요청 생성"""
+        request = ElicitationRequest(
+            id="req-456",
+            endpoint_id="mcp-server-1",
+            message="Enter API key",
+            requested_schema={"type": "object", "properties": {"api_key": {"type": "string"}}},
+        )
+        assert request.status == ElicitationStatus.PENDING
+        assert request.action is None
+        assert request.content is None
+
+    def test_accept_action(self):
+        """accept 액션 설정"""
+        request = ElicitationRequest(
+            id="req-456",
+            endpoint_id="mcp-server-1",
+            message="Enter API key",
+            requested_schema={},
+            action=ElicitationAction.ACCEPT,
+            content={"api_key": "sk-xxx"},
+        )
+        assert request.action == ElicitationAction.ACCEPT
+        assert request.content == {"api_key": "sk-xxx"}
+
+    def test_decline_action(self):
+        """decline 액션 설정"""
+        request = ElicitationRequest(
+            id="req-456",
+            endpoint_id="mcp-server-1",
+            message="Enter API key",
+            requested_schema={},
+            action=ElicitationAction.DECLINE,
+        )
+        assert request.action == ElicitationAction.DECLINE
+```
+
+### 구현
+
+```python
+# src/domain/entities/elicitation_request.py
+
+"""ElicitationRequest 엔티티
+
+MCP Elicitation 요청을 표현합니다. 순수 Python으로 작성됩니다.
+"""
+
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any
+
 
 class ElicitationAction(str, Enum):
-    """Elicitation 응답 액션
+    """Elicitation 액션"""
 
-    Attributes:
-        ACCEPT: 요청 수락 (content 제공)
-        DECLINE: 요청 거부
-        CANCEL: 요청 취소
-    """
     ACCEPT = "accept"
     DECLINE = "decline"
     CANCEL = "cancel"
 
+
 class ElicitationStatus(str, Enum):
     """Elicitation 요청 상태"""
+
     PENDING = "pending"
     ACCEPTED = "accepted"
     DECLINED = "declined"
     CANCELLED = "cancelled"
+    TIMED_OUT = "timed_out"
+
+
+@dataclass
+class ElicitationRequest:
+    """
+    MCP Elicitation 요청
+
+    MCP 서버가 사용자 입력을 요청할 때 사용됩니다.
+
+    Attributes:
+        id: 요청 ID
+        endpoint_id: MCP 엔드포인트 ID
+        message: 사용자에게 보여줄 메시지
+        requested_schema: JSON Schema (입력 구조)
+        action: 사용자 액션 (accept/decline/cancel)
+        content: 사용자 입력 내용 (action=accept일 때)
+        status: 요청 상태
+        created_at: 생성 시각 (UTC)
+    """
+
+    id: str
+    endpoint_id: str
+    message: str
+    requested_schema: dict[str, Any]
+    action: ElicitationAction | None = None
+    content: dict[str, Any] | None = None
+    status: ElicitationStatus = ElicitationStatus.PENDING
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 ```
 
 ---
 
-## Step 1.3: Exceptions 추가
+## Step 1.5: Enums 확인
 
-**파일:** `src/domain/exceptions.py` (기존 파일에 추가)
+**파일:** `src/domain/entities/enums.py`
 
-기존 패턴을 따라 ErrorCode와 함께 정의합니다.
+**Note:** SamplingStatus, ElicitationStatus, ElicitationAction은 각 엔티티 파일에 정의되어 있습니다. 기존 `enums.py`에는 MessageRole, EndpointType, EndpointStatus가 있으며 그대로 유지합니다.
 
-먼저 `src/domain/constants.py`에 ErrorCode 추가:
+---
+
+## Step 1.6: Exceptions 추가
+
+**파일:** `src/domain/exceptions.py` (기존 파일 확장)
+
+### ErrorCode 추가
 
 ```python
-# src/domain/constants.py (기존 파일에 추가)
+# src/domain/constants.py의 ErrorCode 클래스에 추가
+
 class ErrorCode:
     # ... 기존 코드 ...
 
-    # MCP SDK Track
-    RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
-    PROMPT_NOT_FOUND = "PROMPT_NOT_FOUND"
-    SAMPLING_NOT_FOUND = "SAMPLING_NOT_FOUND"
-    ELICITATION_NOT_FOUND = "ELICITATION_NOT_FOUND"
-    HITL_TIMEOUT = "HITL_TIMEOUT"
+    # HITL 관련 에러
+    HITL_TIMEOUT = "HitlTimeoutError"
+    HITL_REQUEST_NOT_FOUND = "HitlRequestNotFoundError"
+
+    # Resource/Prompt 관련 에러
+    RESOURCE_NOT_FOUND = "ResourceNotFoundError"
+    PROMPT_NOT_FOUND = "PromptNotFoundError"
 ```
 
+### Exception 클래스 추가
+
 ```python
-# src/domain/exceptions.py (기존 파일에 추가)
+# src/domain/exceptions.py에 추가
 
 # ============================================================
-# MCP SDK Track 관련 예외
+# HITL 관련 예외
 # ============================================================
+
+
+class HitlTimeoutError(DomainException):
+    """HITL 요청 타임아웃"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.HITL_TIMEOUT)
+
+
+class HitlRequestNotFoundError(DomainException):
+    """HITL 요청을 찾을 수 없음"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.HITL_REQUEST_NOT_FOUND)
+
+
+# ============================================================
+# Resource/Prompt 관련 예외
+# ============================================================
+
 
 class ResourceNotFoundError(DomainException):
     """리소스를 찾을 수 없음"""
@@ -239,38 +530,132 @@ class PromptNotFoundError(DomainException):
 
     def __init__(self, message: str):
         super().__init__(message, code=ErrorCode.PROMPT_NOT_FOUND)
+```
 
+### 테스트 시나리오
 
-class SamplingNotFoundError(DomainException):
-    """Sampling 요청을 찾을 수 없음"""
+```python
+# tests/unit/domain/test_exceptions.py (기존 파일 확장)
 
-    def __init__(self, message: str):
-        super().__init__(message, code=ErrorCode.SAMPLING_NOT_FOUND)
+from src.domain.exceptions import (
+    HitlTimeoutError,
+    HitlRequestNotFoundError,
+    ResourceNotFoundError,
+    PromptNotFoundError,
+)
+from src.domain.constants import ErrorCode
 
+class TestHitlExceptions:
+    def test_hitl_timeout_error(self):
+        """HITL 타임아웃 에러"""
+        error = HitlTimeoutError("Request timed out")
+        assert error.message == "Request timed out"
+        assert error.code == ErrorCode.HITL_TIMEOUT
 
-class ElicitationNotFoundError(DomainException):
-    """Elicitation 요청을 찾을 수 없음"""
+    def test_hitl_request_not_found_error(self):
+        """HITL 요청 미발견 에러"""
+        error = HitlRequestNotFoundError("Request not found")
+        assert error.code == ErrorCode.HITL_REQUEST_NOT_FOUND
 
-    def __init__(self, message: str):
-        super().__init__(message, code=ErrorCode.ELICITATION_NOT_FOUND)
+class TestResourceExceptions:
+    def test_resource_not_found_error(self):
+        """리소스 미발견 에러"""
+        error = ResourceNotFoundError("Resource not found")
+        assert error.code == ErrorCode.RESOURCE_NOT_FOUND
 
-
-class HitlTimeoutError(DomainException):
-    """HITL 승인 대기 시간 초과"""
-
-    def __init__(self, message: str):
-        super().__init__(message, code=ErrorCode.HITL_TIMEOUT)
+    def test_prompt_not_found_error(self):
+        """프롬프트 미발견 에러"""
+        error = PromptNotFoundError("Prompt not found")
+        assert error.code == ErrorCode.PROMPT_NOT_FOUND
 ```
 
 ---
 
-## 테스트 실행
+## Step 1.7: __init__.py 엔티티 Export (M3 수정)
+
+**파일:** `src/domain/entities/__init__.py`
+
+### 문제
+
+현재 `__init__.py`는 `StreamChunk`만 export합니다. 새로 추가된 엔티티들(Resource, PromptTemplate, SamplingRequest, ElicitationRequest)이 누락되어 있습니다.
+
+### 수정
+
+```python
+"""Domain Entities - 비즈니스 개념 모델"""
+
+from .elicitation_request import ElicitationRequest, ElicitationAction, ElicitationStatus
+from .prompt_template import PromptTemplate, PromptArgument
+from .resource import Resource, ResourceContent
+from .sampling_request import SamplingRequest, SamplingStatus
+from .stream_chunk import StreamChunk
+
+__all__ = [
+    "ElicitationRequest",
+    "ElicitationAction",
+    "ElicitationStatus",
+    "PromptArgument",
+    "PromptTemplate",
+    "Resource",
+    "ResourceContent",
+    "SamplingRequest",
+    "SamplingStatus",
+    "StreamChunk",
+]
+```
+
+### 테스트
+
+이 Step은 테스트가 필요 없습니다 (import 구조 변경).
+
+---
+
+## Verification
 
 ```bash
-# Phase 1 테스트만 실행
-pytest tests/unit/domain/entities/test_resource.py \
-       tests/unit/domain/entities/test_prompt_template.py \
-       tests/unit/domain/entities/test_sampling_request.py \
-       tests/unit/domain/entities/test_elicitation_request.py \
-       -v
+# 모든 엔티티 테스트
+pytest tests/unit/domain/entities/ -v
+
+# 예외 테스트
+pytest tests/unit/domain/test_exceptions.py -v
 ```
+
+---
+
+## Step 1.8: Documentation Update
+
+**목표:** Phase 1에서 추가된 Domain Entity 문서화
+
+**문서화 항목:**
+
+| 작업 | 대상 파일 | 유형 | 내용 |
+|------|----------|------|------|
+| Modify | docs/developers/architecture/layer/core/README.md | Architecture | SDK Track 엔티티 섹션 추가 (Resource, PromptTemplate, SamplingRequest, ElicitationRequest) |
+| Modify | docs/developers/architecture/layer/core/README.md | Architecture | HITL 엔티티 패턴 설명 (Signal 기반 상태 관리 asyncio.Event) |
+| Modify | tests/docs/STRUCTURE.md | Test Documentation | HITL 엔티티 테스트 전략 추가 (TTL, timeout 테스트) |
+
+**주의사항:**
+- 엔티티 다이어그램은 포함하지 않음 (코드 우선 접근)
+- HITL Signal 패턴은 Phase 3 Service 문서화 시 상세 설명
+
+---
+
+## Checklist
+
+- [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
+- [ ] Step 1.1: Resource 엔티티 (TDD)
+- [ ] Step 1.2: PromptTemplate 엔티티 (TDD)
+- [ ] Step 1.3: SamplingRequest 엔티티 (TDD, datetime.now(timezone.utc) 사용)
+- [ ] Step 1.4: ElicitationRequest 엔티티 (TDD)
+- [ ] Step 1.5: Enums 확인 (각 엔티티 파일에 정의됨)
+- [ ] Step 1.6: Exceptions 추가 (TDD)
+- [ ] Step 1.7: __init__.py 엔티티 Export (M3 수정)
+- [ ] Step 1.8: Documentation Update (Architecture + Test Docs)
+- [ ] 전체 테스트 통과 확인
+- [ ] **Phase 완료**: Status 변경 (🔄 → ✅)
+- [ ] Git 커밋: `docs: complete phase N - {phase_name}`
+
+---
+
+*Last Updated: 2026-02-07*
+*Principle: TDD (Red → Green → Refactor), Domain Purity (순수 Python)*

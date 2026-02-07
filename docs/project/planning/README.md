@@ -84,6 +84,29 @@ Phase 7: UI                    (Extension)
 - TDD Red-Green-Refactor 단위
 - 번호: `N.1`, `N.2`, `N.3` (Phase별로 독립)
 
+### 4. Playground-First Testing (Plan 07+)
+
+HTTP API/SSE 등 Playground로 테스트 가능한 기능은 **백엔드 구현과 동시에** Playground UI + E2E 테스트를 작성합니다.
+
+**적용 기준:**
+- ✅ **적용**: HTTP Routes (Phase 6+), SSE Events (Phase 7+) - 즉시 피드백 가능
+- ❌ **제외**: Domain 엔티티, Port, Service (순수 Python, 단위/통합 테스트로 검증)
+- ❌ **제외**: 순수 백엔드 기능 (chaos engineering, retry logic 등)
+- ⏸️ **연기**: Chrome Extension UI (Production Preparation Phase로 연기)
+
+**구현 순서:**
+1. Backend 구현 (TDD)
+2. Playground UI 추가 (HTML/JS)
+3. Playground E2E 테스트 작성 (Playwright)
+4. 회귀 테스트 즉시 실행
+
+**장점:**
+- 즉각적인 피드백 (Extension 빌드 불필요)
+- 빠른 회귀 테스트 (Playwright E2E < 10초)
+- API 계약 조기 검증
+
+**예시:** Plan 07 Phase 6에서 Resources/Prompts/Sampling/Elicitation API 구현 시, Playground 탭 UI와 E2E 테스트를 함께 작성하여 즉시 검증
+
 ---
 
 ## 📊 Plan Status
@@ -102,33 +125,11 @@ Phase 7: UI                    (Extension)
 planned/ → active/ → completed/
 ```
 
-**Plan 완료 시:**
+**Phase 완료 시:**
 1. `active/NN_plan/` → `completed/NN_plan/` 이동
 2. `completed/README.md` 테이블에 완료 Plan 추가
 3. `active/README.md` 다음 Plan 정보로 업데이트
 4. Git 커밋: `docs: complete plan NN`
-
-**Phase 완료 시:**
-1. Plan README.md의 Implementation Phases 테이블에서 Status를 🔄 → ✅로 변경
-2. Git 커밋: `docs: complete phase N - {phase_name}`
-
----
-
-## 📝 Template Usage
-
-새 Plan 시작 시 [TEMPLATE.md](TEMPLATE.md)를 사용하세요.
-
-**사용 방법:**
-1. TEMPLATE.md를 `active/NN_descriptive_name/README.md`로 복사
-2. `{placeholder}` 값을 실제 값으로 치환
-3. Implementation Phases 테이블 업데이트 (Phase 수, 이름, 레이어)
-4. Architecture Diagram 및 Features 작성
-
-**Phase Progress Tracking:**
-- 각 Phase의 Status는 Implementation Phases 테이블에서 관리
-- Phase 시작: ⏸️ → 🔄
-- Phase 완료: 🔄 → ✅
-- 항상 1개의 Phase만 🔄 상태 유지
 
 ---
 

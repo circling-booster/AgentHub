@@ -21,15 +21,12 @@
       "Bash(tree:*)",
       "Bash(git ls-tree:*)",
       "Bash(wc:*)",
-      "Bash(npm install)",
-      "Bash(npm run test:coverage:*)",
-      "Bash(powershell -Command \"cd c:\\\\Users\\\\sungb\\\\Documents\\\\GitHub\\\\AgentHub; $env:DEV_MODE=''true''; .\\\\.venv\\\\Scripts\\\\pytest ''tests/e2e/test_playground.py::TestPlaygroundChatStreaming'' ''tests/e2e/test_playground.py::TestPlaygroundMcpManagement::test_mcp_server_registration_flow'' -v -m e2e_playwright --timeout=120 -s 2>&1\")",
-      "Bash(.venv\\\\Scripts\\\\python.exe -m pytest:*)",
-      "Bash(.venvScriptspython.exe -m pytest tests/e2e/test_playground.py -m e2e_playwright -v --tb=short)",
-      "Bash(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest:*)",
-      "Bash(powershell -Command \".\\\\.venv\\\\Scripts\\\\python.exe -m pytest tests/e2e/test_playground.py -m e2e_playwright -v --tb=short\")",
-      "Bash(xargs:*)",
-      "Bash(.venv/Scripts/python.exe -m pytest:*)"
+      "WebFetch(domain:github.com)",
+      "Bash(gh api:*)",
+      "Bash(powershell:*)",
+      "Bash(bash:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
