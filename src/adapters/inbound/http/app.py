@@ -22,6 +22,7 @@ from .routes import (
     health,
     mcp,
     oauth,
+    resources,
     usage,
     workflow,
 )
@@ -212,6 +213,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(oauth.router)  # OAuth 2.1
     app.include_router(mcp.router)
+    app.include_router(resources.router)  # SDK Track: Resources
     app.include_router(a2a.router)
     app.include_router(a2a_card.router)  # A2A Agent Card
     app.include_router(chat.router)

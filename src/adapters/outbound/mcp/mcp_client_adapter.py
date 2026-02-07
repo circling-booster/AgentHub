@@ -126,8 +126,17 @@ class McpClientAdapter(McpClientPort):
 
     async def read_resource(self, endpoint_id: str, uri: str) -> ResourceContent:
         """리소스 콘텐츠 읽기"""
+        from mcp.shared.exceptions import McpError
+
+        from src.domain.exceptions import ResourceNotFoundError
+
         session = self._get_session(endpoint_id)
-        result = await session.read_resource(uri)
+        try:
+            result = await session.read_resource(uri)
+        except McpError as e:
+            # MCP SDK 예외 → Domain 예외 변환
+            raise ResourceNotFoundError(f"Resource not found: {uri}") from e
+
         # result.contents[0]이 TextResourceContents 또는 BlobResourceContents
         content = result.contents[0]
         if hasattr(content, "text"):

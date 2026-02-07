@@ -114,14 +114,18 @@ async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]
     # 테스트용 토큰 주입
     token_provider.reset(TEST_TOKEN)
 
+    # Phase 6+: Dual-Track 활성화 (환경변수로 설정 - Container 생성 전)
+    os.environ["MCP__ENABLE_DUAL_TRACK"] = "true"
+
     # FastAPI 앱 생성
     app = create_app()
     container = app.container
 
     # Container 재설정 (임시 데이터 디렉토리 + LLM 테스트용 모델)
     container.reset_singletons()
-    container.settings().storage.data_dir = str(temp_data_dir)
-    container.settings().llm.default_model = "openai/gpt-4o-mini"
+    settings = container.settings()
+    settings.storage.data_dir = str(temp_data_dir)
+    settings.llm.default_model = "openai/gpt-4o-mini"
 
     # CRITICAL FIX: db_path가 올바른 temp_data_dir을 가리키도록 storage를 재생성
     # Callable provider는 lazy evaluation이 아니므로 명시적으로 오버라이드 필요
@@ -166,3 +170,6 @@ async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]
     container.usage_storage.reset_override()
     container.reset_singletons()
     container.unwire()
+
+    # Phase 6+: Dual-Track 환경변수 cleanup
+    os.environ.pop("MCP__ENABLE_DUAL_TRACK", None)

@@ -6,6 +6,7 @@
 import {
     healthCheck,
     registerMcpServer, getMcpServers, deleteMcpServer, getMcpTools,
+    listResources, readResource,
     registerA2aAgent, getA2aAgents, deleteA2aAgent,
     getChatStreamUrl,
     createConversation, getConversations, deleteConversation, getToolCalls,
@@ -160,6 +161,64 @@ export function initMcpHandlers() {
     });
 }
 
+export function initResourcesHandlers() {
+    const endpointSelect = document.querySelector("[data-testid='resources-endpoint-select']");
+    const listBtn = document.querySelector("[data-testid='resources-list-btn']");
+    const resourcesList = document.querySelector("[data-testid='resources-list']");
+    const resourceContent = document.querySelector("[data-testid='resource-content']");
+
+    // Populate endpoint select when tab is activated
+    const resourcesTab = document.querySelector("[data-testid='tab-resources']");
+    resourcesTab.addEventListener("click", async () => {
+        try {
+            const servers = await getMcpServers();
+            endpointSelect.innerHTML = servers.map(s =>
+                `<option value="${s.id}">${s.name}</option>`
+            ).join('');
+        } catch (e) {
+            console.error("Failed to load endpoints:", e);
+        }
+    });
+
+    // List resources button handler
+    listBtn.addEventListener("click", async () => {
+        const endpointId = endpointSelect.value;
+        if (!endpointId) return;
+
+        try {
+            const data = await listResources(endpointId);
+            resourcesList.innerHTML = data.resources.map(r => `
+                <div class="resource-card" data-uri="${r.uri}">
+                    <h4>${r.name}</h4>
+                    <p>${r.description}</p>
+                    <p><small>${r.mime_type || 'unknown'}</small></p>
+                    <button data-testid="resource-read-btn" data-uri="${r.uri}">Read</button>
+                </div>
+            `).join('');
+
+            // Add click handlers for read buttons
+            resourcesList.querySelectorAll('[data-testid="resource-read-btn"]').forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    const uri = e.target.getAttribute("data-uri");
+                    try {
+                        const content = await readResource(endpointId, uri);
+                        resourceContent.innerHTML = `
+                            <h3>Resource: ${uri}</h3>
+                            <p><strong>MIME Type:</strong> ${content.mime_type || 'unknown'}</p>
+                            ${content.text ? `<pre>${content.text}</pre>` : ''}
+                            ${content.blob ? `<p>Binary data (Base64): ${content.blob.substring(0, 50)}...</p>` : ''}
+                        `;
+                    } catch (e) {
+                        resourceContent.innerHTML = `<p class="error">Failed to read resource: ${e.message}</p>`;
+                    }
+                });
+            });
+        } catch (e) {
+            resourcesList.innerHTML = `<p class="error">Failed to list resources: ${e.message}</p>`;
+        }
+    });
+}
+
 export function initA2aHandlers() {
     const registerBtn = document.querySelector("[data-testid='a2a-register-btn']");
     const agentList = document.querySelector("[data-testid='a2a-agent-list']");
@@ -301,6 +360,7 @@ if (typeof document !== "undefined") {
         initTabNavigation();
         initChatHandlers();
         initMcpHandlers();
+        initResourcesHandlers();
         initA2aHandlers();
         initConversationsHandlers();
         initUsageHandlers();

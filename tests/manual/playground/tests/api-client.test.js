@@ -390,4 +390,82 @@ describe("API Client", () => {
             expect(url).toContain("name=my-workflow");
         });
     });
+
+    // Resources API (Step 6.1: TDD Red Phase)
+    describe("listResources", () => {
+        test("Red: fetches resource list for endpoint", async () => {
+            // Given: Mock fetch response
+            global.fetch.mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    resources: [
+                        {
+                            uri: "file:///test.txt",
+                            name: "test.txt",
+                            description: "Test resource",
+                            mime_type: "text/plain"
+                        }
+                    ]
+                })
+            });
+
+            // When: listResources 호출 (아직 구현 안됨!)
+            const { listResources } = await import("../js/api-client.js");
+            const result = await listResources("endpoint-1");
+
+            // Then: GET 요청 및 응답 확인
+            expect(global.fetch).toHaveBeenCalledWith(
+                `${API_BASE}/api/mcp/servers/endpoint-1/resources`
+            );
+            expect(result.resources).toHaveLength(1);
+            expect(result.resources[0].uri).toBe("file:///test.txt");
+        });
+    });
+
+    describe("readResource", () => {
+        test("Red: fetches resource content", async () => {
+            // Given: Mock fetch response
+            global.fetch.mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    uri: "file:///test.txt",
+                    mime_type: "text/plain",
+                    text: "Hello World",
+                    blob: null
+                })
+            });
+
+            // When: readResource 호출 (아직 구현 안됨!)
+            const { readResource } = await import("../js/api-client.js");
+            const result = await readResource("endpoint-1", "file:///test.txt");
+
+            // Then: GET 요청 및 응답 확인 (URI는 URL 인코딩됨)
+            expect(global.fetch).toHaveBeenCalledWith(
+                `${API_BASE}/api/mcp/servers/endpoint-1/resources/file%3A%2F%2F%2Ftest.txt`
+            );
+            expect(result.text).toBe("Hello World");
+            expect(result.blob).toBeNull();
+        });
+
+        test("Red: handles blob resources", async () => {
+            // Given: Mock fetch response with blob (Base64)
+            global.fetch.mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    uri: "file:///image.png",
+                    mime_type: "image/png",
+                    text: null,
+                    blob: "iVBORw0KGgoAAAANSUhEUgAAAAUA..." // Base64
+                })
+            });
+
+            // When: readResource 호출
+            const { readResource } = await import("../js/api-client.js");
+            const result = await readResource("endpoint-1", "file:///image.png");
+
+            // Then: blob 데이터 확인
+            expect(result.blob).toBe("iVBORw0KGgoAAAANSUhEUgAAAAUA...");
+            expect(result.text).toBeNull();
+        });
+    });
 });

@@ -20,6 +20,7 @@
     <nav class="tab-nav">
         <button class="tab-btn active" data-tab="chat" data-testid="tab-chat">Chat</button>
         <button class="tab-btn" data-tab="mcp" data-testid="tab-mcp">MCP</button>
+        <button class="tab-btn" data-tab="resources" data-testid="tab-resources">Resources</button>
         <button class="tab-btn" data-tab="a2a" data-testid="tab-a2a">A2A</button>
         <button class="tab-btn" data-tab="conversations" data-testid="tab-conversations">Conversations</button>
         <button class="tab-btn" data-tab="usage" data-testid="tab-usage">Usage</button>
@@ -61,6 +62,18 @@
             <div class="server-list" data-testid="mcp-server-list">
                 <!-- 서버 카드는 JS로 동적 생성 (Phase 5) -->
             </div>
+        </div>
+
+        <!-- Resources Tab (Step 6.1) -->
+        <div id="resources-tab" class="tab-pane">
+            <h2>MCP Resources</h2>
+            <div class="form-group">
+                <label>MCP Server:</label>
+                <select data-testid="resources-endpoint-select"></select>
+                <button data-testid="resources-list-btn">List Resources</button>
+            </div>
+            <div class="resources-list" data-testid="resources-list"></div>
+            <div class="resource-content" data-testid="resource-content"></div>
         </div>
 
         <!-- A2A Tab -->

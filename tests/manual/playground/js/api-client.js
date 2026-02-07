@@ -153,3 +153,25 @@ export function getWorkflowStreamUrl(name, steps) {
     });
     return `${API_BASE}/api/workflows/execute?${params.toString()}`;
 }
+
+// Resources API (Step 6.1: TDD Green Phase)
+/**
+ * List resources for an MCP endpoint
+ * @param {string} endpointId - MCP server endpoint ID
+ * @returns {Promise<{resources: Array}>} Resources list
+ */
+export async function listResources(endpointId) {
+    return fetchGet(`${API_BASE}/api/mcp/servers/${endpointId}/resources`);
+}
+
+/**
+ * Read resource content
+ * @param {string} endpointId - MCP server endpoint ID
+ * @param {string} uri - Resource URI
+ * @returns {Promise<{uri: string, mime_type: string, text: string|null, blob: string|null}>} Resource content
+ */
+export async function readResource(endpointId, uri) {
+    // URI를 URL 인코딩 (path parameter로 전달)
+    const encodedUri = encodeURIComponent(uri);
+    return fetchGet(`${API_BASE}/api/mcp/servers/${endpointId}/resources/${encodedUri}`);
+}
