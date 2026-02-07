@@ -164,13 +164,23 @@ class McpClientAdapter(McpClientPort):
 
     async def get_prompt(self, endpoint_id: str, name: str, arguments: dict | None) -> str:
         """프롬프트 렌더링"""
+        from mcp.shared.exceptions import McpError
+
+        from src.domain.exceptions import PromptNotFoundError
+
         session = self._get_session(endpoint_id)
-        result = await session.get_prompt(name, arguments or {})
-        # 메시지들을 결합하여 반환
-        return "\n".join(
-            m.content.text if hasattr(m.content, "text") else str(m.content)
-            for m in result.messages
-        )
+        try:
+            result = await session.get_prompt(name, arguments or {})
+            # 메시지들을 결합하여 반환
+            return "\n".join(
+                m.content.text if hasattr(m.content, "text") else str(m.content)
+                for m in result.messages
+            )
+        except McpError as e:
+            # "Unknown prompt" 에러를 Domain 예외로 변환
+            if "Unknown prompt" in str(e):
+                raise PromptNotFoundError(f"Prompt not found: {name}") from e
+            raise
 
     def _get_session(self, endpoint_id: str) -> ClientSession:
         """세션 조회 (없으면 예외)"""

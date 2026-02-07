@@ -14,6 +14,9 @@
             <span>●</span> <span id="health-status">Checking...</span>
             <span data-testid="health-error" style="display: none;"></span>
         </div>
+        <div class="hitl-sse-indicator" data-testid="hitl-sse-indicator" data-status="disconnected">
+            <span>●</span> <span id="hitl-sse-status">HITL SSE: Disconnected</span>
+        </div>
     </header>
 
     <!-- Tab Navigation -->
@@ -21,6 +24,9 @@
         <button class="tab-btn active" data-tab="chat" data-testid="tab-chat">Chat</button>
         <button class="tab-btn" data-tab="mcp" data-testid="tab-mcp">MCP</button>
         <button class="tab-btn" data-tab="resources" data-testid="tab-resources">Resources</button>
+        <button class="tab-btn" data-tab="prompts" data-testid="tab-prompts">Prompts</button>
+        <button class="tab-btn" data-tab="sampling" data-testid="tab-sampling">Sampling</button>
+        <button class="tab-btn" data-tab="elicitation" data-testid="tab-elicitation">Elicitation</button>
         <button class="tab-btn" data-tab="a2a" data-testid="tab-a2a">A2A</button>
         <button class="tab-btn" data-tab="conversations" data-testid="tab-conversations">Conversations</button>
         <button class="tab-btn" data-tab="usage" data-testid="tab-usage">Usage</button>
@@ -74,6 +80,40 @@
             </div>
             <div class="resources-list" data-testid="resources-list"></div>
             <div class="resource-content" data-testid="resource-content"></div>
+        </div>
+
+        <!-- Prompts Tab (Step 6.2) -->
+        <div id="prompts-tab" class="tab-pane">
+            <h2>MCP Prompts</h2>
+            <div class="form-group">
+                <label>MCP Server:</label>
+                <select data-testid="prompts-endpoint-select"></select>
+                <button data-testid="prompts-list-btn">List Prompts</button>
+            </div>
+            <div class="prompts-list" data-testid="prompts-list"></div>
+            <div class="prompt-content" data-testid="prompt-content"></div>
+        </div>
+
+        <!-- Sampling Tab (Step 6.3) -->
+        <div id="sampling-tab" class="tab-pane">
+            <h2>Sampling HITL (Method C)</h2>
+            <div class="form-group">
+                <button data-testid="sampling-refresh-btn">Refresh Requests</button>
+            </div>
+            <div class="sampling-requests" data-testid="sampling-requests">
+                <!-- Sampling 요청 목록은 JS로 동적 생성 -->
+            </div>
+        </div>
+
+        <!-- Elicitation Tab (Step 6.4) -->
+        <div id="elicitation-tab" class="tab-pane">
+            <h2>Elicitation HITL</h2>
+            <div class="form-group">
+                <button data-testid="elicitation-refresh-btn">Refresh Requests</button>
+            </div>
+            <div class="elicitation-requests" data-testid="elicitation-requests">
+                <!-- Elicitation 요청 목록은 JS로 동적 생성 -->
+            </div>
         </div>
 
         <!-- A2A Tab -->

@@ -41,8 +41,38 @@ pytest \--cov=src \--cov-report=html
 \# 병렬 실행 (pytest-xdist)  
 pytest \-n auto
 
-\# 테스트 수 확인 (실행 없이)  
+\# 테스트 수 확인 (실행 없이)
 pytest \--co \-q
+
+### **Playground E2E Tests**
+
+\# Playground E2E 테스트 전체 실행
+pytest tests/e2e/test\_playground.py \-v \-m e2e\_playwright
+
+\# 특정 테스트 클래스만 실행
+pytest tests/e2e/test\_playground.py::TestPlaygroundResources \-v \-m e2e\_playwright
+
+\# Trace 활성화 (디버깅)
+pytest tests/e2e/test\_playground.py \--tracing=on \-m e2e\_playwright
+
+\# 헤드리스 모드 비활성화 (브라우저 UI 표시)
+pytest tests/e2e/test\_playground.py \--headed \-m e2e\_playwright
+
+**마커:**
+- `@pytest.mark.e2e_playwright` \- Playwright E2E 테스트 (기본 제외)
+
+**Fixtures:**
+- `playwright_server` \- Backend server (localhost:8000)
+- `playground_server` \- Playground UI server (localhost:9001)
+- `browser`, `page` \- Playwright browser context
+
+**실행 전 확인:**
+1. Backend server 중지 (테스트가 자체 서버 시작)
+2. `npx playwright install` 실행 (최초 1회)
+
+**Related:**
+- [Playground README](../../manual/playground/README.md) \- Playground UI 사용 가이드
+- [SDK Track API](../../../docs/developers/architecture/api/sdk-track.md) \- API 엔드포인트
 
 ## **🔄 Regression Prevention Strategy**
 

@@ -48,6 +48,26 @@ header h1 {
     color: #6c757d;
 }
 
+/* HITL SSE Indicator (Step 6.5a) */
+.hitl-sse-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.hitl-sse-indicator[data-status="connected"] span:first-child {
+    color: #28a745;
+}
+
+.hitl-sse-indicator[data-status="disconnected"] span:first-child {
+    color: #6c757d;
+}
+
+.hitl-sse-indicator[data-status="error"] span:first-child {
+    color: #dc3545;
+}
+
 /* Tab Navigation */
 .tab-nav {
     display: flex;

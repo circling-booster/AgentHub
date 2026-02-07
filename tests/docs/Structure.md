@@ -42,14 +42,28 @@ tests/
 │   ├── test\_concurrent\_requests.py \# 동시성 테스트  
 │   └── test\_mcp\_failures.py       \# MCP 장애 시나리오  
 │  
-├── e2e/                           \# E2E 테스트 (Full Stack)  
-│   ├── conftest.py                \# 🔶 E2E fixtures (Playwright)  
-│   ├── test\_extension\_server.py  \# TestClient 기반 E2E  
-│   └── test\_playwright\_extension.py  \# Full Browser E2E  
-│  
-└── fixtures/                      \# 테스트용 fixture 서버  
-    └── a2a\_agents/  
-        ├── echo\_agent.py          \# Echo A2A agent  
+├── e2e/                           \# E2E 테스트 (Full Stack)
+│   ├── conftest.py                \# 🔶 E2E fixtures (Playwright)
+│   ├── test\_extension\_server.py  \# TestClient 기반 E2E
+│   ├── test\_playwright\_extension.py  \# Full Browser E2E
+│   └── test\_playground.py        \# Playground E2E (Playwright, @pytest.mark.e2e\_playwright)
+│
+├── manual/                        \# Manual Testing (Phase 6+)
+│   └── playground/                \# Playground-First Testing (ADR-T07)
+│       ├── index.html             \# Main UI (Tabs \+ Token Auth)
+│       ├── package.json           \# Jest \+ Playwright dependencies
+│       ├── css/styles.css         \# Tailwind-inspired styles
+│       ├── js/                    \# JavaScript modules
+│       │   ├── main.js            \# Tab switching \+ initialization
+│       │   ├── api-client.js      \# HTTP API client
+│       │   ├── sse-handler.js     \# SSE EventSource handler
+│       │   └── ui-components.js   \# UI update helpers
+│       ├── tests/\*.test.js       \# Jest unit tests (optional)
+│       └── coverage/              \# Jest coverage reports
+│
+└── fixtures/                      \# 테스트용 fixture 서버
+    └── a2a\_agents/
+        ├── echo\_agent.py          \# Echo A2A agent
         └── math\_agent.py          \# Math A2A agent (ADK LlmAgent)
 
 ## **🔧 Fixture Hierarchy**

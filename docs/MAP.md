@@ -26,8 +26,8 @@
 ### [developers/](developers/) - 개발자 가이드
 코드베이스 이해, 기여, 확장을 위한 문서
 
-- **architecture/** - 시스템 아키텍처 (헥사고날, 도메인 모델, Extension 구조, Dual-Track 통합)
-- **testing/** - 테스트 전략 (TDD, Fake Adapter 패턴)
+- **architecture/** - 시스템 아키텍처 (헥사고날, 도메인 모델, Extension 구조, Dual-Track 통합, API 문서)
+- **testing/** - 테스트 전략 (TDD, Fake Adapter 패턴, Playground-First Testing)
 - **workflows/** - 개발 워크플로우 (Git, CI/CD, 자동화)
 - **guides/** - 구현 가이드 (Entity/Service/Adapter 작성, 표준 통합, Lifecycle 관리)
 
@@ -65,6 +65,9 @@
 | 아키텍처 이해 | [developers/architecture/](developers/architecture/) |
 | Dual-Track 통합 (Phase 7) | [developers/architecture/integrations/dual-track.md](developers/architecture/integrations/dual-track.md) |
 | Method C Signal Pattern (HITL) | [developers/architecture/layer/patterns/method-c-signal.md](developers/architecture/layer/patterns/method-c-signal.md) |
+| SDK Track API (Phase 6) | [developers/architecture/api/sdk-track.md](developers/architecture/api/sdk-track.md) |
+| HITL SSE Events (Phase 6) | [developers/architecture/api/hitl-sse.md](developers/architecture/api/hitl-sse.md) |
+| Playground Testing (Phase 6+) | [../tests/manual/playground/README.md](../tests/manual/playground/README.md) |
 | 테스트 작성 | [developers/testing/](developers/testing/) |
 | 배포/설정 | [operators/deployment/](operators/deployment/) |
 | 현재 작업 (Plan 07) | [project/planning/active/](project/planning/active/) |

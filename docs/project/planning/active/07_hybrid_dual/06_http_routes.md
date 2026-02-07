@@ -913,19 +913,19 @@ pytest --cov=src --cov-fail-under=80 -q
 
 ## Checklist
 
-- [ ] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
-- [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
-- [ ] Step 6.1: Resources API + Playground Tab (TDD, E2E)
-- [ ] Step 6.2: Prompts API + Playground Tab (TDD, E2E)
-- [ ] Step 6.3: Sampling API (Method C) + Playground Tab (TDD, E2E)
-- [ ] Step 6.4: Elicitation API + Playground Tab (TDD, E2E)
-- [ ] Step 6.5: MCP Apps Raw Response (iframe sandbox)
-- [ ] Step 6.5a: HITL SSE 이벤트 엔드포인트 (TDD, Integration)
-- [ ] Step 6.6: Router 등록
-- [ ] Step 6.7: Playground Regression Tests
-- [ ] Step 6.8: Documentation Update (API Docs + Playground README + Test Docs + ADR References)
-- [ ] **Phase 완료**: Status 변경 (🔄 → ✅)
-- [ ] Git 커밋: `docs: complete phase N - {phase_name}`
+- [x] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
+- [x] **Phase 시작**: Status 변경 (⏸️ → 🔄)
+- [x] Step 6.1: Resources API + Playground Tab (TDD, E2E)
+- [x] Step 6.2: Prompts API + Playground Tab (TDD, E2E)
+- [x] Step 6.3: Sampling API (Method C) + Playground Tab (TDD, E2E)
+- [x] Step 6.4: Elicitation API + Playground Tab (TDD, E2E)
+- [x] Step 6.5: MCP Apps Raw Response (iframe sandbox)
+- [x] Step 6.5a: HITL SSE 이벤트 엔드포인트 (TDD, Integration)
+- [x] Step 6.6: Router 등록
+- [x] Step 6.7: Playground Regression Tests
+- [x] Step 6.8: Documentation Update (API Docs + Playground README + Test Docs + ADR References)
+- [x] **Phase 완료**: Status 변경 (🔄 → ✅)
+- [ ] Git 커밋: `docs: complete phase 6 - HTTP Routes + Playground`
 
 ---
 

@@ -137,3 +137,131 @@ async def get_test_state(
         "a2a_agents": len(a2a_endpoints),
         "conversations": len(conversations),
     }
+
+
+@router.post("/sampling/inject")
+@inject
+async def inject_sampling_request(
+    endpoint_id: str,
+    request_id: str | None = None,
+    sampling_service=Depends(Provide[Container.sampling_service]),
+    sse_broker=Depends(Provide[Container.sse_broker]),
+):
+    """
+    테스트용 Sampling 요청 주입
+
+    E2E 테스트에서 Sampling HITL 워크플로우를 검증하기 위해
+    실제 MCP 서버 없이 대기 중인 Sampling 요청을 생성하고
+    SSE 이벤트를 브로드캐스트합니다.
+
+    Args:
+        endpoint_id: MCP 엔드포인트 ID
+        request_id: 요청 ID (선택, 기본값: test-sampling-request-{uuid})
+
+    Returns:
+        dict: {"request_id": str, "status": "created"}
+    """
+    import uuid
+
+    from src.domain.entities.sampling_request import SamplingRequest
+
+    # Generate unique request ID if not provided
+    if not request_id:
+        request_id = f"test-sampling-request-{uuid.uuid4().hex[:8]}"
+
+    # Create test sampling request
+    request = SamplingRequest(
+        id=request_id,
+        endpoint_id=endpoint_id,
+        messages=[
+            {"role": "user", "content": "What is 2+2?"}
+        ],
+        model_preferences={"model": "openai/gpt-4o-mini"},
+        system_prompt="You are a helpful assistant.",
+        max_tokens=100,
+    )
+
+    await sampling_service.create_request(request)
+
+    # Broadcast SSE event for E2E testing
+    await sse_broker.broadcast(
+        "sampling_request",
+        {
+            "request_id": request.id,
+            "endpoint_id": request.endpoint_id,
+        },
+    )
+
+    return {
+        "request_id": request.id,
+        "status": "created",
+    }
+
+
+@router.post("/elicitation/inject")
+@inject
+async def inject_elicitation_request(
+    endpoint_id: str,
+    request_id: str | None = None,
+    elicitation_service=Depends(Provide[Container.elicitation_service]),
+    sse_broker=Depends(Provide[Container.sse_broker]),
+):
+    """
+    테스트용 Elicitation 요청 주입
+
+    E2E 테스트에서 Elicitation HITL 워크플로우를 검증하기 위해
+    실제 MCP 서버 없이 대기 중인 Elicitation 요청을 생성하고
+    SSE 이벤트를 브로드캐스트합니다.
+
+    Args:
+        endpoint_id: MCP 엔드포인트 ID
+        request_id: 요청 ID (선택, 기본값: test-elicitation-request-{uuid})
+
+    Returns:
+        dict: {"request_id": str, "status": "created"}
+    """
+    import uuid
+
+    from src.domain.entities.elicitation_request import ElicitationRequest, ElicitationStatus
+
+    # Generate unique request ID if not provided
+    if not request_id:
+        request_id = f"test-elicitation-request-{uuid.uuid4().hex[:8]}"
+
+    # Create test elicitation request
+    request = ElicitationRequest(
+        id=request_id,
+        endpoint_id=endpoint_id,
+        message="Please provide your name and email",
+        requested_schema={
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Your full name"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Your email address"
+                }
+            },
+            "required": ["name", "email"],
+        },
+        status=ElicitationStatus.PENDING,
+    )
+
+    await elicitation_service.create_request(request)
+
+    # Broadcast SSE event for E2E testing
+    await sse_broker.broadcast(
+        "elicitation_request",
+        {
+            "request_id": request.id,
+            "endpoint_id": request.endpoint_id,
+        },
+    )
+
+    return {
+        "request_id": request.id,
+        "status": "created",
+    }

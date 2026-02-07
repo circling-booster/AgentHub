@@ -19,10 +19,14 @@ from .routes import (
     auth,
     chat,
     conversations,
+    elicitation,
     health,
+    hitl_events,
     mcp,
     oauth,
+    prompts,
     resources,
+    sampling,
     usage,
     workflow,
 )
@@ -214,6 +218,10 @@ def create_app() -> FastAPI:
     app.include_router(oauth.router)  # OAuth 2.1
     app.include_router(mcp.router)
     app.include_router(resources.router)  # SDK Track: Resources
+    app.include_router(prompts.router)  # SDK Track: Prompts
+    app.include_router(sampling.router)  # SDK Track: Sampling (HITL)
+    app.include_router(elicitation.router)  # SDK Track: Elicitation (HITL)
+    app.include_router(hitl_events.router)  # SDK Track: HITL SSE Events
     app.include_router(a2a.router)
     app.include_router(a2a_card.router)  # A2A Agent Card
     app.include_router(chat.router)

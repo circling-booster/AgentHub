@@ -26,7 +26,8 @@
       "Bash(powershell:*)",
       "Bash(bash:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }

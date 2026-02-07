@@ -173,3 +173,39 @@ async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]
 
     # Phase 6+: Dual-Track 환경변수 cleanup
     os.environ.pop("MCP__ENABLE_DUAL_TRACK", None)
+
+
+@pytest.fixture
+async def mcp_synapse_endpoint(authenticated_client: TestClient) -> dict:
+    """
+    MCP Synapse 테스트 서버 등록 fixture
+
+    특징:
+    - MCP_TEST_URL (http://127.0.0.1:9000/mcp) 서버 등록
+    - authenticated_client 사용하여 등록
+    - 테스트 후 자동 삭제
+
+    Returns:
+        dict: 등록된 엔드포인트 정보 {id, url, name, type, enabled, registered_at}
+    """
+    # MCP 서버 등록
+    response = authenticated_client.post(
+        "/api/mcp/servers",
+        json={
+            "url": MCP_TEST_URL,
+            "name": "Test Synapse MCP",
+        },
+    )
+    assert response.status_code == 201, f"Failed to register MCP server: {response.text}"
+    endpoint = response.json()
+
+    yield endpoint
+
+    # Cleanup: 엔드포인트 삭제
+    try:
+        delete_response = authenticated_client.delete(f"/api/mcp/servers/{endpoint['id']}")
+        # 404는 이미 삭제된 경우이므로 무시
+        if delete_response.status_code not in (200, 204, 404):
+            print(f"Warning: Failed to delete endpoint {endpoint['id']}: {delete_response.text}")
+    except Exception as e:
+        print(f"Warning: Cleanup failed for endpoint {endpoint['id']}: {e}")

@@ -175,3 +175,72 @@ export async function readResource(endpointId, uri) {
     const encodedUri = encodeURIComponent(uri);
     return fetchGet(`${API_BASE}/api/mcp/servers/${endpointId}/resources/${encodedUri}`);
 }
+
+// Prompts API (Step 6.2: TDD Green Phase)
+/**
+ * List prompts for an MCP endpoint
+ * @param {string} endpointId - MCP server endpoint ID
+ * @returns {Promise<{prompts: Array}>} Prompts list
+ */
+export async function listPrompts(endpointId) {
+    return fetchGet(`${API_BASE}/api/mcp/servers/${endpointId}/prompts`);
+}
+
+/**
+ * Get rendered prompt
+ * @param {string} endpointId - MCP server endpoint ID
+ * @param {string} name - Prompt name
+ * @param {object} promptArgs - Prompt arguments (key-value pairs)
+ * @returns {Promise<{description: string, messages: Array}>} Rendered prompt
+ */
+export async function getPrompt(endpointId, name, promptArgs) {
+    return fetchPost(`${API_BASE}/api/mcp/servers/${endpointId}/prompts/${name}`, { arguments: promptArgs });
+}
+
+// Sampling HITL API (Step 6.3: TDD Green Phase)
+/**
+ * List pending sampling requests
+ * @returns {Promise<{requests: Array}>} Sampling requests list
+ */
+export async function listSamplingRequests() {
+    return fetchGet(`${API_BASE}/api/sampling/requests`);
+}
+
+/**
+ * Approve sampling request (triggers LLM execution)
+ * @param {string} requestId - Request ID
+ * @returns {Promise<{status: string, result: object}>} Approval response
+ */
+export async function approveSamplingRequest(requestId) {
+    return fetchPost(`${API_BASE}/api/sampling/requests/${requestId}/approve`, {});
+}
+
+/**
+ * Reject sampling request
+ * @param {string} requestId - Request ID
+ * @param {string} reason - Rejection reason
+ * @returns {Promise<{status: string}>} Rejection response
+ */
+export async function rejectSamplingRequest(requestId, reason = "") {
+    return fetchPost(`${API_BASE}/api/sampling/requests/${requestId}/reject`, { reason });
+}
+
+// Elicitation HITL API (Step 6.4: TDD Green Phase)
+/**
+ * List pending elicitation requests
+ * @returns {Promise<{requests: Array}>} Elicitation requests list
+ */
+export async function listElicitationRequests() {
+    return fetchGet(`${API_BASE}/api/elicitation/requests`);
+}
+
+/**
+ * Respond to elicitation request
+ * @param {string} requestId - Request ID
+ * @param {string} action - Action: "accept", "decline", "cancel"
+ * @param {object|null} content - User input content (required for "accept")
+ * @returns {Promise<{status: string}>} Response result
+ */
+export async function respondElicitationRequest(requestId, action, content = null) {
+    return fetchPost(`${API_BASE}/api/elicitation/requests/${requestId}/respond`, { action, content });
+}
