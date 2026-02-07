@@ -511,3 +511,204 @@ class TestRegistryServiceRestore:
         # Then: 빈 결과
         assert len(result["restored"]) == 0
         assert len(result["failed"]) == 0
+
+
+class TestRegistryServiceWithMcpClient:
+    """SDK Track 통합 테스트 (Method C)"""
+
+    @pytest.fixture
+    def storage(self):
+        return FakeEndpointStorage()
+
+    @pytest.fixture
+    def toolset(self):
+        return FakeToolset()
+
+    @pytest.fixture
+    def mcp_client(self):
+        from tests.unit.fakes.fake_mcp_client import FakeMcpClient
+
+        return FakeMcpClient()
+
+    @pytest.fixture
+    def sampling_service(self):
+        from src.domain.services.sampling_service import SamplingService
+
+        return SamplingService(ttl_seconds=600)
+
+    @pytest.fixture
+    def elicitation_service(self):
+        from src.domain.services.elicitation_service import ElicitationService
+
+        return ElicitationService(ttl_seconds=600)
+
+    @pytest.fixture
+    def hitl_notification(self):
+        from tests.unit.fakes.fake_hitl_notification import FakeHitlNotification
+
+        return FakeHitlNotification()
+
+    @pytest.fixture
+    def service(self, storage, toolset, mcp_client, sampling_service, elicitation_service):
+        return RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=sampling_service,
+            elicitation_service=elicitation_service,
+        )
+
+    async def test_register_mcp_connects_sdk_track(self, service, mcp_client):
+        """
+        Given: MCP Client가 설정된 RegistryService
+        When: MCP 엔드포인트 등록 시
+        Then: SDK Track도 연결되고 콜백이 설정됨
+        """
+        # When
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+
+        # Then: SDK Track 연결 확인
+        assert mcp_client.is_connected(endpoint.id)
+        # 콜백이 설정되었는지 확인
+        assert mcp_client.get_sampling_callback(endpoint.id) is not None
+        assert mcp_client.get_elicitation_callback(endpoint.id) is not None
+
+    async def test_unregister_disconnects_sdk_track(self, service, mcp_client):
+        """
+        Given: SDK Track이 연결된 MCP 엔드포인트
+        When: 엔드포인트 해제 시
+        Then: SDK Track도 연결 해제됨
+        """
+        # Given
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+        assert mcp_client.is_connected(endpoint.id)
+
+        # When
+        await service.unregister_endpoint(endpoint.id)
+
+        # Then
+        assert not mcp_client.is_connected(endpoint.id)
+
+    async def test_sampling_callback_waits_for_approval(
+        self, storage, toolset, mcp_client, sampling_service
+    ):
+        """
+        Given: SDK Track이 연결된 상태
+        When: Sampling 콜백 호출 시
+        Then: SamplingService에 요청이 생성되고 approve 대기 후 결과 반환
+        """
+        # Given
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=sampling_service,
+        )
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+
+        # 콜백 가져오기
+        callback = mcp_client.get_sampling_callback(endpoint.id)
+        assert callback is not None
+
+        # 백그라운드에서 approve 실행 (0.1초 후)
+        import asyncio
+
+        async def delayed_approve():
+            await asyncio.sleep(0.1)
+            await sampling_service.approve("test-req-1", {"content": "LLM response"})
+
+        asyncio.create_task(delayed_approve())
+
+        # When: 콜백 실행
+        result = await callback(
+            request_id="test-req-1",
+            endpoint_id=endpoint.id,
+            messages=[{"role": "user", "content": "test"}],
+            model_preferences=None,
+            system_prompt=None,
+            max_tokens=1024,
+        )
+
+        # Then: LLM 결과 반환됨
+        assert result == {"content": "LLM response"}
+        # SamplingService에 요청이 생성되었는지 확인
+        request = sampling_service.get_request("test-req-1")
+        assert request is not None
+        assert request.id == "test-req-1"
+
+    async def test_sampling_callback_timeout_notifies_sse(
+        self, storage, toolset, mcp_client, sampling_service, hitl_notification
+    ):
+        """
+        Given: SDK Track + HITL Notification이 설정된 상태
+        When: Short timeout 초과 시
+        Then: SSE 알림 전송됨
+        """
+        from src.domain.exceptions import HitlTimeoutError
+
+        # Given: short_timeout=0.05초로 설정하여 빠른 테스트
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=sampling_service,
+            hitl_notification=hitl_notification,
+            short_timeout=0.05,
+            long_timeout=0.1,
+        )
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+
+        callback = mcp_client.get_sampling_callback(endpoint.id)
+
+        # When: Long timeout까지 대기 (approve 없음)
+        with pytest.raises(HitlTimeoutError):
+            await callback(
+                request_id="test-req-timeout",
+                endpoint_id=endpoint.id,
+                messages=[{"role": "user", "content": "timeout test"}],
+                model_preferences=None,
+                system_prompt=None,
+                max_tokens=1024,
+            )
+
+        # Then: SSE 알림 검증
+        assert len(hitl_notification.sampling_notifications) > 0
+        notified_request = hitl_notification.sampling_notifications[0]
+        assert notified_request.id == "test-req-timeout"
+
+    async def test_restore_endpoints_connects_sdk_track(self, storage, toolset, mcp_client):
+        """
+        Given: 저장소에 MCP 엔드포인트 존재
+        When: restore_endpoints() 호출
+        Then: SDK Track도 재연결됨 (M1 수정)
+        """
+        from src.domain.services.sampling_service import SamplingService
+        from src.domain.services.elicitation_service import ElicitationService
+
+        # Given: 저장소에 MCP 엔드포인트 저장
+        mcp_endpoint = Endpoint(
+            url="https://mcp.example.com/server",
+            type=EndpointType.MCP,
+            name="Test MCP",
+        )
+        await storage.save_endpoint(mcp_endpoint)
+
+        # SDK Track 의존성 포함된 서비스
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=SamplingService(),
+            elicitation_service=ElicitationService(),
+        )
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 재연결 성공
+        assert mcp_endpoint.url in result["restored"]
+        assert len(result["failed"]) == 0
+        # SDK Track 연결 확인
+        assert mcp_client.is_connected(mcp_endpoint.id)
+        assert mcp_client.get_sampling_callback(mcp_endpoint.id) is not None
+        assert mcp_client.get_elicitation_callback(mcp_endpoint.id) is not None
