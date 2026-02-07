@@ -694,6 +694,7 @@ pytest tests/integration/ -m "local_mcp or llm" -v
 
 ## Checklist
 
+- [ ] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
 - [ ] Step 5.1: RegistryService 수정 (Method C 콜백, TDD)
 - [ ] Step 5.2: DI Container 수정 (Provide[] 패턴)

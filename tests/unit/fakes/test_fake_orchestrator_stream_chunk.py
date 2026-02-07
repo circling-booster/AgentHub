@@ -66,3 +66,39 @@ class TestFakeOrchestratorStreamChunk:
         # Then
         assert all(isinstance(r, StreamChunk) for r in orchestrator.responses)
         assert all(r.type == "text" for r in orchestrator.responses)
+
+    @pytest.mark.asyncio
+    async def test_generate_response_returns_preset(self):
+        """generate_response가 설정된 결과 반환 (TDD - Red Phase)"""
+        # Given
+        orchestrator = FakeOrchestrator()
+        orchestrator.set_generate_result({
+            "role": "assistant",
+            "content": "Custom response",
+            "model": "gpt-4",
+        })
+
+        # When
+        result = await orchestrator.generate_response(
+            messages=[{"role": "user", "content": "test"}]
+        )
+
+        # Then
+        assert result["content"] == "Custom response"
+        assert result["model"] == "gpt-4"
+
+    @pytest.mark.asyncio
+    async def test_generate_response_default_result(self):
+        """generate_response 기본 결과 반환 (TDD - Red Phase)"""
+        # Given
+        orchestrator = FakeOrchestrator()
+
+        # When
+        result = await orchestrator.generate_response(
+            messages=[{"role": "user", "content": "test"}]
+        )
+
+        # Then
+        assert result["role"] == "assistant"
+        assert result["content"] == "Fake LLM response"
+        assert result["model"] == "fake-model"

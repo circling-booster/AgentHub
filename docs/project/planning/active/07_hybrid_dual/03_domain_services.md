@@ -693,6 +693,7 @@ pytest tests/unit/domain/ -q --tb=line
 
 ## Checklist
 
+- [ ] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
 - [ ] Step 3.1: ResourceService 구현 (TDD)
 - [ ] Step 3.2: PromptService 구현 (TDD)

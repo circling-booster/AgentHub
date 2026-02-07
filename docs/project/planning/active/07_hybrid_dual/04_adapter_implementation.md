@@ -756,6 +756,7 @@ pytest tests/integration/ -m "local_mcp or llm" -v
 
 ## Checklist
 
+- [ ] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
 - [ ] Step 4.1: pyproject.toml에 mcp 의존성 추가
 - [ ] Step 4.2: McpClientAdapter 구현 (콜백 변환, AsyncExitStack)

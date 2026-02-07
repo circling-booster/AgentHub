@@ -420,6 +420,7 @@ pytest --cov=src --cov-fail-under=80 -q
 
 ## Checklist
 
+- [ ] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
 - [ ] Step 7.1: StreamChunk에 새 이벤트 타입 추가 (TDD)
 - [ ] Step 7.2: Playground SSE 핸들러 업데이트 (E2E TDD)

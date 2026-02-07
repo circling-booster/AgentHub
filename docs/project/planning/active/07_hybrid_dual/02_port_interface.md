@@ -702,6 +702,7 @@ pytest tests/unit/fakes/ -v
 
 ## Checklist
 
+- [ ] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
 - [ ] Step 2.1: McpClientPort 생성
 - [ ] Step 2.2: HitlNotificationPort 생성
@@ -712,7 +713,7 @@ pytest tests/unit/fakes/ -v
 - [ ] Step 2.7: EventBroadcastPort 생성
 - [ ] Step 2.8: FakeSseBroker (TDD)
 - [ ] Step 2.9: Documentation Update (Ports + Test Docs)
-- [ ] Verification: 모든 테스트 통과
+- [ ] **회귀 테스트**: `pytest --cov=src --cov-fail-under=80 -q` (Phase 완료 후 검증)
 - [ ] **Phase 완료**: Status 변경 (🔄 → ✅)
 - [ ] Git 커밋: `docs: complete phase N - {phase_name}`
 ---

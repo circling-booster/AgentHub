@@ -913,6 +913,7 @@ pytest --cov=src --cov-fail-under=80 -q
 
 ## Checklist
 
+- [ ] **Baseline 회귀 테스트**: `pytest -q --tb=line` (Phase 시작 전 Green 상태 확인)
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
 - [ ] Step 6.1: Resources API + Playground Tab (TDD, E2E)
 - [ ] Step 6.2: Prompts API + Playground Tab (TDD, E2E)
