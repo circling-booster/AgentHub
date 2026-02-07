@@ -64,6 +64,7 @@
 |------|----------|
 | 아키텍처 이해 | [developers/architecture/](developers/architecture/) |
 | Dual-Track 통합 (Phase 7) | [developers/architecture/integrations/dual-track.md](developers/architecture/integrations/dual-track.md) |
+| Method C Signal Pattern (HITL) | [developers/architecture/layer/patterns/method-c-signal.md](developers/architecture/layer/patterns/method-c-signal.md) |
 | 테스트 작성 | [developers/testing/](developers/testing/) |
 | 배포/설정 | [operators/deployment/](operators/deployment/) |
 | 현재 작업 (Plan 07) | [project/planning/active/](project/planning/active/) |

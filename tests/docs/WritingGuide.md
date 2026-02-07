@@ -129,6 +129,69 @@ async def test\_callback\_stored\_on\_connect():
 
 **⚠️ Protocol 사용 이유:** Domain Layer에서 MCP SDK 타입을 직접 사용하지 않고 Duck Typing으로 추상화 (Domain Purity 유지)
 
+### **Recipe 6: asyncio.Event-based Service Tests (Signal Pattern)**
+
+HITL 서비스(SamplingService, ElicitationService)는 asyncio.Event 기반 Signal 패턴을 사용합니다.
+
+**Pattern: delayed signal with background task**
+
+```python
+import asyncio
+import pytest
+from src.domain.services.sampling_service import SamplingService
+from src.domain.entities.sampling_request import SamplingRequest, SamplingStatus
+
+async def test_wait_for_response_returns_after_signal():
+    """wait_for_response() - 시그널 후 즉시 반환"""
+    # Given: Service와 Request 준비
+    service = SamplingService()
+    request = SamplingRequest(
+        id="req-1",
+        endpoint_id="ep-1",
+        messages=[{"role": "user", "content": "Hello"}]
+    )
+    await service.create_request(request)
+
+    # Background task: 1초 후 approve
+    async def delayed_approve():
+        await asyncio.sleep(1.0)
+        await service.approve("req-1", {"content": "test"})
+
+    asyncio.create_task(delayed_approve())
+
+    # When: 30초 타임아웃이지만 1초 내 반환됨
+    result = await service.wait_for_response("req-1", timeout=30.0)
+
+    # Then: 승인된 결과 반환
+    assert result is not None
+    assert result.status == SamplingStatus.APPROVED
+    assert result.llm_result == {"content": "test"}
+```
+
+**Key Points:**
+- `asyncio.create_task()`: Background task로 Signal 전송
+- `wait_for_response()`: Event.wait()로 대기하다가 approve() 호출 시 즉시 반환
+- Timeout 없이 빠른 테스트 (실제로는 1초만 대기)
+
+**Timeout Test:**
+
+```python
+async def test_wait_for_response_timeout():
+    """wait_for_response() - timeout → None"""
+    # Given: Request 생성
+    service = SamplingService()
+    request = SamplingRequest(id="req-1", endpoint_id="ep-1", messages=[])
+    await service.create_request(request)
+
+    # When: approve 없이 0.1초 timeout
+    result = await service.wait_for_response("req-1", timeout=0.1)
+
+    # Then: Timeout (None 반환)
+    assert result is None
+```
+
+**참조:** [Method C Signal Pattern](../docs/developers/architecture/layer/patterns/method-c-signal.md#testing-strategy)
+
 ## **📐 Test Structure Patterns**
 
 ### **Given-When-Then Pattern (BDD)**

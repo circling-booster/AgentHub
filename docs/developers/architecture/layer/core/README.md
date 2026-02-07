@@ -314,6 +314,87 @@ class DomainService:
 | **GatewayService** | Circuit Breaker, 재시도 로직 |
 | **CostService** | 비용 계산 |
 | **HealthMonitorService** | 엔드포인트 상태 모니터링 |
+| **ResourceService** | MCP Resource 조회 (위임 패턴) |
+| **PromptService** | MCP Prompt 템플릿 조회 및 렌더링 (위임 패턴) |
+| **SamplingService** | MCP HITL Sampling 요청 큐 관리 (Signal 패턴) |
+| **ElicitationService** | MCP HITL Elicitation 요청 큐 관리 (Signal 패턴) |
+
+### SDK Track Services (Plan 07 Phase 3)
+
+SDK Track (Resources, Prompts, Sampling, Elicitation) 서비스 구현:
+
+#### Delegation Pattern Services
+
+**ResourceService** 및 **PromptService**는 McpClientPort로 단순 위임:
+
+```python
+class ResourceService:
+    def __init__(self, mcp_client: McpClientPort) -> None:
+        self._mcp_client = mcp_client
+
+    async def list_resources(self, endpoint_id: str) -> list[Resource]:
+        return await self._mcp_client.list_resources(endpoint_id)
+
+    async def read_resource(self, endpoint_id: str, uri: str) -> ResourceContent:
+        return await self._mcp_client.read_resource(endpoint_id, uri)
+```
+
+**특징:**
+- 순수 위임 패턴 (비즈니스 로직 없음)
+- McpClientPort 인터페이스 사용 (헥사고날 준수)
+- Exceptions 전파 (EndpointNotFoundError, ResourceNotFoundError 등)
+
+#### Signal Pattern Services
+
+**SamplingService** 및 **ElicitationService**는 asyncio.Event 기반 Signal 패턴 사용:
+
+**핵심 구조:**
+```python
+class SamplingService:
+    def __init__(self, ttl_seconds: int = 600) -> None:
+        self._requests: dict[str, SamplingRequest] = {}
+        self._events: dict[str, asyncio.Event] = {}
+        self._ttl_seconds = ttl_seconds
+
+    async def create_request(self, request: SamplingRequest) -> None:
+        """요청 생성 및 Event 준비"""
+        self._requests[request.id] = request
+        self._events[request.id] = asyncio.Event()
+
+    async def wait_for_response(
+        self, request_id: str, timeout: float = 30.0
+    ) -> SamplingRequest | None:
+        """Event.wait() 대기 (timeout 시 None)"""
+        if request_id not in self._events:
+            return None
+        try:
+            await asyncio.wait_for(
+                self._events[request_id].wait(),
+                timeout=timeout
+            )
+            return self._requests.get(request_id)
+        except asyncio.TimeoutError:
+            return None
+
+    async def approve(self, request_id: str, llm_result: dict) -> bool:
+        """Signal 전송 (Event.set())"""
+        if request_id not in self._requests:
+            return False
+        request = self._requests[request_id]
+        request.status = SamplingStatus.APPROVED
+        request.llm_result = llm_result
+        if request_id in self._events:
+            self._events[request_id].set()  # Wake up callback
+        return True
+```
+
+**특징:**
+- **Method C 패턴**: LLM 호출은 Route에서, Service는 Signal 관리만
+- **asyncio.Event**: 표준 라이브러리 기반 (외부 의존성 없음)
+- **Timeout 지원**: `asyncio.wait_for()` 사용
+- **TTL Cleanup**: `cleanup_expired()` 메서드로 만료 요청 정리
+
+**참조:** [Method C Signal Pattern](../patterns/method-c-signal.md)
 
 ---
 
@@ -415,7 +496,11 @@ src/domain/
 │   ├── oauth_service.py
 │   ├── gateway_service.py
 │   ├── cost_service.py
-│   └── health_monitor_service.py
+│   ├── health_monitor_service.py
+│   ├── resource_service.py         # SDK Track: Resource 조회 (위임)
+│   ├── prompt_service.py           # SDK Track: Prompt 조회 (위임)
+│   ├── sampling_service.py         # SDK Track: HITL Sampling (Signal)
+│   └── elicitation_service.py      # SDK Track: HITL Elicitation (Signal)
 └── ports/
     ├── __init__.py
     ├── inbound/
