@@ -691,6 +691,78 @@ pytest tests/unit/domain/ -q --tb=line
 
 ---
 
+## Step 3.6: Git Commit
+
+**목표:** Phase 3 완료 커밋
+
+**절차:**
+
+1. **Phase 시작 전 회귀 테스트**
+   ```bash
+   pytest -q --tb=line -x
+   ```
+
+2. **Phase 3 테스트 실행**
+   ```bash
+   pytest tests/unit/domain/services/test_resource_service.py -v
+   pytest tests/unit/domain/services/test_prompt_service.py -v
+   pytest tests/unit/domain/services/test_sampling_service.py -v
+   pytest tests/unit/domain/services/test_elicitation_service.py -v
+   pytest tests/unit/domain/ -q --tb=line
+   ```
+
+3. **커버리지 확인**
+   ```bash
+   pytest --cov=src --cov-fail-under=80 -q
+   ```
+
+4. **커밋 수행**
+   ```bash
+   git add src/domain/services/resource_service.py \
+           src/domain/services/prompt_service.py \
+           src/domain/services/sampling_service.py \
+           src/domain/services/elicitation_service.py \
+           tests/unit/domain/services/test_resource_service.py \
+           tests/unit/domain/services/test_prompt_service.py \
+           tests/unit/domain/services/test_sampling_service.py \
+           tests/unit/domain/services/test_elicitation_service.py \
+           docs/developers/architecture/layer/patterns/method-c-signal.md \
+           docs/developers/architecture/layer/core/README.md \
+           tests/docs/WritingGuide.md \
+           docs/MAP.md
+
+   git commit -m "$(cat <<'EOF'
+   feat: implement Phase 3 - Domain Services (Method C Signal Pattern)
+
+   - Add ResourceService (delegates to McpClientPort)
+   - Add PromptService (delegates to McpClientPort)
+   - Add SamplingService with Method C Signal pattern (asyncio.Event)
+   - Add ElicitationService with Signal pattern
+   - Implement wait_for_response() with timeout support
+   - Implement approve()/reject()/respond() for HITL signal transmission
+   - Add cleanup_expired() for TTL-based request management
+
+   Method C Architecture:
+   - Services manage HITL queue with asyncio.Event for signaling
+   - Route calls OrchestratorPort.generate_response() for LLM
+   - Route signals result via approve() to wake callback
+   - Callback waits on Event.wait() and returns result to MCP server
+
+   Test Coverage:
+   - All services tested with Fake adapters (TDD approach)
+   - Signal pattern tested with delayed_approve background tasks
+   - Timeout scenarios tested with asyncio.TimeoutError
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+   EOF
+   )"
+   ```
+
+5. **Phase Status 업데이트**
+   - `docs/project/planning/active/07_hybrid_dual/README.md`에서 Phase 3 Status를 ✅로 변경
+
+---
+
 ## Checklist
 
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)

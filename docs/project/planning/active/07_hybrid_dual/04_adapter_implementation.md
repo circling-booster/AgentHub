@@ -754,6 +754,90 @@ pytest tests/integration/ -m "local_mcp or llm" -v
 
 ---
 
+## Step 4.7: Git Commit
+
+**목표:** Phase 4 완료 커밋
+
+**절차:**
+
+1. **Phase 시작 전 회귀 테스트**
+   ```bash
+   pytest tests/unit/ -q --tb=line -x
+   ```
+
+2. **Phase 4 Integration 테스트 실행**
+   ```bash
+   # Synapse 통합 테스트
+   pytest tests/integration/test_mcp_client_adapter.py -m local_mcp -v
+
+   # LLM 통합 테스트
+   pytest tests/integration/test_orchestrator_generate.py -m llm -v
+
+   # SSE Broker 통합 테스트
+   pytest tests/integration/test_sse_broker.py -v
+
+   # 모든 통합 테스트
+   pytest tests/integration/ -m "local_mcp or llm" -v
+   ```
+
+3. **커버리지 확인**
+   ```bash
+   pytest --cov=src --cov-fail-under=80 -q
+   ```
+
+4. **커밋 수행**
+   ```bash
+   git add pyproject.toml \
+           src/adapters/outbound/mcp/mcp_client_adapter.py \
+           src/adapters/outbound/mcp/__init__.py \
+           src/adapters/outbound/sse/broker.py \
+           src/adapters/outbound/sse/hitl_notification_adapter.py \
+           src/adapters/outbound/sse/__init__.py \
+           src/adapters/outbound/adk/orchestrator_adapter.py \
+           tests/integration/test_mcp_client_adapter.py \
+           tests/integration/test_sse_broker.py \
+           tests/integration/test_hitl_notification_adapter.py \
+           tests/integration/test_orchestrator_generate.py \
+           src/adapters/outbound/mcp/README.md \
+           src/adapters/outbound/sse/README.md \
+           docs/developers/architecture/layer/adapters/README.md \
+           docs/developers/guides/standards/mcp/streamable-http.md \
+           tests/docs/RESOURCES.md \
+           docs/MAP.md
+
+   git commit -m "$(cat <<'EOF'
+   feat: implement Phase 4 - Adapter Implementation (SDK Track + SSE)
+
+   - Add MCP SDK dependency (mcp>=1.25,<2) for Streamable HTTP
+   - Implement McpClientAdapter with AsyncExitStack lifecycle management
+   - Implement Domain callback → MCP SDK callback conversion
+   - Implement SseBroker for pub/sub event broadcasting
+   - Implement HitlNotificationAdapter for HITL SSE notifications
+   - Extend AdkOrchestratorAdapter with generate_response() for Method C
+   - Add Synapse integration tests (Resources, Prompts, read/list operations)
+   - Add SSE broker integration tests (multi-subscriber support)
+
+   Callback Conversion:
+   - SamplingCallback: Domain Protocol → MCP CreateMessageRequestParams
+   - ElicitationCallback: Domain Protocol → MCP ElicitRequestParams
+   - Error handling with MCP ErrorData type
+
+   Test Coverage:
+   - Integration tests with real Synapse MCP server (@pytest.mark.local_mcp)
+   - Integration tests with real LLM calls (@pytest.mark.llm)
+   - SSE broker pub/sub pattern tested with asyncio
+   - AsyncExitStack cleanup verified (disconnect/disconnect_all)
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+   EOF
+   )"
+   ```
+
+5. **Phase Status 업데이트**
+   - `docs/project/planning/active/07_hybrid_dual/README.md`에서 Phase 4 Status를 ✅로 변경
+
+---
+
 ## Checklist
 
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)

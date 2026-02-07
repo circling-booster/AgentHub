@@ -640,6 +640,77 @@ pytest tests/unit/domain/test_exceptions.py -v
 
 ---
 
+## Step 1.9: Git Commit
+
+**목표:** Phase 1 완료 커밋
+
+**절차:**
+
+1. **Phase 시작 전 회귀 테스트 베이스라인 기록**
+   ```bash
+   pytest -q --tb=line -x
+   # 결과: N개 통과, M개 실패 (있다면 기존 이슈)
+   ```
+
+2. **Phase 완료 후 전체 테스트 실행**
+   ```bash
+   # 모든 엔티티 테스트
+   pytest tests/unit/domain/entities/ -v
+
+   # 예외 테스트
+   pytest tests/unit/domain/test_exceptions.py -v
+
+   # 전체 회귀 테스트
+   pytest -q --tb=line -x
+   ```
+
+3. **커버리지 확인**
+   ```bash
+   pytest --cov=src --cov-fail-under=80 -q
+   ```
+
+4. **커밋 수행**
+   ```bash
+   git add src/domain/entities/resource.py \
+           src/domain/entities/prompt_template.py \
+           src/domain/entities/sampling_request.py \
+           src/domain/entities/elicitation_request.py \
+           src/domain/entities/__init__.py \
+           src/domain/constants.py \
+           src/domain/exceptions.py \
+           tests/unit/domain/entities/test_resource.py \
+           tests/unit/domain/entities/test_prompt_template.py \
+           tests/unit/domain/entities/test_sampling_request.py \
+           tests/unit/domain/entities/test_elicitation_request.py \
+           tests/unit/domain/test_exceptions.py \
+           docs/developers/architecture/layer/core/README.md \
+           tests/docs/STRUCTURE.md
+
+   git commit -m "$(cat <<'EOF'
+   feat: implement Phase 1 - Domain Entities for SDK Track
+
+   - Add Resource and ResourceContent entities
+   - Add PromptTemplate and PromptArgument entities
+   - Add SamplingRequest entity with Signal pattern (asyncio.Event)
+   - Add ElicitationRequest entity
+   - Add HITL-related exceptions (HitlTimeoutError, etc.)
+   - Update entity exports in __init__.py
+
+   Test Coverage:
+   - All entities have unit tests with TDD approach
+   - Exception tests for HITL error scenarios
+   - datetime.now(timezone.utc) used for timezone-aware timestamps
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+   EOF
+   )"
+   ```
+
+5. **Phase Status 업데이트**
+   - `docs/project/planning/active/07_hybrid_dual/README.md`에서 Phase 1 Status를 ✅로 변경
+
+---
+
 ## Checklist
 
 - [ ] **Phase 시작**: Status 변경 (⏸️ → 🔄)
