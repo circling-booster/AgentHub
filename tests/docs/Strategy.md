@@ -80,8 +80,28 @@ class FakeConversationStorage(ConversationStoragePort):
     async def save\_conversation(self, conversation: Conversation) \-\> None:  
         self.\_conversations\[conversation.id\] \= conversation
 
-    async def get\_conversation(self, conversation\_id: str) \-\> Conversation | None:  
+    async def get\_conversation(self, conversation\_id: str) \-\> Conversation | None:
         return self.\_conversations.get(conversation\_id)
+
+\# ✅ Fake MCP Client: Preset 기반 응답 설정
+from src.domain.ports.outbound.mcp\_client\_port import McpClientPort
+from src.domain.entities.resource import Resource, ResourceContent
+
+class FakeMcpClient(McpClientPort):
+    def \_\_init\_\_(self):
+        self.\_connections \= {}
+        self.\_resources \= {}  \# endpoint\_id \-\> \[Resource\]
+        self.\_resource\_contents \= {}  \# endpoint\_id \-\> {uri \-\> ResourceContent}
+
+    def set\_resources(self, endpoint\_id: str, resources: list\[Resource\]) \-\> None:
+        """테스트 시나리오: 리소스 목록 설정"""
+        self.\_resources\[endpoint\_id\] \= resources
+
+    async def connect(self, endpoint\_id: str, url: str, \*\*kwargs) \-\> None:
+        self.\_connections\[endpoint\_id\] \= True
+
+    async def list\_resources(self, endpoint\_id: str) \-\> list\[Resource\]:
+        return self.\_resources.get(endpoint\_id, \[\])
 
 ### **Mock (필요한 경우만)**
 

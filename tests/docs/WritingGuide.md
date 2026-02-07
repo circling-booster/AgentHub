@@ -77,10 +77,57 @@ class FakeMyPort(MyPort):
 from tests.unit.fakes.fake\_my\_port import FakeMyPort  
 \_\_all\_\_ \= \[..., "FakeMyPort"\]
 
-\# 3\. tests/unit/conftest.py에 fixture 추가 (필요 시)  
-@pytest.fixture  
-def fake\_my\_port():  
+\# 3\. tests/unit/conftest.py에 fixture 추가 (필요 시)
+@pytest.fixture
+def fake\_my\_port():
     return FakeMyPort()
+
+### **Recipe 5: 콜백 테스트 (Protocol 타입)**
+
+\# Callback Protocol 정의 (Domain Purity용)
+from typing import Protocol, Any
+
+class SamplingCallback(Protocol):
+    async def \_\_call\_\_(
+        self,
+        request\_id: str,
+        endpoint\_id: str,
+        messages: list\[dict\[str, Any\]\],
+        \*\*kwargs
+    ) \-\> dict\[str, Any\]: ...
+
+\# Fake Adapter에 콜백 저장 기능 추가
+class FakeMcpClient(McpClientPort):
+    def \_\_init\_\_(self):
+        self.\_sampling\_callbacks \= {}  \# endpoint\_id \-\> callback
+
+    async def connect(
+        self,
+        endpoint\_id: str,
+        url: str,
+        sampling\_callback: SamplingCallback | None \= None,
+    ) \-\> None:
+        self.\_connections\[endpoint\_id\] \= True
+        if sampling\_callback:
+            self.\_sampling\_callbacks\[endpoint\_id\] \= sampling\_callback
+
+    def get\_sampling\_callback(self, endpoint\_id: str):
+        """테스트 검증용: 저장된 콜백 반환"""
+        return self.\_sampling\_callbacks.get(endpoint\_id)
+
+\# 테스트: 콜백이 올바르게 저장되었는지 검증
+async def test\_callback\_stored\_on\_connect():
+    fake \= FakeMcpClient()
+
+    async def sample\_callback(\*\*kwargs):
+        return {"role": "assistant", "content": "test"}
+
+    await fake.connect("ep-1", "http://localhost:8080/mcp", sampling\_callback=sample\_callback)
+    stored \= fake.get\_sampling\_callback("ep-1")
+
+    assert stored is sample\_callback  \# 동일 객체 참조 확인
+
+**⚠️ Protocol 사용 이유:** Domain Layer에서 MCP SDK 타입을 직접 사용하지 않고 Duck Typing으로 추상화 (Domain Purity 유지)
 
 ## **📐 Test Structure Patterns**
 
