@@ -172,3 +172,41 @@ class WorkflowNotFoundError(DomainException):
 
     def __init__(self, message: str):
         super().__init__(message, code=ErrorCode.WORKFLOW_NOT_FOUND)
+
+
+# ============================================================
+# HITL 관련 예외
+# ============================================================
+
+
+class HitlTimeoutError(DomainException):
+    """HITL 요청 타임아웃"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.HITL_TIMEOUT)
+
+
+class HitlRequestNotFoundError(DomainException):
+    """HITL 요청을 찾을 수 없음"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.HITL_REQUEST_NOT_FOUND)
+
+
+# ============================================================
+# Resource/Prompt 관련 예외
+# ============================================================
+
+
+class ResourceNotFoundError(DomainException):
+    """리소스를 찾을 수 없음"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.RESOURCE_NOT_FOUND)
+
+
+class PromptNotFoundError(DomainException):
+    """프롬프트를 찾을 수 없음"""
+
+    def __init__(self, message: str):
+        super().__init__(message, code=ErrorCode.PROMPT_NOT_FOUND)

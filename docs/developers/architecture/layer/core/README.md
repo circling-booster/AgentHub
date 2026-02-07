@@ -103,6 +103,12 @@ class Entity:
 | **BudgetStatus** | 예산 상태 | alert_level, can_proceed |
 | **Workflow** | 멀티스텝 워크플로우 | steps, workflow_type |
 | **WorkflowStep** | 워크플로우 단계 | agent_endpoint_id, output_key |
+| **Resource** | MCP 리소스 메타데이터 | uri, name, description |
+| **ResourceContent** | MCP 리소스 콘텐츠 | text, blob, mime_type |
+| **PromptTemplate** | MCP 프롬프트 템플릿 | name, arguments |
+| **PromptArgument** | 프롬프트 인자 | name, required, description |
+| **SamplingRequest** | MCP HITL Sampling 요청 | messages, status, llm_result |
+| **ElicitationRequest** | MCP HITL Elicitation 요청 | message, action, content |
 
 ### Entity Details (Phase 6)
 
@@ -166,6 +172,75 @@ class BudgetStatus:
 | `warning` | 90-100% | ✅ |
 | `critical` | 100-110% | ⚠️ |
 | `blocked` | > 110% | ❌ |
+
+#### SDK Track Entities (Plan 07)
+
+SDK Track (Resources, Prompts, Sampling, Elicitation) 엔티티:
+
+**Resource & ResourceContent**
+
+```python
+@dataclass(frozen=True, slots=True)
+class Resource:
+    uri: str              # 리소스 URI (file://, http://, custom://)
+    name: str             # 리소스 이름
+    description: str = "" # 리소스 설명
+    mime_type: str = ""   # MIME 타입
+
+@dataclass(frozen=True, slots=True)
+class ResourceContent:
+    uri: str                   # 리소스 URI
+    text: str | None = None    # 텍스트 콘텐츠 (text 리소스)
+    blob: bytes | None = None  # 바이너리 콘텐츠 (blob 리소스)
+    mime_type: str = ""        # MIME 타입
+```
+
+**PromptTemplate & PromptArgument**
+
+```python
+@dataclass(frozen=True, slots=True)
+class PromptArgument:
+    name: str                 # 인자 이름
+    required: bool = True     # 필수 여부
+    description: str = ""     # 인자 설명
+
+@dataclass(frozen=True, slots=True)
+class PromptTemplate:
+    name: str                                      # 템플릿 이름
+    description: str = ""                          # 템플릿 설명
+    arguments: list[PromptArgument] = field(...)   # 인자 목록
+```
+
+**HITL Entities (SamplingRequest & ElicitationRequest)**
+
+HITL (Human-in-the-Loop) 패턴을 사용하는 엔티티입니다:
+
+```python
+@dataclass
+class SamplingRequest:
+    id: str                           # 요청 ID
+    endpoint_id: str                  # MCP 엔드포인트 ID
+    messages: list[dict]              # LLM 메시지 목록
+    status: SamplingStatus            # PENDING | APPROVED | REJECTED | TIMED_OUT
+    llm_result: dict | None = None    # LLM 응답 결과
+    created_at: datetime = field(...)  # 생성 시각 (UTC, timezone-aware)
+
+@dataclass
+class ElicitationRequest:
+    id: str                              # 요청 ID
+    endpoint_id: str                     # MCP 엔드포인트 ID
+    message: str                         # 사용자 메시지
+    requested_schema: dict               # JSON Schema
+    action: ElicitationAction | None     # ACCEPT | DECLINE | CANCEL
+    content: dict | None = None          # 사용자 입력
+    status: ElicitationStatus            # PENDING | ACCEPTED | DECLINED | ...
+    created_at: datetime = field(...)    # 생성 시각 (UTC)
+```
+
+**HITL 특징:**
+- **Timezone-aware datetime**: `datetime.now(timezone.utc)` 사용
+- **State Machine**: Status Enum으로 상태 관리
+- **Phase 3 Service에서 Signal 패턴**: asyncio.Event로 비동기 대기 구현 예정
 
 ---
 
@@ -317,7 +392,7 @@ src/domain/
 ├── exceptions.py         # 도메인 예외
 ├── entities/
 │   ├── __init__.py
-│   ├── enums.py          # 열거형
+│   ├── enums.py                   # 열거형
 │   ├── conversation.py
 │   ├── message.py
 │   ├── agent.py
@@ -327,7 +402,11 @@ src/domain/
 │   ├── tool_call.py
 │   ├── auth_config.py
 │   ├── circuit_breaker.py
-│   └── usage.py
+│   ├── usage.py
+│   ├── resource.py                # SDK Track: Resource, ResourceContent
+│   ├── prompt_template.py         # SDK Track: PromptTemplate, PromptArgument
+│   ├── sampling_request.py        # SDK Track: SamplingRequest (HITL)
+│   └── elicitation_request.py     # SDK Track: ElicitationRequest (HITL)
 ├── services/
 │   ├── __init__.py
 │   ├── orchestrator_service.py

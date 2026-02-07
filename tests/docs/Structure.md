@@ -87,6 +87,40 @@ tests/
 
 ### **Chaos Level (tests/chaos/conftest.py)**
 
-* chaotic\_mcp\_server (async, 포트 9999\)  
-* chaos\_retry\_config (단축 타임아웃)  
+* chaotic\_mcp\_server (async, 포트 9999\)
+* chaos\_retry\_config (단축 타임아웃)
 * container (async, direct container access)
+
+---
+
+## **HITL Entity Testing Strategy (Plan 07)**
+
+Human-in-the-Loop (HITL) 엔티티 테스트 전략:
+
+### **Test Coverage**
+
+| Entity | Test Focus | Key Scenarios |
+|--------|-----------|---------------|
+| **SamplingRequest** | 상태 관리, Timezone 검증 | PENDING → APPROVED/REJECTED, timezone-aware datetime |
+| **ElicitationRequest** | 액션 처리, Schema 검증 | ACCEPT/DECLINE, JSON Schema validation |
+
+### **Testing Patterns**
+
+**Timezone-aware Datetime**
+
+```python
+def test_datetime_uses_timezone_aware(self):
+    request = SamplingRequest(id="req-123", endpoint_id="mcp-1", messages=[])
+    assert request.created_at.tzinfo is not None  # UTC timezone
+```
+
+**State Transitions**
+
+```python
+def test_status_transitions(self):
+    request = SamplingRequest(...)
+    assert request.status == SamplingStatus.PENDING
+    # Phase 3 Service에서 상태 전이 로직 테스트
+```
+
+**Note:** HITL Signal 패턴(asyncio.Event) 테스트는 **Phase 3 Service**에서 다룹니다.
