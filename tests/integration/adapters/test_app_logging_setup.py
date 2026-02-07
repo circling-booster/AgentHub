@@ -5,8 +5,6 @@ Phase 4 Part B: Verify logging configuration is initialized on app startup
 
 import logging
 
-import pytest
-
 
 def test_app_startup_initializes_logging(tmp_path):
     """앱 시작 시 로깅 설정이 초기화되어야 함"""

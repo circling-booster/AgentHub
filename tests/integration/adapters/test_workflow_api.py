@@ -278,8 +278,7 @@ class TestWorkflowExecuteGET:
         # 500은 orchestrator 에러 (라우트 매칭은 성공)
         # 200은 완전한 성공
         assert response.status_code in (200, 500), (
-            f"Unexpected status code: {response.status_code}. "
-            f"Response: {response.text}"
+            f"Unexpected status code: {response.status_code}. Response: {response.text}"
         )
 
     async def test_execute_workflow_get_invalid_json(self, authenticated_client: TestClient):

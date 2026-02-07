@@ -5,12 +5,11 @@ FakeHitlNotification 자체의 동작을 검증합니다.
 
 from datetime import datetime, timezone
 
-from src.domain.entities.sampling_request import SamplingRequest, SamplingStatus
 from src.domain.entities.elicitation_request import (
     ElicitationRequest,
     ElicitationStatus,
-    ElicitationAction,
 )
+from src.domain.entities.sampling_request import SamplingRequest, SamplingStatus
 from tests.unit.fakes.fake_hitl_notification import FakeHitlNotification
 
 

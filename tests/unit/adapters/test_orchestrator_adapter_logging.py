@@ -6,8 +6,6 @@ Phase 4 Part B: Structured Logging for OrchestratorAdapter
 import logging
 from unittest.mock import AsyncMock
 
-import pytest
-
 from src.adapters.outbound.adk.orchestrator_adapter import AdkOrchestratorAdapter
 
 

@@ -3,8 +3,6 @@
 GET /api/conversations/{id}/tool-calls 검증
 """
 
-import pytest
-
 from src.domain.entities.conversation import Conversation
 from src.domain.entities.message import Message, MessageRole
 from src.domain.entities.tool_call import ToolCall

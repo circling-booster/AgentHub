@@ -173,9 +173,7 @@ async def inject_sampling_request(
     request = SamplingRequest(
         id=request_id,
         endpoint_id=endpoint_id,
-        messages=[
-            {"role": "user", "content": "What is 2+2?"}
-        ],
+        messages=[{"role": "user", "content": "What is 2+2?"}],
         model_preferences={"model": "openai/gpt-4o-mini"},
         system_prompt="You are a helpful assistant.",
         max_tokens=100,
@@ -236,14 +234,8 @@ async def inject_elicitation_request(
         requested_schema={
             "type": "object",
             "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Your full name"
-                },
-                "email": {
-                    "type": "string",
-                    "description": "Your email address"
-                }
+                "name": {"type": "string", "description": "Your full name"},
+                "email": {"type": "string", "description": "Your email address"},
             },
             "required": ["name", "email"],
         },

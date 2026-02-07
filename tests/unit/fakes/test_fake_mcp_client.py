@@ -5,12 +5,12 @@ FakeMcpClient 자체의 동작을 검증합니다.
 
 import pytest
 
+from src.domain.entities.prompt_template import PromptArgument, PromptTemplate
 from src.domain.entities.resource import Resource, ResourceContent
-from src.domain.entities.prompt_template import PromptTemplate, PromptArgument
 from src.domain.exceptions import (
     EndpointNotFoundError,
-    ResourceNotFoundError,
     PromptNotFoundError,
+    ResourceNotFoundError,
 )
 from tests.unit.fakes.fake_mcp_client import FakeMcpClient
 
@@ -119,9 +119,7 @@ class TestFakeMcpClient:
         async def sample_callback(**kwargs):
             return {"role": "assistant", "content": "test"}
 
-        await fake.connect(
-            "ep-1", "http://localhost:8080/mcp", sampling_callback=sample_callback
-        )
+        await fake.connect("ep-1", "http://localhost:8080/mcp", sampling_callback=sample_callback)
         stored = fake.get_sampling_callback("ep-1")
 
         assert stored is sample_callback

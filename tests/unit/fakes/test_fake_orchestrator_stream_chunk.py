@@ -3,8 +3,6 @@
 Step 2.2: FakeOrchestrator가 StreamChunk를 yield하는지 검증합니다.
 """
 
-import pytest
-
 from src.domain.entities.stream_chunk import StreamChunk
 from tests.unit.fakes import FakeOrchestrator
 
@@ -68,11 +66,13 @@ class TestFakeOrchestratorStreamChunk:
         """generate_response가 설정된 결과 반환 (TDD - Red Phase)"""
         # Given
         orchestrator = FakeOrchestrator()
-        orchestrator.set_generate_result({
-            "role": "assistant",
-            "content": "Custom response",
-            "model": "gpt-4",
-        })
+        orchestrator.set_generate_result(
+            {
+                "role": "assistant",
+                "content": "Custom response",
+                "model": "gpt-4",
+            }
+        )
 
         # When
         result = await orchestrator.generate_response(

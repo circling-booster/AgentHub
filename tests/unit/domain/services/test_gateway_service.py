@@ -3,8 +3,6 @@
 import asyncio
 import time
 
-import pytest
-
 from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointType
 from src.domain.services.gateway_service import GatewayService, TokenBucket

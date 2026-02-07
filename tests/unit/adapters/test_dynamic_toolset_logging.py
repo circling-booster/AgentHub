@@ -6,8 +6,6 @@ Phase 4 Part B: Structured Logging for DynamicToolset
 import logging
 from unittest.mock import AsyncMock
 
-import pytest
-
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 from src.domain.entities.endpoint import Endpoint, EndpointType
 

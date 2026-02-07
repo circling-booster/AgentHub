@@ -7,8 +7,6 @@ Step 8: OAuth 2.1 Flow - Routes TDD
 import contextlib
 from unittest.mock import patch
 
-import pytest
-
 from src.domain.ports.outbound.oauth_port import TokenResponse
 
 

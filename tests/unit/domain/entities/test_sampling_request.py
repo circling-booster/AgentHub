@@ -5,7 +5,7 @@ TDD로 작성됨:
 - SamplingStatus
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from src.domain.entities.sampling_request import SamplingRequest, SamplingStatus
 

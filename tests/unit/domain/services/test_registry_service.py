@@ -682,8 +682,8 @@ class TestRegistryServiceWithMcpClient:
         When: restore_endpoints() 호출
         Then: SDK Track도 재연결됨 (M1 수정)
         """
-        from src.domain.services.sampling_service import SamplingService
         from src.domain.services.elicitation_service import ElicitationService
+        from src.domain.services.sampling_service import SamplingService
 
         # Given: 저장소에 MCP 엔드포인트 저장
         mcp_endpoint = Endpoint(

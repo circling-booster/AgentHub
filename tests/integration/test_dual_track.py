@@ -38,9 +38,7 @@ class TestDualTrack:
 
         return MCP_TEST_URL
 
-    async def test_adk_calls_synapse_with_sampling(
-        self, authenticated_client, synapse_url
-    ):
+    async def test_adk_calls_synapse_with_sampling(self, authenticated_client, synapse_url):
         """ADK → Synapse 도구 호출 → Sampling 콜백 → LLM 호출 → 결과 반환
 
         Given: Synapse MCP 서버가 실행 중
@@ -52,7 +50,7 @@ class TestDualTrack:
             "/api/mcp/servers", json={"url": synapse_url, "name": "Test Synapse"}
         )
         assert response.status_code == 201  # Created
-        endpoint_id = response.json()["id"]
+        _endpoint_id = response.json()["id"]  # noqa: F841
 
         # 2. ADK에게 Synapse 도구 사용 지시
         # (summarize 도구가 sampling을 요청한다고 가정)
@@ -76,9 +74,7 @@ class TestDualTrack:
         # - LLM 호출 및 응답
         # 이러한 검증은 tests/e2e/playwright로 구현 예정
 
-    async def test_sampling_callback_timeout_sends_sse(
-        self, authenticated_client, synapse_url
-    ):
+    async def test_sampling_callback_timeout_sends_sse(self, authenticated_client, synapse_url):
         """Sampling Short timeout 시 SSE 알림 전송
 
         Given: Synapse MCP 서버가 실행 중
@@ -90,7 +86,7 @@ class TestDualTrack:
             "/api/mcp/servers", json={"url": synapse_url, "name": "Test Synapse"}
         )
         assert response.status_code == 201  # Created
-        endpoint_id = response.json()["id"]
+        _endpoint_id = response.json()["id"]  # noqa: F841
 
         # 2. Sampling 요청 트리거 (approve 없이 30초 대기)
         # (이 테스트는 실제 30초를 기다려야 하므로, mock 또는 timeout 단축 필요)
@@ -101,9 +97,7 @@ class TestDualTrack:
         # (Integration 레벨에서는 구현하기 어려움)
         pass
 
-    async def test_restore_endpoints_connects_dual_track(
-        self, authenticated_client, synapse_url
-    ):
+    async def test_restore_endpoints_connects_dual_track(self, authenticated_client, synapse_url):
         """서버 재시작 시 Dual-Track 재연결
 
         Given: Synapse MCP 서버가 등록되어 있음

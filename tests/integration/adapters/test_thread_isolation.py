@@ -7,8 +7,6 @@ import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
-
 from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 
 

@@ -3,8 +3,6 @@
 A2A 에이전트 등록/해제/조회 API 테스트
 """
 
-import pytest
-
 
 class TestA2aAgentRegistration:
     """A2A Agent 등록 API 테스트"""
