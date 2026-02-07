@@ -4,6 +4,7 @@ MCP Python SDK를 사용하여 MCP 서버와 통신하는 어댑터입니다.
 Streamable HTTP Transport를 사용합니다.
 """
 
+import contextlib
 import uuid
 from contextlib import AsyncExitStack
 
@@ -31,6 +32,7 @@ class McpClientAdapter(McpClientPort):
     def __init__(self) -> None:
         self._sessions: dict[str, ClientSession] = {}
         self._exit_stacks: dict[str, AsyncExitStack] = {}
+        self._is_cleaning_up: bool = False  # 중복 disconnect_all() 방지
 
     async def connect(
         self,
@@ -81,8 +83,9 @@ class McpClientAdapter(McpClientPort):
         if endpoint_id in self._exit_stacks:
             try:
                 await self._exit_stacks[endpoint_id].aclose()
-            except Exception:
-                # MCP SDK anyio/asyncio 충돌, 네트워크 오류 등 무시
+            except BaseException:
+                # MCP SDK anyio/asyncio 충돌, CancelledError, 네트워크 오류 등 무시
+                # BaseException으로 catch하여 asyncio.CancelledError도 처리
                 # Teardown 중 발생하는 예외는 세션 정리를 방해하지 않음
                 pass
             finally:
@@ -90,9 +93,22 @@ class McpClientAdapter(McpClientPort):
                 del self._sessions[endpoint_id]
 
     async def disconnect_all(self) -> None:
-        """모든 세션 정리 (서버 종료 시)"""
-        for endpoint_id in list(self._sessions.keys()):
-            await self.disconnect(endpoint_id)
+        """모든 세션 정리 (서버 종료 시)
+
+        Note: 중복 호출을 방지하여 anyio plugin의 fixture teardown과 안전하게 동작
+        """
+        # 이미 정리 중이거나 완료되었으면 즉시 반환 (idempotent)
+        if self._is_cleaning_up or not self._sessions:
+            return
+
+        self._is_cleaning_up = True
+        try:
+            for endpoint_id in list(self._sessions.keys()):
+                # anyio cancel scope 충돌, CancelledError 등 무시하고 계속 진행
+                with contextlib.suppress(BaseException):
+                    await self.disconnect(endpoint_id)
+        finally:
+            self._is_cleaning_up = False
 
     async def list_resources(self, endpoint_id: str) -> list[Resource]:
         """리소스 목록 조회"""
