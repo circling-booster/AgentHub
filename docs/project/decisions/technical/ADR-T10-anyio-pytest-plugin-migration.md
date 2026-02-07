@@ -98,9 +98,9 @@ anyio_mode = "auto"  # async def test_*() 자동 감지
 
 ### Positive
 
-- ✅ **Teardown 에러 해소**: 648개 테스트 전체 PASSED, teardown 에러 0건
+- ✅ **Teardown 에러 해소**: 616개 테스트 전체 PASSED, teardown 에러 0건
 - ✅ **테스트 안정성 향상**: MCP SDK와의 완벽한 호환성
-- ✅ **코드 간소화**: `@pytest.mark.asyncio` 마커 200개 제거
+- ✅ **코드 간소화**: `@pytest.mark.asyncio` 마커 ~195개 제거 (37 files)
 - ✅ **호환성 유지**: 기존 asyncio API 그대로 사용 가능
 
 ### Negative
@@ -120,8 +120,10 @@ anyio_mode = "auto"  # async def test_*() 자동 감지
 **Phase 4.5에서 완료:**
 - Step 4.5.2: pyproject.toml 수정 (1 file)
 - Step 4.5.3: @pytest_asyncio.fixture 변경 (2 files)
-- Step 4.5.4: @pytest.mark.asyncio 제거 (39 files)
-- Step 4.5.5: 검증 (648 passed, coverage 88.01%)
+- Step 4.5.4: @pytest.mark.asyncio 제거 (37 files)
+- Step 4.5.4.1: authenticated_client 사용 테스트를 async로 변환 (9 files)
+- Step 4.5.4.2: test_app_startup.py app fixture 동기화 (1 file)
+- Step 4.5.5: 검증 (616 passed, coverage 86.84%)
 - Step 4.5.6: 문서 업데이트 (7 files)
 
 **문서 업데이트:**

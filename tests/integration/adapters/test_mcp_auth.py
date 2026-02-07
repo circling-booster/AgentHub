@@ -19,7 +19,6 @@ from src.domain.entities.endpoint import Endpoint
 from src.domain.entities.enums import EndpointType
 
 
-@pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.local_mcp
 class TestMcpAuthenticatedConnection:

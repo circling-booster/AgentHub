@@ -12,7 +12,6 @@ from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 from src.domain.entities.endpoint import Endpoint, EndpointType
 
 
-@pytest.mark.asyncio
 async def test_get_tools_logs_cache_hit_miss(caplog):
     """get_tools()가 캐시 hit/miss를 로깅해야 함"""
     # Given: DynamicToolset with mocked MCPToolset
@@ -46,7 +45,6 @@ async def test_get_tools_logs_cache_hit_miss(caplog):
     assert any("cache HIT" in record.message for record in caplog.records)
 
 
-@pytest.mark.asyncio
 async def test_get_tools_logs_total_tool_count(caplog):
     """get_tools()가 총 도구 개수를 INFO 레벨로 로깅해야 함"""
     # Given: DynamicToolset with mocked MCPToolset
@@ -71,7 +69,6 @@ async def test_get_tools_logs_total_tool_count(caplog):
     assert any("3 tools" in record.message for record in info_logs)
 
 
-@pytest.mark.asyncio
 async def test_add_mcp_server_logs_endpoint_url_and_tool_count(caplog):
     """add_mcp_server()가 엔드포인트 URL과 도구 개수를 로깅해야 함"""
     # Given: DynamicToolset (실제 MCP 서버 불필요, Mock 사용)
@@ -108,7 +105,6 @@ async def test_add_mcp_server_logs_endpoint_url_and_tool_count(caplog):
     assert log_with_extra[0].tool_count == 5
 
 
-@pytest.mark.asyncio
 async def test_remove_mcp_server_logs_removed_tool_count(caplog):
     """remove_mcp_server()가 제거된 도구 개수를 로깅해야 함"""
     # Given: DynamicToolset with registered endpoint

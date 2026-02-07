@@ -55,19 +55,28 @@ addopts \= "-v \--tb=short \-m 'not llm and not e2e\_playwright and not local\_m
 * \*/\_\_init\_\_.py  
 * src/main.py
 
-## **⚡ Async Test Configuration**
+## **⚡ Async Test Configuration (AnyIO Plugin)**
 
-### **asyncio\_mode \= "auto"**
+### **anyio\_mode \= "auto"**
 
 **pyproject.toml:**
 
-\[tool.pytest.ini\_options\]  
-asyncio\_mode \= "auto"
+\[tool.pytest.ini\_options\]
+anyio\_mode \= "auto"
 
 **효과:**
 
 * async def test\_\*() 형식의 테스트를 자동으로 비동기 테스트로 인식
-* @pytest.mark.asyncio 데코레이터가 불필요해짐 (기존 코드 호환)
+* @pytest.mark.asyncio 데코레이터 불필요 (auto mode)
+* anyio는 asyncio를 기본 backend로 사용하여 기존 asyncio API와 호환
+
+**마이그레이션 배경:**
+
+* pytest-asyncio는 fixture setup/teardown을 서로 다른 task에서 실행
+* MCP SDK의 anyio.CancelScope는 동일 task 진입/탈출 요구
+* anyio plugin은 fixture를 단일 task에서 실행하여 이 문제 해소
+
+**관련 문서:** [ADR-T10: AnyIO Pytest Plugin Migration](../../docs/project/decisions/technical/ADR-T10-anyio-pytest-plugin-migration.md)
 
 ## **🌍 Environment Variables**
 

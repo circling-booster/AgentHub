@@ -25,7 +25,6 @@ class TestConversationService:
     def service(self, storage, orchestrator):
         return ConversationService(storage=storage, orchestrator=orchestrator)
 
-    @pytest.mark.asyncio
     async def test_create_conversation(self, service):
         """새 대화 생성"""
         # When
@@ -35,7 +34,6 @@ class TestConversationService:
         assert conversation.id is not None
         assert conversation.title == ""
 
-    @pytest.mark.asyncio
     async def test_create_conversation_with_title(self, service):
         """제목과 함께 새 대화 생성"""
         # When
@@ -44,7 +42,6 @@ class TestConversationService:
         # Then
         assert conversation.title == "Test Chat"
 
-    @pytest.mark.asyncio
     async def test_get_conversation(self, service, storage):
         """대화 조회"""
         # Given
@@ -58,14 +55,12 @@ class TestConversationService:
         assert result.id == "conv-123"
         assert result.title == "Existing"
 
-    @pytest.mark.asyncio
     async def test_get_conversation_not_found(self, service):
         """존재하지 않는 대화 조회"""
         # When / Then
         with pytest.raises(ConversationNotFoundError):
             await service.get_conversation("non-existent")
 
-    @pytest.mark.asyncio
     async def test_list_conversations(self, service, storage):
         """대화 목록 조회"""
         # Given
@@ -78,7 +73,6 @@ class TestConversationService:
         # Then
         assert len(result) == 3
 
-    @pytest.mark.asyncio
     async def test_delete_conversation(self, service, storage):
         """대화 삭제"""
         # Given
@@ -91,7 +85,6 @@ class TestConversationService:
         assert result is True
         assert "conv-123" not in storage.conversations
 
-    @pytest.mark.asyncio
     async def test_send_message_to_new_conversation(self, service, storage):
         """새 대화에 메시지 전송"""
         # When
@@ -106,7 +99,6 @@ class TestConversationService:
         assert chunks[0].content == "Hello! "
         assert chunks[1].content == "How can I help you?"
 
-    @pytest.mark.asyncio
     async def test_send_message_to_existing_conversation(self, service, storage):
         """기존 대화에 메시지 전송"""
         # Given
@@ -122,7 +114,6 @@ class TestConversationService:
         assert len(chunks) == 2
         assert all(isinstance(c, StreamChunk) for c in chunks)
 
-    @pytest.mark.asyncio
     async def test_send_message_saves_user_message(self, service, storage):
         """메시지 전송 시 사용자 메시지 저장"""
         # Given
@@ -139,7 +130,6 @@ class TestConversationService:
         assert len(user_messages) == 1
         assert user_messages[0].content == "Test message"
 
-    @pytest.mark.asyncio
     async def test_send_message_saves_assistant_response(self, service, storage):
         """메시지 전송 시 어시스턴트 응답 저장"""
         # Given
@@ -156,7 +146,6 @@ class TestConversationService:
         assert len(assistant_messages) == 1
         assert assistant_messages[0].content == "Hello! How can I help you?"
 
-    @pytest.mark.asyncio
     async def test_send_message_to_nonexistent_conversation(self, service):
         """존재하지 않는 대화에 메시지 전송 시 에러"""
         # When / Then
@@ -164,7 +153,6 @@ class TestConversationService:
             async for _ in service.send_message("nonexistent", "Hello"):
                 pass
 
-    @pytest.mark.asyncio
     async def test_send_message_accumulates_only_text_chunks(self, storage, orchestrator):
         """tool_call/tool_result 청크는 저장 시 무시하고 text만 축적"""
         # Given
@@ -193,7 +181,6 @@ class TestConversationService:
         assert len(assistant_msgs) == 1
         assert assistant_msgs[0].content == "Before After"
 
-    @pytest.mark.asyncio
     async def test_get_or_create_conversation_creates_new(self, service, storage):
         """get_or_create_conversation - 새 대화 생성"""
         # When
@@ -203,7 +190,6 @@ class TestConversationService:
         assert conv.id is not None
         assert conv.id in storage.conversations
 
-    @pytest.mark.asyncio
     async def test_get_or_create_conversation_returns_existing(self, service, storage):
         """get_or_create_conversation - 기존 대화 반환"""
         # Given

@@ -18,7 +18,6 @@ TEST_MODEL = "openai/gpt-4o-mini"  # Use fast, cheap model for tests
 class TestSequentialWorkflowIntegration:
     """Test Sequential Workflow with real A2A agents (Echo → Math)"""
 
-    @pytest.mark.asyncio
     async def test_echo_math_sequential_workflow(self, a2a_echo_agent, a2a_math_agent):
         """
         Given: Sequential workflow with Echo → Math agents
@@ -96,7 +95,6 @@ class TestSequentialWorkflowIntegration:
             await orchestrator.close()
             await dynamic_toolset.close()
 
-    @pytest.mark.asyncio
     async def test_workflow_agent_lifecycle(self, a2a_echo_agent):
         """
         Given: Workflow agent created
@@ -155,7 +153,6 @@ class TestSequentialWorkflowIntegration:
 class TestWorkflowAgentCreationValidation:
     """Test workflow agent creation validation"""
 
-    @pytest.mark.asyncio
     async def test_workflow_with_unregistered_agent_fails(self):
         """
         Given: Workflow referencing unregistered A2A agent
@@ -196,7 +193,6 @@ class TestWorkflowAgentCreationValidation:
             await orchestrator.close()
             await dynamic_toolset.close()
 
-    @pytest.mark.asyncio
     async def test_invalid_workflow_type_fails(self, a2a_echo_agent):
         """
         Given: Workflow with invalid workflow_type

@@ -11,7 +11,6 @@ from src.domain.entities.tool_call import ToolCall
 from tests.integration.conftest import TEST_EXTENSION_TOKEN
 
 
-@pytest.mark.asyncio
 async def test_get_tool_calls_api_returns_list(http_client):
     """GET /api/conversations/{id}/tool-calls가 ToolCall 리스트를 반환해야 함"""
     # Given: http_client의 Container에서 storage 가져오기
@@ -54,7 +53,6 @@ async def test_get_tool_calls_api_returns_list(http_client):
     assert data[0]["duration_ms"] == 100
 
 
-@pytest.mark.asyncio
 async def test_get_tool_calls_api_404_for_nonexistent_conversation(http_client):
     """존재하지 않는 대화 ID로 조회 시 404 반환"""
     # When: 존재하지 않는 대화 조회 (인증 토큰 포함)

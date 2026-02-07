@@ -23,9 +23,11 @@
 1. **WAL 파일 삭제**: rm data/agenthub.db-wal data/agenthub.db-shm  
 2. **격리 확인**: authenticated\_client fixture를 사용하여 독립 DB를 쓰고 있는지 확인
 
-### **pytest-asyncio 에러**
+### **anyio plugin 에러**
 
-* pyproject.toml에 asyncio\_mode \= "auto"가 설정되어 있는지 확인하십시오.
+* pyproject.toml에 `anyio_mode = "auto"`가 설정되어 있는지 확인하십시오.
+* `@pytest.mark.asyncio` 마커가 남아있지 않은지 확인 (anyio plugin과 충돌)
+* asyncio API (create_task, gather 등)는 anyio가 기본 backend로 사용하여 정상 동작
 
 ### **Import 에러 (ModuleNotFoundError)**
 

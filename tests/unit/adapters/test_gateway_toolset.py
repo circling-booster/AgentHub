@@ -14,7 +14,6 @@ from src.domain.services.gateway_service import GatewayService
 class TestGatewayToolset:
     """GatewayToolset Adapter 테스트"""
 
-    @pytest.mark.asyncio
     async def test_get_tools_delegates_to_dynamic_toolset(self):
         """
         Given: DynamicToolset과 GatewayService
@@ -46,7 +45,6 @@ class TestGatewayToolset:
         assert tools[0].name == "tool1"
         dynamic_toolset.get_tools.assert_called_once()
 
-    @pytest.mark.asyncio
     async def test_call_tool_with_gateway_circuit_open_raises_error(self):
         """
         Given: Circuit Breaker OPEN 상태
@@ -78,7 +76,6 @@ class TestGatewayToolset:
 
         assert "circuit breaker open" in str(exc_info.value.message).lower()
 
-    @pytest.mark.asyncio
     async def test_call_tool_with_gateway_rate_limit_exceeded_raises_error(self):
         """
         Given: Rate Limit 초과 (burst 소진)
@@ -109,7 +106,6 @@ class TestGatewayToolset:
 
         assert "rate limit exceeded" in str(exc_info.value.message).lower()
 
-    @pytest.mark.asyncio
     async def test_call_tool_with_gateway_success_records_success(self):
         """
         Given: Circuit CLOSED, Rate Limit 여유
@@ -138,7 +134,6 @@ class TestGatewayToolset:
         assert result == {"result": "success"}
         dynamic_toolset.call_tool.assert_called_once_with("tool1", {"arg": "value"})
 
-    @pytest.mark.asyncio
     async def test_call_tool_with_gateway_failure_records_failure(self):
         """
         Given: Circuit CLOSED
@@ -164,7 +159,6 @@ class TestGatewayToolset:
 
         assert "Tool execution failed" in str(exc_info.value)
 
-    @pytest.mark.asyncio
     async def test_call_tool_with_gateway_fallback_on_failure(self):
         """
         Given: Primary 서버 실패, Fallback URL 설정

@@ -701,9 +701,8 @@ pytest tests/unit/domain/ -q --tb=line
 - [ ] Step 3.4: ElicitationService 구현 (Signal 패턴, TDD)
 - [ ] Step 3.5: Documentation Update (Architecture Pattern + ADR References)
 - [ ] 모든 테스트 통과 확인
-- [ ] Git 커밋: `docs: complete phase 3 - domain services`
 - [ ] **Phase 완료**: Status 변경 (🔄 → ✅)
-- [ ] Git 커밋: `docs: complete phase N - {phase_name}`
+- [ ] Git 커밋: `docs: complete phase 3 - domain services`
 
 ---
 

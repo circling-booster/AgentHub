@@ -6,7 +6,6 @@ A2A 에이전트 등록/해제/조회 API 테스트
 import pytest
 
 
-@pytest.mark.asyncio
 class TestA2aAgentRegistration:
     """A2A Agent 등록 API 테스트"""
 
@@ -74,7 +73,6 @@ class TestA2aAgentRegistration:
         assert response.status_code == 502
 
 
-@pytest.mark.asyncio
 class TestA2aAgentList:
     """A2A Agent 목록 조회 API 테스트"""
 
@@ -125,7 +123,6 @@ class TestA2aAgentList:
         assert isinstance(data, list)
 
 
-@pytest.mark.asyncio
 class TestA2aAgentDetail:
     """A2A Agent 상세 조회 API 테스트"""
 
@@ -176,7 +173,6 @@ class TestA2aAgentDetail:
         assert response.status_code == 404
 
 
-@pytest.mark.asyncio
 class TestA2aAgentCard:
     """A2A Agent Card 조회 API 테스트"""
 
@@ -225,7 +221,6 @@ class TestA2aAgentCard:
         assert response.status_code == 404
 
 
-@pytest.mark.asyncio
 class TestA2aAgentDeletion:
     """A2A Agent 삭제 API 테스트"""
 
@@ -276,7 +271,6 @@ class TestA2aAgentDeletion:
         assert response.status_code == 404
 
 
-@pytest.mark.asyncio
 class TestA2aRoutesSecurity:
     """A2A Routes 보안 테스트"""
 

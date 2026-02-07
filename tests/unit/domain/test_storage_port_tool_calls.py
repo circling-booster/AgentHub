@@ -20,7 +20,6 @@ def test_storage_port_has_get_tool_calls_method():
     assert hasattr(ConversationStoragePort, "get_tool_calls")
 
 
-@pytest.mark.asyncio
 async def test_fake_storage_saves_and_retrieves_tool_calls():
     """Fake Storage가 ToolCall을 저장하고 조회할 수 있어야 함"""
     from src.domain.entities.conversation import Conversation

@@ -12,7 +12,6 @@ from tests.unit.fakes import FakeOrchestrator
 class TestFakeOrchestratorStreamChunk:
     """FakeOrchestrator가 StreamChunk를 yield하는지 검증"""
 
-    @pytest.mark.asyncio
     async def test_process_message_yields_stream_chunks(self):
         """process_message가 StreamChunk 객체를 yield해야 함"""
         # Given
@@ -31,7 +30,6 @@ class TestFakeOrchestratorStreamChunk:
         assert chunks[1].type == "text"
         assert chunks[1].content == "How can I help you?"
 
-    @pytest.mark.asyncio
     async def test_set_responses_accepts_stream_chunks(self):
         """set_responses가 StreamChunk 리스트를 수용해야 함"""
         # Given
@@ -57,7 +55,6 @@ class TestFakeOrchestratorStreamChunk:
         assert chunks[2].type == "tool_result"
         assert chunks[3].type == "text"
 
-    @pytest.mark.asyncio
     async def test_default_responses_are_text_stream_chunks(self):
         """기본 응답이 text 타입 StreamChunk여야 함"""
         # Given
@@ -67,7 +64,6 @@ class TestFakeOrchestratorStreamChunk:
         assert all(isinstance(r, StreamChunk) for r in orchestrator.responses)
         assert all(r.type == "text" for r in orchestrator.responses)
 
-    @pytest.mark.asyncio
     async def test_generate_response_returns_preset(self):
         """generate_response가 설정된 결과 반환 (TDD - Red Phase)"""
         # Given
@@ -87,7 +83,6 @@ class TestFakeOrchestratorStreamChunk:
         assert result["content"] == "Custom response"
         assert result["model"] == "gpt-4"
 
-    @pytest.mark.asyncio
     async def test_generate_response_default_result(self):
         """generate_response 기본 결과 반환 (TDD - Red Phase)"""
         # Given

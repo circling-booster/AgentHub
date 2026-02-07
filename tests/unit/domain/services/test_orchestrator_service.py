@@ -19,7 +19,6 @@ class TestOrchestratorService:
     def service(self, conversation_service):
         return OrchestratorService(conversation_service=conversation_service)
 
-    @pytest.mark.asyncio
     async def test_send_message(self, service):
         """메시지 전송 - ChatPort.send_message 구현"""
         # When
@@ -33,7 +32,6 @@ class TestOrchestratorService:
         text = "".join(c.content for c in chunks if c.type == "text")
         assert text == "Hello! How can I help you?"
 
-    @pytest.mark.asyncio
     async def test_send_message_to_existing_conversation(self, service, conversation_service):
         """기존 대화에 메시지 전송"""
         # Given
@@ -48,7 +46,6 @@ class TestOrchestratorService:
         assert len(chunks) == 2
         assert all(isinstance(c, StreamChunk) for c in chunks)
 
-    @pytest.mark.asyncio
     async def test_send_message_nonexistent_conversation(self, service):
         """존재하지 않는 대화에 메시지 전송"""
         # When / Then
@@ -56,7 +53,6 @@ class TestOrchestratorService:
             async for _ in service.send_message("nonexistent", "Hello"):
                 pass
 
-    @pytest.mark.asyncio
     async def test_get_conversation(self, service, conversation_service):
         """대화 조회"""
         # Given
@@ -69,14 +65,12 @@ class TestOrchestratorService:
         assert result.id == conv.id
         assert result.title == "Test"
 
-    @pytest.mark.asyncio
     async def test_get_conversation_not_found(self, service):
         """존재하지 않는 대화 조회"""
         # When / Then
         with pytest.raises(ConversationNotFoundError):
             await service.get_conversation("nonexistent")
 
-    @pytest.mark.asyncio
     async def test_list_conversations(self, service, conversation_service):
         """대화 목록 조회"""
         # Given
@@ -90,7 +84,6 @@ class TestOrchestratorService:
         # Then
         assert len(result) == 2
 
-    @pytest.mark.asyncio
     async def test_create_conversation(self, service):
         """새 대화 생성"""
         # When
@@ -99,7 +92,6 @@ class TestOrchestratorService:
         # Then
         assert conv.title == "New Chat"
 
-    @pytest.mark.asyncio
     async def test_delete_conversation(self, service, conversation_service):
         """대화 삭제"""
         # Given
@@ -112,7 +104,6 @@ class TestOrchestratorService:
         assert result is True
         assert conv.id not in conversation_service.conversations
 
-    @pytest.mark.asyncio
     async def test_delete_nonexistent_conversation(self, service):
         """존재하지 않는 대화 삭제"""
         # When

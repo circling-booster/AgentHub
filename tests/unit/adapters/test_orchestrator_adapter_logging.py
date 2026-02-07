@@ -11,7 +11,6 @@ import pytest
 from src.adapters.outbound.adk.orchestrator_adapter import AdkOrchestratorAdapter
 
 
-@pytest.mark.asyncio
 async def test_rebuild_agent_logs_tool_and_agent_counts(caplog):
     """_rebuild_agent()가 MCP 도구와 A2A 에이전트 개수를 로깅해야 함"""
     # Given: OrchestratorAdapter with mocked DynamicToolset
@@ -57,7 +56,6 @@ async def test_rebuild_agent_logs_tool_and_agent_counts(caplog):
     assert log_with_extra[0].a2a_agents == 0
 
 
-@pytest.mark.asyncio
 async def test_initialize_logs_model_name(caplog):
     """initialize()가 모델 이름을 로깅해야 함 (회귀 방지)"""
     # Given: OrchestratorAdapter

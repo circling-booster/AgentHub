@@ -13,7 +13,6 @@ from src.domain.services.gateway_service import GatewayService, TokenBucket
 class TestTokenBucket:
     """Token Bucket Rate Limiting 테스트"""
 
-    @pytest.mark.asyncio
     async def test_consume_success_when_tokens_available(self):
         """
         Given: Token Bucket with capacity 10, rate 5 tokens/sec
@@ -29,7 +28,6 @@ class TestTokenBucket:
         # Then
         assert result is True
 
-    @pytest.mark.asyncio
     async def test_consume_fail_when_no_tokens(self):
         """
         Given: Token Bucket with capacity 2
@@ -45,7 +43,6 @@ class TestTokenBucket:
         # Then
         assert result is False
 
-    @pytest.mark.asyncio
     async def test_refill_over_time(self):
         """
         Given: Token Bucket with rate 10 tokens/sec
@@ -63,7 +60,6 @@ class TestTokenBucket:
         # Then
         assert result is True
 
-    @pytest.mark.asyncio
     async def test_refill_does_not_exceed_capacity(self):
         """
         Given: Token Bucket with capacity 10, rate 10 tokens/sec
@@ -126,7 +122,6 @@ class TestGatewayService:
         # Then
         assert result is False
 
-    @pytest.mark.asyncio
     async def test_gateway_rate_limit_exceeded(self):
         """
         Given: Rate Limit 5 rps (burst 10)

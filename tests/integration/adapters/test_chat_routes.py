@@ -19,7 +19,7 @@ class TestChatStreaming:
     """POST /api/chat/stream - SSE 스트리밍 채팅"""
 
     @pytest.mark.llm
-    def test_chat_stream_basic(self, authenticated_client, request):
+    async def test_chat_stream_basic(self, authenticated_client, request):
         """
         Given: 간단한 채팅 메시지
         When: POST /api/chat/stream 호출
@@ -61,7 +61,7 @@ class TestChatStreaming:
             text_events = [e for e in events if e["type"] == "text"]
             assert len(text_events) > 0
 
-    def test_chat_stream_invalid_request_empty_message(self, authenticated_client):
+    async def test_chat_stream_invalid_request_empty_message(self, authenticated_client):
         """
         Given: 잘못된 요청 (빈 메시지)
         When: POST /api/chat/stream 호출
@@ -76,7 +76,7 @@ class TestChatStreaming:
         # Then: 422 Validation Error
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_chat_stream_conversation_id_optional(self, authenticated_client):
+    async def test_chat_stream_conversation_id_optional(self, authenticated_client):
         """
         Given: conversation_id 없는 요청
         When: POST /api/chat/stream 호출 (non-LLM이므로 에러 이벤트 예상)
@@ -120,7 +120,7 @@ class TestChatStreaming:
         container.unwire()
 
     @pytest.mark.llm
-    def test_chat_stream_multiple_messages(self, authenticated_client, request):
+    async def test_chat_stream_multiple_messages(self, authenticated_client, request):
         """
         Given: 동일 conversation_id로 여러 메시지
         When: POST /api/chat/stream 연속 호출
@@ -163,7 +163,7 @@ class TestChatStreamingGET:
     """GET /api/chat/stream - EventSource 지원"""
 
     @pytest.mark.llm
-    def test_chat_stream_get_basic(self, authenticated_client, request):
+    async def test_chat_stream_get_basic(self, authenticated_client, request):
         """
         Given: Query parameters로 메시지 전달
         When: GET /api/chat/stream 호출
@@ -198,7 +198,7 @@ class TestChatStreamingGET:
             assert events[-1]["type"] == "done"
 
     @pytest.mark.llm
-    def test_chat_stream_get_with_conversation_id(self, authenticated_client, request):
+    async def test_chat_stream_get_with_conversation_id(self, authenticated_client, request):
         """
         Given: conversation_id를 query param으로 전달
         When: GET /api/chat/stream 호출
@@ -230,7 +230,7 @@ class TestChatStreamingGET:
 
             assert len(events) >= 1
 
-    def test_chat_stream_get_empty_message_validation(self, authenticated_client):
+    async def test_chat_stream_get_empty_message_validation(self, authenticated_client):
         """
         Given: 빈 메시지
         When: GET /api/chat/stream 호출

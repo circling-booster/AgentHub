@@ -38,7 +38,6 @@ async def orchestrator():
     await adapter.close()
 
 
-@pytest.mark.asyncio
 async def test_sub_agents_populated_after_registration(orchestrator, a2a_echo_agent):
     """
     진단 1: A2A 에이전트 등록 후 sub_agents 딕셔너리가 채워지는지 확인
@@ -63,7 +62,6 @@ async def test_sub_agents_populated_after_registration(orchestrator, a2a_echo_ag
     assert remote_agent.name == f"a2a_{endpoint_id}".replace("-", "_")
 
 
-@pytest.mark.asyncio
 async def test_rebuild_agent_includes_sub_agents(orchestrator, a2a_echo_agent):
     """
     진단 2: _rebuild_agent() 후 LlmAgent.sub_agents에 포함되는지 확인
@@ -90,7 +88,6 @@ async def test_rebuild_agent_includes_sub_agents(orchestrator, a2a_echo_agent):
     assert remote_agent in agent_sub_agents
 
 
-@pytest.mark.asyncio
 async def test_dynamic_instruction_contains_a2a_section(orchestrator, a2a_echo_agent):
     """
     진단 3: 동적 instruction에 A2A 에이전트 정보가 포함되는지 확인
@@ -116,7 +113,6 @@ async def test_dynamic_instruction_contains_a2a_section(orchestrator, a2a_echo_a
     assert "echo" in instruction_lower or endpoint_id in instruction_lower
 
 
-@pytest.mark.asyncio
 @pytest.mark.llm
 async def test_llm_delegates_to_a2a_agent(orchestrator, a2a_echo_agent):
     """

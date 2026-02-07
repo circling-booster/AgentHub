@@ -15,7 +15,6 @@ from src.adapters.outbound.adk.dynamic_toolset import DynamicToolset
 class TestThreadIsolation:
     """Thread Isolation 검증"""
 
-    @pytest.mark.asyncio
     async def test_thread_isolation_health_during_tool_execution(self):
         """
         Given: 무거운 동기 작업을 수행하는 도구가 실행 중
@@ -65,7 +64,6 @@ class TestThreadIsolation:
         # Cleanup
         await toolset.close()
 
-    @pytest.mark.asyncio
     async def test_asyncio_to_thread_wrapper(self):
         """
         Given: DynamicToolset.call_tool()이 asyncio.to_thread()를 사용
@@ -109,7 +107,6 @@ class TestThreadIsolation:
 
         await toolset.close()
 
-    @pytest.mark.asyncio
     async def test_event_loop_not_blocked_during_tool_call(self):
         """
         Given: 메인 이벤트 루프에서 실행 중

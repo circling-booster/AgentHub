@@ -21,7 +21,6 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import pytest_asyncio
 from dependency_injector import providers
 from fastapi.testclient import TestClient
 
@@ -100,7 +99,7 @@ def mock_mcp_toolset_in_ci():
         yield
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]:
     """
     인증된 TestClient 인스턴스 (공통 fixture)

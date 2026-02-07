@@ -6,7 +6,7 @@ MCP Registration API with Authentication - Integration Tests
 class TestMcpAuthApi:
     """MCP 서버 등록 API 인증 테스트"""
 
-    def test_register_mcp_with_api_key_via_api(self, authenticated_client):
+    async def test_register_mcp_with_api_key_via_api(self, authenticated_client):
         """
         API Key 인증으로 MCP 서버 등록
 
@@ -44,7 +44,7 @@ class TestMcpAuthApi:
         assert len(servers) == 1
         assert servers[0]["url"] == "http://127.0.0.1:9001/mcp"
 
-    def test_register_mcp_with_custom_headers_via_api(self, authenticated_client):
+    async def test_register_mcp_with_custom_headers_via_api(self, authenticated_client):
         """
         커스텀 헤더 인증으로 MCP 서버 등록
 
@@ -77,7 +77,7 @@ class TestMcpAuthApi:
         assert data["url"] == "http://127.0.0.1:9000/mcp"
         assert data["name"] == "Custom Header MCP"
 
-    def test_register_mcp_without_auth_backwards_compatible(self, authenticated_client):
+    async def test_register_mcp_without_auth_backwards_compatible(self, authenticated_client):
         """
         인증 없는 MCP 서버 등록 (하위 호환성)
 

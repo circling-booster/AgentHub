@@ -56,7 +56,6 @@ def mock_toolset_with_failing_tool():
 class TestToolRetryOnTransientError:
     """일시적 에러 시 재시도 테스트"""
 
-    @pytest.mark.asyncio
     async def test_tool_retries_on_transient_error(
         self, dynamic_toolset_with_retry, mock_toolset_with_failing_tool
     ):
@@ -87,7 +86,6 @@ class TestToolRetryOnTransientError:
         # Then: max_retries + 1회 호출 (첫 시도 + 재시도 2회 = 3회)
         assert call_count == 3
 
-    @pytest.mark.asyncio
     async def test_tool_succeeds_after_retry(
         self, dynamic_toolset_with_retry, mock_toolset_with_failing_tool
     ):
@@ -124,7 +122,6 @@ class TestToolRetryOnTransientError:
 class TestToolNoRetryOnPermanentError:
     """영구 에러 시 재시도 안함 테스트"""
 
-    @pytest.mark.asyncio
     async def test_tool_no_retry_on_permanent_error(self, dynamic_toolset_with_retry):
         """
         Given: 영구 에러가 발생하는 도구 (ValueError, RuntimeError 등)
@@ -159,7 +156,6 @@ class TestToolNoRetryOnPermanentError:
 class TestExponentialBackoff:
     """Exponential Backoff 테스트"""
 
-    @pytest.mark.asyncio
     async def test_exponential_backoff_timing(
         self, dynamic_toolset_with_retry, mock_toolset_with_failing_tool
     ):
@@ -198,7 +194,6 @@ class TestExponentialBackoff:
 class TestMaxRetriesExceeded:
     """최대 재시도 초과 테스트"""
 
-    @pytest.mark.asyncio
     async def test_max_retries_exceeded_raises(
         self, dynamic_toolset_with_retry, mock_toolset_with_failing_tool
     ):
@@ -218,7 +213,6 @@ class TestMaxRetriesExceeded:
 class TestRetryDisabled:
     """재시도 비활성화 테스트"""
 
-    @pytest.mark.asyncio
     async def test_retry_disabled_when_max_retries_zero(self):
         """
         Given: max_retries = 0

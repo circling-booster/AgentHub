@@ -15,7 +15,6 @@ from src.domain.exceptions import EndpointConnectionError, EndpointNotFoundError
 class TestA2aClientAdapterRegister:
     """Agent 등록 테스트"""
 
-    @pytest.mark.asyncio
     async def test_register_agent_fetches_agent_card(self, a2a_echo_agent):
         """
         Given: 실행 중인 A2A Echo Agent (fixture)
@@ -39,7 +38,6 @@ class TestA2aClientAdapterRegister:
         assert "name" in agent_card or "agentId" in agent_card
         assert isinstance(agent_card, dict)
 
-    @pytest.mark.asyncio
     async def test_register_agent_connection_failure(self):
         """
         Given: A2aClientAdapter 인스턴스
@@ -64,7 +62,6 @@ class TestA2aClientAdapterRegister:
 class TestA2aClientAdapterQuery:
     """Agent Card 조회 테스트"""
 
-    @pytest.mark.asyncio
     async def test_get_agent_card(self, a2a_echo_agent):
         """
         Given: 등록된 A2A 에이전트
@@ -88,7 +85,6 @@ class TestA2aClientAdapterQuery:
         assert agent_card is not None
         assert isinstance(agent_card, dict)
 
-    @pytest.mark.asyncio
     async def test_get_agent_card_not_found(self):
         """
         Given: A2aClientAdapter 인스턴스
@@ -107,7 +103,6 @@ class TestA2aClientAdapterQuery:
 class TestA2aClientAdapterUnregister:
     """Agent 등록 해제 테스트"""
 
-    @pytest.mark.asyncio
     async def test_unregister_agent(self, a2a_echo_agent):
         """
         Given: 등록된 A2A 에이전트
@@ -133,7 +128,6 @@ class TestA2aClientAdapterUnregister:
         with pytest.raises(EndpointNotFoundError):
             await client.get_agent_card("echo-agent-3")
 
-    @pytest.mark.asyncio
     async def test_unregister_nonexistent_agent(self):
         """
         Given: A2aClientAdapter 인스턴스
@@ -154,7 +148,6 @@ class TestA2aClientAdapterUnregister:
 class TestA2aClientAdapterHealth:
     """Agent Health Check 테스트"""
 
-    @pytest.mark.asyncio
     async def test_health_check_registered_agent(self, a2a_echo_agent):
         """
         Given: 등록된 A2A 에이전트
@@ -177,7 +170,6 @@ class TestA2aClientAdapterHealth:
         # Then
         assert is_healthy is True
 
-    @pytest.mark.asyncio
     async def test_health_check_nonexistent_agent(self):
         """
         Given: A2aClientAdapter 인스턴스

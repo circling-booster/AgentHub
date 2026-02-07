@@ -11,7 +11,7 @@ from src.domain.entities.endpoint import EndpointType
 class TestMcpServerRegistration:
     """POST /api/mcp/servers - MCP 서버 등록"""
 
-    def test_register_mcp_server_success(self, authenticated_client):
+    async def test_register_mcp_server_success(self, authenticated_client):
         """
         Given: 유효한 MCP 서버 URL
         When: POST /api/mcp/servers 호출
@@ -36,7 +36,7 @@ class TestMcpServerRegistration:
         assert "registered_at" in data
         assert data["enabled"] is True
 
-    def test_register_mcp_server_without_name(self, authenticated_client):
+    async def test_register_mcp_server_without_name(self, authenticated_client):
         """
         Given: name 없이 URL만 제공
         When: POST /api/mcp/servers 호출
@@ -54,7 +54,7 @@ class TestMcpServerRegistration:
         assert data["url"] == payload["url"]
         assert data["name"]  # 기본 이름 존재
 
-    def test_register_mcp_server_invalid_url(self, authenticated_client):
+    async def test_register_mcp_server_invalid_url(self, authenticated_client):
         """
         Given: 잘못된 URL 형식
         When: POST /api/mcp/servers 호출
@@ -69,7 +69,7 @@ class TestMcpServerRegistration:
         # Then: 422 Validation Error
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_register_duplicate_mcp_server(self, authenticated_client):
+    async def test_register_duplicate_mcp_server(self, authenticated_client):
         """
         Given: 이미 등록된 MCP 서버 URL
         When: 동일 URL로 재등록 시도
@@ -91,7 +91,7 @@ class TestMcpServerRegistration:
 class TestMcpServerList:
     """GET /api/mcp/servers - 등록된 서버 목록 조회"""
 
-    def test_list_mcp_servers_empty(self, authenticated_client):
+    async def test_list_mcp_servers_empty(self, authenticated_client):
         """
         Given: 등록된 서버가 없음
         When: GET /api/mcp/servers 호출
@@ -106,7 +106,7 @@ class TestMcpServerList:
         assert isinstance(data, list)
         assert len(data) == 0
 
-    def test_list_mcp_servers_with_items(self, authenticated_client):
+    async def test_list_mcp_servers_with_items(self, authenticated_client):
         """
         Given: MCP 서버 등록됨
         When: GET /api/mcp/servers 호출
@@ -131,7 +131,7 @@ class TestMcpServerList:
 class TestMcpServerRemoval:
     """DELETE /api/mcp/servers/{server_id} - 서버 해제"""
 
-    def test_remove_mcp_server_success(self, authenticated_client):
+    async def test_remove_mcp_server_success(self, authenticated_client):
         """
         Given: 등록된 MCP 서버
         When: DELETE /api/mcp/servers/{id} 호출
@@ -153,7 +153,7 @@ class TestMcpServerRemoval:
         list_response = authenticated_client.get("/api/mcp/servers")
         assert len(list_response.json()) == 0
 
-    def test_remove_nonexistent_server(self, authenticated_client):
+    async def test_remove_nonexistent_server(self, authenticated_client):
         """
         Given: 존재하지 않는 서버 ID
         When: DELETE /api/mcp/servers/{id} 호출
@@ -169,7 +169,7 @@ class TestMcpServerRemoval:
 class TestMcpServerTools:
     """GET /api/mcp/servers/{server_id}/tools - 서버의 도구 목록 조회"""
 
-    def test_get_server_tools_success(self, authenticated_client):
+    async def test_get_server_tools_success(self, authenticated_client):
         """
         Given: 등록된 MCP 서버
         When: GET /api/mcp/servers/{id}/tools 호출
@@ -190,7 +190,7 @@ class TestMcpServerTools:
         assert isinstance(data, list)
         # 실제 도구 조회는 Mock MCP 서버에 따라 다름
 
-    def test_get_tools_for_nonexistent_server(self, authenticated_client):
+    async def test_get_tools_for_nonexistent_server(self, authenticated_client):
         """
         Given: 존재하지 않는 서버 ID
         When: GET /api/mcp/servers/{id}/tools 호출

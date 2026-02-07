@@ -50,7 +50,6 @@ def mock_toolset_with_tools():
 class TestGetRegisteredInfo:
     """get_registered_info() 메서드 테스트"""
 
-    @pytest.mark.asyncio
     async def test_get_registered_info_returns_endpoint_tools(
         self, dynamic_toolset, mock_mcp_endpoint, mock_toolset_with_tools
     ):
@@ -77,7 +76,6 @@ class TestGetRegisteredInfo:
         assert "test_tool_1" in endpoint_info["tools"]
         assert "test_tool_2" in endpoint_info["tools"]
 
-    @pytest.mark.asyncio
     async def test_get_registered_info_empty_when_no_servers(self, dynamic_toolset):
         """등록된 서버가 없으면 빈 딕셔너리를 반환해야 함"""
         # When: 서버가 등록되지 않은 상태에서 호출
@@ -86,7 +84,6 @@ class TestGetRegisteredInfo:
         # Then: 빈 딕셔너리 반환
         assert info == {}
 
-    @pytest.mark.asyncio
     async def test_get_registered_info_multiple_servers(
         self, dynamic_toolset, mock_toolset_with_tools
     ):
@@ -128,7 +125,6 @@ class TestGetRegisteredInfo:
         assert info["mcp-1"]["name"] == "Server 1"
         assert info["mcp-2"]["name"] == "Server 2"
 
-    @pytest.mark.asyncio
     async def test_get_registered_info_handles_empty_cache(
         self, dynamic_toolset, mock_mcp_endpoint, mock_toolset_with_tools
     ):

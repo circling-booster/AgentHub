@@ -31,8 +31,8 @@ Configurable via `SYNAPSE_DIR` environment variable.
 
 ## **📚 References**
 
-* [pytest Documentation](https://docs.pytest.org/)  
-* [pytest-asyncio](https://pytest-asyncio.readthedocs.io/)  
-* [pytest-cov](https://pytest-cov.readthedocs.io/)  
-* [Hexagonal Architecture Testing](https://alistair.cockburn.us/hexagonal-architecture/)  
+* [pytest Documentation](https://docs.pytest.org/)
+* [AnyIO Documentation](https://anyio.readthedocs.io/) (pytest plugin for async tests)
+* [pytest-cov](https://pytest-cov.readthedocs.io/)
+* [Hexagonal Architecture Testing](https://alistair.cockburn.us/hexagonal-architecture/)
 * [TDD Best Practices](https://www.builder.io/blog/test-driven-development-ai)

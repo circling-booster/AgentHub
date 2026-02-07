@@ -64,7 +64,7 @@ class TestUsageAPI:
         await storage.close()
         os.unlink(db_path)
 
-    def test_get_usage_summary_requires_auth(self, authenticated_client):
+    async def test_get_usage_summary_requires_auth(self, authenticated_client):
         """인증 필요 (X-Extension-Token 헤더)"""
         # Given: 인증 토큰 없는 client (authenticated_client는 기본으로 토큰 포함)
         client_without_auth = TestClient(app)
@@ -76,7 +76,7 @@ class TestUsageAPI:
         assert response.status_code == 403
         assert response.json()["error"] == "Unauthorized"
 
-    def test_get_usage_summary(self, authenticated_client):
+    async def test_get_usage_summary(self, authenticated_client):
         """사용량 요약 조회"""
         # authenticated_client는 이미 X-Extension-Token 헤더 포함
         # When
@@ -91,7 +91,7 @@ class TestUsageAPI:
         assert "call_count" in data
         assert "by_model" in data
 
-    def test_get_usage_by_model(self, authenticated_client):
+    async def test_get_usage_by_model(self, authenticated_client):
         """모델별 사용량 조회"""
         # When
         response = authenticated_client.get("/api/usage/by-model")
@@ -102,7 +102,7 @@ class TestUsageAPI:
 
         assert isinstance(data, dict)
 
-    def test_get_budget_status(self, authenticated_client):
+    async def test_get_budget_status(self, authenticated_client):
         """예산 상태 조회"""
         # When
         response = authenticated_client.get("/api/usage/budget")
@@ -117,7 +117,7 @@ class TestUsageAPI:
         assert "alert_level" in data
         assert "can_proceed" in data
 
-    def test_update_budget(self, authenticated_client):
+    async def test_update_budget(self, authenticated_client):
         """예산 설정 업데이트"""
         # When
         response = authenticated_client.put(

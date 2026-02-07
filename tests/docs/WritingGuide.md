@@ -34,12 +34,12 @@ class TestMyService:
         orchestrator \= FakeOrchestrator(responses=\["Hello"\])  
         return MyService(storage=storage, orchestrator=orchestrator)
 
-    async def test\_process(self, service):  
-        \# async def \- asyncio\_mode="auto"이므로 @pytest.mark.asyncio 불필요  
-        result \= await service.process("input")  
+    async def test\_process(self, service):
+        \# async def \- anyio\_mode="auto"이므로 @pytest.mark.asyncio 불필요
+        result \= await service.process("input")
         assert result \== "Hello"
 
-**⚠️ @pytest.mark.asyncio 불필요:** asyncio\_mode \= "auto" 설정으로 자동 감지됨.
+**⚠️ @pytest.mark.asyncio 불필요:** anyio\_mode \= "auto" 설정으로 자동 감지됨.
 
 ### **Recipe 3: API Integration 테스트**
 
@@ -242,7 +242,7 @@ def test\_\<what\>\_\<condition\>\_\<expected\>():
 
 | 함정 | 원인 | 해결 |
 | :---- | :---- | :---- |
-| @pytest.mark.asyncio 불필요하게 추가 | asyncio\_mode \= "auto" 설정으로 자동 감지 | 붙이지 않아도 됨 (기존 코드에 남아있는 건 레거시) |
+| @pytest.mark.asyncio 불필요하게 추가 | anyio\_mode \= "auto" 설정으로 자동 감지 | 붙이지 않아도 됨 (anyio plugin 사용) |
 | Integration 테스트에서 403 오류 | authenticated\_client fixture 미사용 | 반드시 authenticated\_client 사용 |
 | Storage 초기화 누락 | await storage.initialize() 필요 | authenticated\_client가 자동 처리, 직접 사용 시 명시적 호출 |
 | Fake Adapter 인라인 정의 | 중앙 관리 원칙 위반 | tests/unit/fakes/에서 import |

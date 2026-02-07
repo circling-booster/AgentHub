@@ -6,7 +6,6 @@ AgentHub LlmAgent를 A2A 프로토콜로 노출
 import pytest
 
 
-@pytest.mark.asyncio
 class TestA2aServerExposure:
     """A2A Server 노출 테스트"""
 

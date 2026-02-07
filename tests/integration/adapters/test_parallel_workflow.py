@@ -18,7 +18,6 @@ TEST_MODEL = "openai/gpt-4o-mini"  # Use fast, cheap model for tests
 class TestParallelWorkflowExecution:
     """Test ParallelAgent workflow execution"""
 
-    @pytest.mark.asyncio
     async def test_parallel_workflow_executes_both_agents_concurrently(
         self,
         a2a_echo_agent,
@@ -91,7 +90,6 @@ class TestParallelWorkflowExecution:
         finally:
             await orchestrator.close()
 
-    @pytest.mark.asyncio
     async def test_parallel_workflow_handles_partial_failure(
         self,
         a2a_echo_agent,
@@ -144,7 +142,6 @@ class TestParallelWorkflowExecution:
 class TestParallelStateIsolation:
     """Test state isolation between parallel agents"""
 
-    @pytest.mark.asyncio
     async def test_parallel_agents_use_separate_output_keys(
         self,
         a2a_echo_agent,
@@ -205,7 +202,6 @@ class TestParallelStateIsolation:
         finally:
             await orchestrator.close()
 
-    @pytest.mark.asyncio
     async def test_parallel_workflow_does_not_share_state_between_agents(
         self,
         a2a_echo_agent,
@@ -269,7 +265,6 @@ class TestWorkflowSSEExecution:
     실제 A2A 에이전트와 함께 Workflow 실행 SSE 스트리밍을 검증합니다.
     """
 
-    @pytest.mark.asyncio
     async def test_sequential_workflow_sse_streaming_with_real_agents(
         self,
         a2a_echo_agent,
@@ -350,7 +345,6 @@ class TestWorkflowSSEExecution:
         finally:
             await orchestrator.close()
 
-    @pytest.mark.asyncio
     async def test_parallel_workflow_sse_streaming_with_real_agents(
         self,
         a2a_echo_agent,
