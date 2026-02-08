@@ -205,8 +205,8 @@ data/
 .DS_Store
 Thumbs.db
 
-# Temporary test scripts
-test_*.py
+# Temporary test scripts (only in root directory)
+/test_*.py
 =*.*
 
 # Playground test artifacts
@@ -214,3 +214,9 @@ tests/manual/playground/coverage/
 e2e_test_output.txt
 tests/manual/reproduce_*.js
 tests/manual/reproduce_*.py
+
+# Test execution logs (Phase Gate Protocol)
+tests/logs/*.log
+tests/logs/*.jsonl
+# Keep directory structure
+!tests/logs/.gitkeep

@@ -3,8 +3,6 @@
 Step 2.2: FakeOrchestrator가 StreamChunk를 yield하는지 검증합니다.
 """
 
-import pytest
-
 from src.domain.entities.stream_chunk import StreamChunk
 from tests.unit.fakes import FakeOrchestrator
 
@@ -12,7 +10,6 @@ from tests.unit.fakes import FakeOrchestrator
 class TestFakeOrchestratorStreamChunk:
     """FakeOrchestrator가 StreamChunk를 yield하는지 검증"""
 
-    @pytest.mark.asyncio
     async def test_process_message_yields_stream_chunks(self):
         """process_message가 StreamChunk 객체를 yield해야 함"""
         # Given
@@ -31,7 +28,6 @@ class TestFakeOrchestratorStreamChunk:
         assert chunks[1].type == "text"
         assert chunks[1].content == "How can I help you?"
 
-    @pytest.mark.asyncio
     async def test_set_responses_accepts_stream_chunks(self):
         """set_responses가 StreamChunk 리스트를 수용해야 함"""
         # Given
@@ -57,7 +53,6 @@ class TestFakeOrchestratorStreamChunk:
         assert chunks[2].type == "tool_result"
         assert chunks[3].type == "text"
 
-    @pytest.mark.asyncio
     async def test_default_responses_are_text_stream_chunks(self):
         """기본 응답이 text 타입 StreamChunk여야 함"""
         # Given
@@ -66,3 +61,39 @@ class TestFakeOrchestratorStreamChunk:
         # Then
         assert all(isinstance(r, StreamChunk) for r in orchestrator.responses)
         assert all(r.type == "text" for r in orchestrator.responses)
+
+    async def test_generate_response_returns_preset(self):
+        """generate_response가 설정된 결과 반환 (TDD - Red Phase)"""
+        # Given
+        orchestrator = FakeOrchestrator()
+        orchestrator.set_generate_result(
+            {
+                "role": "assistant",
+                "content": "Custom response",
+                "model": "gpt-4",
+            }
+        )
+
+        # When
+        result = await orchestrator.generate_response(
+            messages=[{"role": "user", "content": "test"}]
+        )
+
+        # Then
+        assert result["content"] == "Custom response"
+        assert result["model"] == "gpt-4"
+
+    async def test_generate_response_default_result(self):
+        """generate_response 기본 결과 반환 (TDD - Red Phase)"""
+        # Given
+        orchestrator = FakeOrchestrator()
+
+        # When
+        result = await orchestrator.generate_response(
+            messages=[{"role": "user", "content": "test"}]
+        )
+
+        # Then
+        assert result["role"] == "assistant"
+        assert result["content"] == "Fake LLM response"
+        assert result["model"] == "fake-model"

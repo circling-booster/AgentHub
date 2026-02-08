@@ -5,6 +5,13 @@
 """
 
 from src.domain.ports.outbound.a2a_port import A2aPort
+from src.domain.ports.outbound.event_broadcast_port import EventBroadcastPort
+from src.domain.ports.outbound.hitl_notification_port import HitlNotificationPort
+from src.domain.ports.outbound.mcp_client_port import (
+    ElicitationCallback,
+    McpClientPort,
+    SamplingCallback,
+)
 from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
 from src.domain.ports.outbound.storage_port import (
     ConversationStoragePort,
@@ -18,4 +25,9 @@ __all__ = [
     "EndpointStoragePort",
     "ToolsetPort",
     "A2aPort",
+    "McpClientPort",
+    "SamplingCallback",
+    "ElicitationCallback",
+    "HitlNotificationPort",
+    "EventBroadcastPort",
 ]

@@ -25,7 +25,7 @@ class TestAppStartup:
     """FastAPI app 시작 검증"""
 
     @pytest.fixture
-    async def app(self) -> FastAPI:
+    def app(self) -> FastAPI:
         """FastAPI app 인스턴스 생성 (lifespan 실행 포함)"""
         return create_app()
 

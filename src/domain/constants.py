@@ -38,5 +38,13 @@ class ErrorCode:
     # Cost 관련 에러
     BUDGET_EXCEEDED = "BudgetExceededError"
 
+    # HITL 관련 에러
+    HITL_TIMEOUT = "HitlTimeoutError"
+    HITL_REQUEST_NOT_FOUND = "HitlRequestNotFoundError"
+
+    # Resource/Prompt 관련 에러
+    RESOURCE_NOT_FOUND = "ResourceNotFoundError"
+    PROMPT_NOT_FOUND = "PromptNotFoundError"
+
     # 기타
     UNKNOWN = "UnknownError"

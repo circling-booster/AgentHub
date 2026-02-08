@@ -12,6 +12,10 @@
 | [ADR-0009](0009-langgraph-a2a-not-plugin.md) | LangGraph A2A: Plugin이 아닌 Native | Accepted | 2026-01 |
 | [ADR-0010](0010-adk-workflow-agents.md) | ADK Workflow Agents 채택 | Accepted | 2026-01 |
 | [ADR-0011](ADR-011-workflow-agents-spike-results.md) | Workflow Agents Spike 결과 | Accepted | 2026-01 |
+| [ADR-A05](architecture/ADR-A05-method-c-callback-centric.md) | Method C — Callback-Centric LLM Placement | Accepted | 2026-02-06 |
+| [ADR-A06](architecture/ADR-A06-hybrid-timeout-strategy.md) | Hybrid Timeout Strategy | Accepted | 2026-02-06 |
+| [ADR-A07](architecture/ADR-A07-dual-track-architecture.md) | Dual-Track Architecture (ADK + SDK) | Accepted | 2026-02-06 |
+| [ADR-T07](technical/ADR-T07-playground-first-testing.md) | Playground-First Testing | Accepted | 2026-02-06 |
 
 ---
 

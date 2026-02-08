@@ -4,6 +4,7 @@ OrchestratorPort의 테스트용 구현입니다.
 """
 
 from collections.abc import AsyncIterator
+from typing import Any
 
 from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.entities.workflow import Workflow
@@ -43,6 +44,11 @@ class FakeOrchestrator(OrchestratorPort):
         self.added_a2a_agents: list[tuple[str, str]] = []  # (endpoint_id, url)
         self.removed_a2a_agents: list[str] = []  # endpoint_id
         self._workflows: dict[str, Workflow] = {}  # workflow_id -> Workflow
+        self._generate_result: dict[str, Any] = {
+            "role": "assistant",
+            "content": "Fake LLM response",
+            "model": "fake-model",
+        }
 
     async def initialize(self) -> None:
         """초기화"""
@@ -79,6 +85,10 @@ class FakeOrchestrator(OrchestratorPort):
         """실패 모드 설정"""
         self.should_fail = should_fail
         self.error_message = message
+
+    def set_generate_result(self, result: dict[str, Any]) -> None:
+        """generate_response 결과 설정 (테스트용)"""
+        self._generate_result = result
 
     async def add_a2a_agent(self, endpoint_id: str, url: str) -> None:
         """
@@ -174,6 +184,16 @@ class FakeOrchestrator(OrchestratorPort):
             workflow_id: Workflow ID
         """
         self._workflows.pop(workflow_id, None)
+
+    async def generate_response(
+        self,
+        messages: list[dict[str, Any]],
+        model: str | None = None,
+        system_prompt: str | None = None,
+        max_tokens: int = 1024,
+    ) -> dict[str, Any]:
+        """단일 LLM 응답 생성 (Fake)"""
+        return self._generate_result
 
     def reset(self) -> None:
         """상태 초기화"""

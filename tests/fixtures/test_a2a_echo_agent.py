@@ -48,7 +48,6 @@ class TestA2aEchoAgentFixture:
         # ADK auto-generates agent card, check for expected fields
         assert isinstance(card, dict)
 
-    @pytest.mark.asyncio
     async def test_echo_agent_jsonrpc_endpoint_exists(self, a2a_echo_agent):
         """
         Given: Echo agent is running

@@ -6,6 +6,7 @@ TDD Phase: GREEN - Runner 패턴 적용 + A2A Sub-Agent 통합
 import contextlib
 import logging
 from collections.abc import AsyncIterator
+from typing import Any
 
 import litellm
 from google.adk.agents import LlmAgent, ParallelAgent, SequentialAgent
@@ -599,6 +600,58 @@ class AdkOrchestratorAdapter(OrchestratorPort):
         self._workflow_agents.pop(workflow_id, None)
         self._workflows.pop(workflow_id, None)
         logger.info(f"Workflow agent removed: {workflow_id}")
+
+    async def generate_response(
+        self,
+        messages: list[dict[str, Any]],
+        model: str | None = None,
+        system_prompt: str | None = None,
+        max_tokens: int = 1024,
+    ) -> dict[str, Any]:
+        """단일 LLM 응답 생성 (Sampling 콜백용)
+
+        기존 process_message()와 별도:
+        - process_message: ADK Runner 기반 스트리밍 (Tool Call Loop 자동)
+        - generate_response: 단일 LLM 호출 (Sampling HITL 승인 시 사용)
+
+        Args:
+            messages: LLM 메시지 목록 [{"role": "user", "content": "..."}]
+            model: 모델 이름 (None이면 기본 모델)
+            system_prompt: 시스템 프롬프트 (선택)
+            max_tokens: 최대 토큰 수
+
+        Returns:
+            {"role": "assistant", "content": "...", "model": "..."}
+        """
+        import asyncio
+
+        # 모델 선택 (기본값: 인스턴스의 model)
+        target_model = model or self._model_name
+
+        # 메시지 준비 (system_prompt 추가)
+        llm_messages = []
+        if system_prompt:
+            llm_messages.append({"role": "system", "content": system_prompt})
+        llm_messages.extend(messages)
+
+        # LiteLLM 호출 (비동기)
+        response = await asyncio.to_thread(
+            litellm.completion,
+            model=target_model,
+            messages=llm_messages,
+            max_tokens=max_tokens,
+        )
+
+        # 응답 추출
+        choice = response.choices[0]
+        content = choice.message.content or ""
+        used_model = response.model or target_model
+
+        return {
+            "role": "assistant",
+            "content": content,
+            "model": used_model,
+        }
 
     async def _call_llm_with_retry(self, message: str, max_retries: int = 3) -> dict:
         """

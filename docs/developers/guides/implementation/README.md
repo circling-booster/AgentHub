@@ -360,6 +360,39 @@ class Container(containers.DeclarativeContainer):
     )
 ```
 
+### Conditional Dependency Injection (Phase 5+)
+
+**문제:** 일부 의존성은 설정에 따라 조건부로 주입해야 함 (예: `MCP__ENABLE_DUAL_TRACK=false`일 때 SDK Track 비활성화)
+
+**❌ 잘못된 방법 (lambda 사용):**
+
+```python
+# WRONG: lambda는 디버깅 어렵고, 타입 힌트 없음
+registry_service = providers.Factory(
+    RegistryService,
+    mcp_client=lambda: mcp_client_adapter() if settings().mcp.enable_dual_track else None,
+)
+```
+
+**✅ 올바른 방법 (Callable provider):**
+
+```python
+# CORRECT: providers.Callable 사용, 타입 안전성 유지
+registry_service = providers.Factory(
+    RegistryService,
+    mcp_client=providers.Callable(
+        lambda s, m: m if s.mcp.enable_dual_track else None,
+        settings,
+        mcp_client_adapter,
+    ),
+)
+```
+
+**장점:**
+- 타입 힌트 유지
+- 디버깅 가능 (provider 이름 표시)
+- 의존성 명시적 선언 (settings, mcp_client_adapter)
+
 ---
 
 ## TDD Workflow

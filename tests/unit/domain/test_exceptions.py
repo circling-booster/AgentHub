@@ -2,9 +2,14 @@
 
 import pytest
 
+from src.domain.constants import ErrorCode
 from src.domain.exceptions import (
     DomainException,
     EndpointNotFoundError,
+    HitlRequestNotFoundError,
+    HitlTimeoutError,
+    PromptNotFoundError,
+    ResourceNotFoundError,
     ToolNotFoundError,
     ValidationError,
 )
@@ -71,3 +76,32 @@ class TestSpecificExceptions:
             raise EndpointNotFoundError("Not found")
 
         assert exc_info.value.message == "Not found"
+
+
+class TestHitlExceptions:
+    """HITL 관련 예외 테스트"""
+
+    def test_hitl_timeout_error(self):
+        """HITL 타임아웃 에러"""
+        error = HitlTimeoutError("Request timed out")
+        assert error.message == "Request timed out"
+        assert error.code == ErrorCode.HITL_TIMEOUT
+
+    def test_hitl_request_not_found_error(self):
+        """HITL 요청 미발견 에러"""
+        error = HitlRequestNotFoundError("Request not found")
+        assert error.code == ErrorCode.HITL_REQUEST_NOT_FOUND
+
+
+class TestResourceExceptions:
+    """Resource/Prompt 관련 예외 테스트"""
+
+    def test_resource_not_found_error(self):
+        """리소스 미발견 에러"""
+        error = ResourceNotFoundError("Resource not found")
+        assert error.code == ErrorCode.RESOURCE_NOT_FOUND
+
+    def test_prompt_not_found_error(self):
+        """프롬프트 미발견 에러"""
+        error = PromptNotFoundError("Prompt not found")
+        assert error.code == ErrorCode.PROMPT_NOT_FOUND

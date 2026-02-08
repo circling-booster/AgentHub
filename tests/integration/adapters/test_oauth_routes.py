@@ -7,15 +7,12 @@ Step 8: OAuth 2.1 Flow - Routes TDD
 import contextlib
 from unittest.mock import patch
 
-import pytest
-
 from src.domain.ports.outbound.oauth_port import TokenResponse
 
 
 class TestOAuthRoutes:
     """OAuth 2.1 Routes 통합 테스트"""
 
-    @pytest.mark.asyncio
     async def test_oauth_authorize_redirects_to_provider(self, authenticated_client):
         """
         OAuth authorize 엔드포인트가 OAuth provider로 리다이렉트
@@ -60,7 +57,6 @@ class TestOAuthRoutes:
         # 이 테스트는 Mock 서버가 필요하므로 skip 또는 구조 검증만 수행
         assert response.status_code in [302, 404]  # 리다이렉트 또는 Not Found
 
-    @pytest.mark.asyncio
     async def test_oauth_callback_exchanges_code_and_saves_token(self, authenticated_client):
         """
         OAuth callback이 code를 token으로 교환하고 AuthConfig 저장
@@ -94,7 +90,6 @@ class TestOAuthRoutes:
         # State 검증이 실패하면 400, 성공하면 200 or 302
         assert response.status_code in [200, 302, 400]
 
-    @pytest.mark.asyncio
     async def test_oauth_callback_rejects_invalid_state(self, authenticated_client):
         """
         OAuth callback이 잘못된 state 파라미터 거부

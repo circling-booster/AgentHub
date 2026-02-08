@@ -101,7 +101,6 @@ class TestExtensionAuthMiddleware:
         app_mock = Mock()
         return ExtensionAuthMiddleware(app_mock)
 
-    @pytest.mark.asyncio
     async def test_api_request_without_token_returns_403(self, middleware):
         """토큰 없이 /api/* 요청 시 403 반환"""
         mock_request = Mock(spec=Request)
@@ -116,7 +115,6 @@ class TestExtensionAuthMiddleware:
         assert response.status_code == 403
         call_next.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_api_request_with_invalid_token_returns_403(self, middleware):
         """잘못된 토큰으로 /api/* 요청 시 403 반환"""
         mock_request = Mock(spec=Request)
@@ -131,7 +129,6 @@ class TestExtensionAuthMiddleware:
         assert response.status_code == 403
         call_next.assert_not_called()
 
-    @pytest.mark.asyncio
     async def test_api_request_with_valid_token_passes(self, middleware):
         """올바른 토큰으로 /api/* 요청 시 통과"""
         mock_request = Mock(spec=Request)
@@ -146,7 +143,6 @@ class TestExtensionAuthMiddleware:
         assert response == expected_response
         call_next.assert_called_once_with(mock_request)
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "path",
         [
@@ -171,7 +167,6 @@ class TestExtensionAuthMiddleware:
         assert response == expected_response
         call_next.assert_called_once_with(mock_request)
 
-    @pytest.mark.asyncio
     async def test_non_api_path_bypasses_auth(self, middleware):
         """/api/* 아닌 경로는 토큰 검증 생략"""
         mock_request = Mock(spec=Request)
@@ -186,7 +181,6 @@ class TestExtensionAuthMiddleware:
         assert response == expected_response
         call_next.assert_called_once_with(mock_request)
 
-    @pytest.mark.asyncio
     async def test_error_response_includes_json_body(self, middleware):
         """403 응답이 올바른 JSON 구조 포함"""
         mock_request = Mock(spec=Request)

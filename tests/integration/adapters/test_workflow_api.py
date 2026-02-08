@@ -46,7 +46,7 @@ def sample_workflow_data():
 class TestWorkflowCreation:
     """Workflow 생성 API 테스트"""
 
-    def test_create_workflow_returns_201(
+    async def test_create_workflow_returns_201(
         self, authenticated_client: TestClient, sample_workflow_data
     ):
         """
@@ -63,7 +63,7 @@ class TestWorkflowCreation:
         assert data["workflow_type"] == "sequential"
         assert len(data["steps"]) == 2
 
-    def test_create_workflow_with_invalid_type_returns_422(
+    async def test_create_workflow_with_invalid_type_returns_422(
         self, authenticated_client: TestClient, sample_workflow_data
     ):
         """
@@ -80,7 +80,7 @@ class TestWorkflowCreation:
 class TestWorkflowRetrieval:
     """Workflow 조회 API 테스트"""
 
-    def test_list_workflows_returns_empty_list(self, authenticated_client: TestClient):
+    async def test_list_workflows_returns_empty_list(self, authenticated_client: TestClient):
         """
         Given: No workflows created
         When: GET /api/workflows
@@ -92,7 +92,7 @@ class TestWorkflowRetrieval:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_list_workflows_returns_created_workflows(
+    async def test_list_workflows_returns_created_workflows(
         self, authenticated_client: TestClient, sample_workflow_data
     ):
         """
@@ -111,7 +111,7 @@ class TestWorkflowRetrieval:
         data = response.json()
         assert len(data) == 2
 
-    def test_get_workflow_by_id_returns_workflow(
+    async def test_get_workflow_by_id_returns_workflow(
         self, authenticated_client: TestClient, sample_workflow_data
     ):
         """
@@ -129,7 +129,7 @@ class TestWorkflowRetrieval:
         assert data["id"] == workflow_id
         assert data["name"] == sample_workflow_data["name"]
 
-    def test_get_nonexistent_workflow_returns_404(self, authenticated_client: TestClient):
+    async def test_get_nonexistent_workflow_returns_404(self, authenticated_client: TestClient):
         """
         Given: Workflow ID that doesn't exist
         When: GET /api/workflows/{id}
@@ -144,7 +144,7 @@ class TestWorkflowRetrieval:
 class TestWorkflowDeletion:
     """Workflow 삭제 API 테스트"""
 
-    def test_delete_workflow_returns_204(
+    async def test_delete_workflow_returns_204(
         self, authenticated_client: TestClient, sample_workflow_data
     ):
         """
@@ -163,7 +163,7 @@ class TestWorkflowDeletion:
         get_response = authenticated_client.get(f"/api/workflows/{workflow_id}")
         assert get_response.status_code == 404
 
-    def test_delete_nonexistent_workflow_returns_404(self, authenticated_client: TestClient):
+    async def test_delete_nonexistent_workflow_returns_404(self, authenticated_client: TestClient):
         """
         Given: Workflow ID that doesn't exist
         When: DELETE /api/workflows/{id}
@@ -179,7 +179,7 @@ class TestWorkflowExecution:
     """Workflow 실행 API 테스트 (SSE 스트리밍)"""
 
     @pytest.mark.skip(reason="Requires actual A2A agents - will be tested in Step 16 E2E tests")
-    def test_execute_workflow_streams_sse_events(
+    async def test_execute_workflow_streams_sse_events(
         self, authenticated_client: TestClient, sample_workflow_data
     ):
         """
@@ -220,7 +220,7 @@ class TestWorkflowExecution:
         last_event = events[-1]
         assert last_event["type"] in ["workflow_complete", "done"]
 
-    def test_execute_nonexistent_workflow_returns_404(self, authenticated_client: TestClient):
+    async def test_execute_nonexistent_workflow_returns_404(self, authenticated_client: TestClient):
         """
         Given: Workflow ID that doesn't exist
         When: POST /api/workflows/{id}/execute
@@ -238,7 +238,7 @@ class TestWorkflowExecution:
 class TestWorkflowExecuteGET:
     """GET /api/workflows/execute - EventSource 지원"""
 
-    def test_execute_workflow_get_route_matching(self, authenticated_client: TestClient):
+    async def test_execute_workflow_get_route_matching(self, authenticated_client: TestClient):
         """
         Given: Query parameters로 workflow 정보 전달
         When: GET /api/workflows/execute 호출
@@ -278,11 +278,10 @@ class TestWorkflowExecuteGET:
         # 500은 orchestrator 에러 (라우트 매칭은 성공)
         # 200은 완전한 성공
         assert response.status_code in (200, 500), (
-            f"Unexpected status code: {response.status_code}. "
-            f"Response: {response.text}"
+            f"Unexpected status code: {response.status_code}. Response: {response.text}"
         )
 
-    def test_execute_workflow_get_invalid_json(self, authenticated_client: TestClient):
+    async def test_execute_workflow_get_invalid_json(self, authenticated_client: TestClient):
         """
         Given: 잘못된 JSON 형식의 steps
         When: GET /api/workflows/execute 호출

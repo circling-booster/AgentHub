@@ -22,7 +22,6 @@ class TestCostService:
         """CostService 픽스처 (월 예산 $100)"""
         return CostService(usage_port=usage_storage, monthly_budget_usd=100.0)
 
-    @pytest.mark.asyncio
     async def test_record_usage(self, cost_service, usage_storage):
         """사용량 기록"""
         # Given
@@ -41,7 +40,6 @@ class TestCostService:
         total = await usage_storage.get_monthly_total(datetime.now().year, datetime.now().month)
         assert total == 0.01
 
-    @pytest.mark.asyncio
     async def test_check_budget_safe(self, cost_service, usage_storage):
         """안전 범위 예산 (0-89%)"""
         # Given: 현재 지출 $50 (50%)
@@ -63,7 +61,6 @@ class TestCostService:
         assert status.can_proceed is True
         assert status.usage_percentage == 50.0
 
-    @pytest.mark.asyncio
     async def test_check_budget_warning(self, cost_service, usage_storage):
         """경고 범위 예산 (90-99%)"""
         # Given: 현재 지출 $95 (95%)
@@ -85,7 +82,6 @@ class TestCostService:
         assert status.can_proceed is True
         assert status.usage_percentage == 95.0
 
-    @pytest.mark.asyncio
     async def test_check_budget_critical(self, cost_service, usage_storage):
         """심각 범위 예산 (100-109%)"""
         # Given: 현재 지출 $105 (105%)
@@ -107,7 +103,6 @@ class TestCostService:
         assert status.can_proceed is True  # 아직 허용
         assert status.usage_percentage == 105.0
 
-    @pytest.mark.asyncio
     async def test_check_budget_blocked(self, cost_service, usage_storage):
         """차단 범위 예산 (110%+)"""
         # Given: 현재 지출 $115 (115%)
@@ -129,7 +124,6 @@ class TestCostService:
         assert status.can_proceed is False  # API 호출 차단
         assert status.usage_percentage == 115.0
 
-    @pytest.mark.asyncio
     async def test_get_monthly_summary(self, cost_service, usage_storage):
         """월별 사용량 요약"""
         # Given: 여러 모델 사용

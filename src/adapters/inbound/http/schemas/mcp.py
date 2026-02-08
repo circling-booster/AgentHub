@@ -44,6 +44,7 @@ class McpServerResponse(BaseModel):
     type: EndpointType
     enabled: bool
     registered_at: datetime
+    tools: list["ToolResponse"] = Field(default_factory=list)
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}

@@ -16,6 +16,10 @@
 | ADR-T04 | WXT 프레임워크 | Accepted | 2025-12 |
 | ADR-T05 | dependency-injector 채택 | Accepted | 2026-01 |
 | ADR-T06 | pydantic-settings 설정 관리 | Accepted | 2026-01 |
+| ADR-T07 | Playground-First Testing | Accepted | 2026-02 |
+| ADR-T08 | Drive-by RCE Protection | Accepted | 2026-02 |
+| ADR-T09 | DEV_MODE Conditional Endpoints | Accepted | 2026-02-07 |
+| ADR-T10 | AnyIO Pytest Plugin Migration | Accepted | 2026-02-07 |
 
 ---
 
@@ -102,4 +106,41 @@
 
 ---
 
-*Last Updated: 2026-02-05*
+### Playground-First Testing
+
+**컨텍스트:** HTTP API/SSE 구현 시 Extension UI를 기다리지 않고 즉시 테스트할 필요.
+
+**결정:** Phase 6-7에서 Backend + Playground UI + E2E 테스트를 함께 구현.
+
+**이유:**
+- 즉각적인 피드백 (Extension 빌드 불필요)
+- 빠른 회귀 테스트 (Playwright E2E < 10초)
+- API 계약 조기 검증
+- Extension UI는 Production Phase로 연기
+
+**적용:** Resources, Prompts, Sampling, Elicitation API (Plan 07 Phase 6-7)
+
+---
+
+### DEV_MODE Conditional Endpoints
+
+**컨텍스트:** E2E 테스트를 위한 `/test/*` 엔드포인트 필요, 프로덕션 노출 시 보안 위험.
+
+**결정:** `DEV_MODE` 환경변수로 test utilities 라우터를 조건부 등록.
+
+**이유:**
+- Production Safety: 기본값 `false`로 test endpoints 완전 제거
+- E2E Testing: Playwright 테스트에서 `/test/reset-data`로 clean state 달성
+- 명시적 활성화: pydantic validator로 UserWarning 발생
+
+**Behavior:**
+- `DEV_MODE=false` (default): `/test/*` → 404 (라우터 미등록)
+- `DEV_MODE=true`: `/test/*` → 200 (라우터 등록, UserWarning)
+
+**Trade-off:** Configuration 복잡도 증가 vs 프로덕션 보안 강화
+
+**참고:** [ADR-T09](ADR-T09-dev-mode-conditional-endpoints.md)
+
+---
+
+*Last Updated: 2026-02-07*

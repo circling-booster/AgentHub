@@ -21,7 +21,6 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import pytest_asyncio
 from dependency_injector import providers
 from fastapi.testclient import TestClient
 
@@ -100,7 +99,7 @@ def mock_mcp_toolset_in_ci():
         yield
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]:
     """
     인증된 TestClient 인스턴스 (공통 fixture)
@@ -115,14 +114,21 @@ async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]
     # 테스트용 토큰 주입
     token_provider.reset(TEST_TOKEN)
 
+    # Phase 6+: Dual-Track 활성화 (로컬 환경만)
+    # CI 환경에서는 비활성화 (실제 MCP 서버 없음)
+    is_ci = os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
+    if not is_ci:
+        os.environ["MCP__ENABLE_DUAL_TRACK"] = "true"
+
     # FastAPI 앱 생성
     app = create_app()
     container = app.container
 
     # Container 재설정 (임시 데이터 디렉토리 + LLM 테스트용 모델)
     container.reset_singletons()
-    container.settings().storage.data_dir = str(temp_data_dir)
-    container.settings().llm.default_model = "openai/gpt-4o-mini"
+    settings = container.settings()
+    settings.storage.data_dir = str(temp_data_dir)
+    settings.llm.default_model = "openai/gpt-4o-mini"
 
     # CRITICAL FIX: db_path가 올바른 temp_data_dir을 가리키도록 storage를 재생성
     # Callable provider는 lazy evaluation이 아니므로 명시적으로 오버라이드 필요
@@ -167,3 +173,43 @@ async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]
     container.usage_storage.reset_override()
     container.reset_singletons()
     container.unwire()
+
+    # Phase 6+: Dual-Track 환경변수 cleanup (로컬만)
+    if not is_ci:
+        os.environ.pop("MCP__ENABLE_DUAL_TRACK", None)
+
+
+@pytest.fixture
+async def mcp_synapse_endpoint(authenticated_client: TestClient) -> dict:
+    """
+    MCP Synapse 테스트 서버 등록 fixture
+
+    특징:
+    - MCP_TEST_URL (http://127.0.0.1:9000/mcp) 서버 등록
+    - authenticated_client 사용하여 등록
+    - 테스트 후 자동 삭제
+
+    Returns:
+        dict: 등록된 엔드포인트 정보 {id, url, name, type, enabled, registered_at}
+    """
+    # MCP 서버 등록
+    response = authenticated_client.post(
+        "/api/mcp/servers",
+        json={
+            "url": MCP_TEST_URL,
+            "name": "Test Synapse MCP",
+        },
+    )
+    assert response.status_code == 201, f"Failed to register MCP server: {response.text}"
+    endpoint = response.json()
+
+    yield endpoint
+
+    # Cleanup: 엔드포인트 삭제
+    try:
+        delete_response = authenticated_client.delete(f"/api/mcp/servers/{endpoint['id']}")
+        # 404는 이미 삭제된 경우이므로 무시
+        if delete_response.status_code not in (200, 204, 404):
+            print(f"Warning: Failed to delete endpoint {endpoint['id']}: {delete_response.text}")
+    except Exception as e:
+        print(f"Warning: Cleanup failed for endpoint {endpoint['id']}: {e}")

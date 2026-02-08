@@ -1,5 +1,7 @@
 """FastAPI 앱 팩토리"""
 
+import asyncio
+import contextlib
 import logging
 import os
 from collections.abc import AsyncIterator
@@ -17,15 +19,40 @@ from .routes import (
     auth,
     chat,
     conversations,
+    elicitation,
     health,
+    hitl_events,
     mcp,
     oauth,
+    prompts,
+    resources,
+    sampling,
     usage,
     workflow,
 )
 from .security import ExtensionAuthMiddleware
 
 logger = logging.getLogger(__name__)
+
+# 주기적 cleanup 태스크 (Phase 5 - Method C)
+cleanup_task = None
+
+
+async def _periodic_cleanup(sampling_service, elicitation_service, interval=60):
+    """만료된 HITL 요청 주기적 정리
+
+    Args:
+        sampling_service: SamplingService 인스턴스
+        elicitation_service: ElicitationService 인스턴스
+        interval: 정리 주기 (초, 기본 60초)
+    """
+    while True:
+        await asyncio.sleep(interval)
+        try:
+            await sampling_service.cleanup_expired()
+            await elicitation_service.cleanup_expired()
+        except Exception as e:
+            logger.warning(f"Cleanup failed: {e}")
 
 
 def get_cors_config(dev_mode: bool) -> dict:
@@ -109,10 +136,32 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         f"{len(restore_result['failed'])} failed"
     )
 
+    # cleanup 스케줄러 시작 (Phase 5 - Method C)
+    global cleanup_task
+    sampling_service = container.sampling_service()
+    elicitation_service = container.elicitation_service()
+    cleanup_task = asyncio.create_task(
+        _periodic_cleanup(sampling_service, elicitation_service, interval=60)
+    )
+    logger.info("HITL cleanup scheduler started")
+
     yield
 
     # Shutdown
     logger.info("AgentHub API shutting down")
+
+    # cleanup 태스크 취소 (Phase 5 - Method C)
+    if cleanup_task:
+        cleanup_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await cleanup_task
+        logger.info("HITL cleanup scheduler stopped")
+
+    # MCP SDK Track 세션 정리 (Phase 5 - Method C)
+    mcp_client = container.mcp_client_adapter()
+    await mcp_client.disconnect_all()
+    logger.info("MCP SDK Track sessions disconnected")
+
     await orchestrator.close()
     logger.info("Orchestrator closed")
     await conv_storage.close()
@@ -168,6 +217,11 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(oauth.router)  # OAuth 2.1
     app.include_router(mcp.router)
+    app.include_router(resources.router)  # SDK Track: Resources
+    app.include_router(prompts.router)  # SDK Track: Prompts
+    app.include_router(sampling.router)  # SDK Track: Sampling (HITL)
+    app.include_router(elicitation.router)  # SDK Track: Elicitation (HITL)
+    app.include_router(hitl_events.router)  # SDK Track: HITL SSE Events
     app.include_router(a2a.router)
     app.include_router(a2a_card.router)  # A2A Agent Card
     app.include_router(chat.router)

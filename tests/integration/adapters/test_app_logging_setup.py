@@ -5,8 +5,6 @@ Phase 4 Part B: Verify logging configuration is initialized on app startup
 
 import logging
 
-import pytest
-
 
 def test_app_startup_initializes_logging(tmp_path):
     """앱 시작 시 로깅 설정이 초기화되어야 함"""
@@ -25,7 +23,6 @@ def test_app_startup_initializes_logging(tmp_path):
     assert len(root_logger.handlers) > 0
 
 
-@pytest.mark.asyncio
 async def test_app_startup_uses_json_format_when_configured():
     """observability.log_format="json" 설정 시 JSON 포맷 사용"""
     # Given: 환경변수로 JSON 포맷 설정

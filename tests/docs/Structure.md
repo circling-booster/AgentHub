@@ -42,14 +42,28 @@ tests/
 │   ├── test\_concurrent\_requests.py \# 동시성 테스트  
 │   └── test\_mcp\_failures.py       \# MCP 장애 시나리오  
 │  
-├── e2e/                           \# E2E 테스트 (Full Stack)  
-│   ├── conftest.py                \# 🔶 E2E fixtures (Playwright)  
-│   ├── test\_extension\_server.py  \# TestClient 기반 E2E  
-│   └── test\_playwright\_extension.py  \# Full Browser E2E  
-│  
-└── fixtures/                      \# 테스트용 fixture 서버  
-    └── a2a\_agents/  
-        ├── echo\_agent.py          \# Echo A2A agent  
+├── e2e/                           \# E2E 테스트 (Full Stack)
+│   ├── conftest.py                \# 🔶 E2E fixtures (Playwright)
+│   ├── test\_extension\_server.py  \# TestClient 기반 E2E
+│   ├── test\_playwright\_extension.py  \# Full Browser E2E
+│   └── test\_playground.py        \# Playground E2E (Playwright, @pytest.mark.e2e\_playwright)
+│
+├── manual/                        \# Manual Testing (Phase 6+)
+│   └── playground/                \# Playground-First Testing (ADR-T07)
+│       ├── index.html             \# Main UI (Tabs \+ Token Auth)
+│       ├── package.json           \# Jest \+ Playwright dependencies
+│       ├── css/styles.css         \# Tailwind-inspired styles
+│       ├── js/                    \# JavaScript modules
+│       │   ├── main.js            \# Tab switching \+ initialization
+│       │   ├── api-client.js      \# HTTP API client
+│       │   ├── sse-handler.js     \# SSE EventSource handler
+│       │   └── ui-components.js   \# UI update helpers
+│       ├── tests/\*.test.js       \# Jest unit tests (optional)
+│       └── coverage/              \# Jest coverage reports
+│
+└── fixtures/                      \# 테스트용 fixture 서버
+    └── a2a\_agents/
+        ├── echo\_agent.py          \# Echo A2A agent
         └── math\_agent.py          \# Math A2A agent (ADK LlmAgent)
 
 ## **🔧 Fixture Hierarchy**
@@ -87,6 +101,40 @@ tests/
 
 ### **Chaos Level (tests/chaos/conftest.py)**
 
-* chaotic\_mcp\_server (async, 포트 9999\)  
-* chaos\_retry\_config (단축 타임아웃)  
+* chaotic\_mcp\_server (async, 포트 9999\)
+* chaos\_retry\_config (단축 타임아웃)
 * container (async, direct container access)
+
+---
+
+## **HITL Entity Testing Strategy (Plan 07)**
+
+Human-in-the-Loop (HITL) 엔티티 테스트 전략:
+
+### **Test Coverage**
+
+| Entity | Test Focus | Key Scenarios |
+|--------|-----------|---------------|
+| **SamplingRequest** | 상태 관리, Timezone 검증 | PENDING → APPROVED/REJECTED, timezone-aware datetime |
+| **ElicitationRequest** | 액션 처리, Schema 검증 | ACCEPT/DECLINE, JSON Schema validation |
+
+### **Testing Patterns**
+
+**Timezone-aware Datetime**
+
+```python
+def test_datetime_uses_timezone_aware(self):
+    request = SamplingRequest(id="req-123", endpoint_id="mcp-1", messages=[])
+    assert request.created_at.tzinfo is not None  # UTC timezone
+```
+
+**State Transitions**
+
+```python
+def test_status_transitions(self):
+    request = SamplingRequest(...)
+    assert request.status == SamplingStatus.PENDING
+    # Phase 3 Service에서 상태 전이 로직 테스트
+```
+
+**Note:** HITL Signal 패턴(asyncio.Event) 테스트는 **Phase 3 Service**에서 다룹니다.

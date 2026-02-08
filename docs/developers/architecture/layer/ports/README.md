@@ -177,6 +177,96 @@ class A2APort(ABC):
         pass
 ```
 
+### McpClientPort
+
+MCP SDK 클라이언트 인터페이스:
+
+```python
+# Callback Protocols (Domain purity)
+class SamplingCallback(Protocol):
+    async def __call__(
+        self,
+        request_id: str,
+        endpoint_id: str,
+        messages: list[dict[str, Any]],
+        model_preferences: dict[str, Any] | None,
+        system_prompt: str | None,
+        max_tokens: int,
+    ) -> dict[str, Any]:
+        """Sampling HITL 콜백"""
+        ...
+
+class ElicitationCallback(Protocol):
+    async def __call__(
+        self,
+        request_id: str,
+        endpoint_id: str,
+        message: str,
+        requested_schema: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Elicitation HITL 콜백"""
+        ...
+
+class McpClientPort(ABC):
+    @abstractmethod
+    async def connect(
+        self,
+        endpoint_id: str,
+        url: str,
+        sampling_callback: SamplingCallback | None = None,
+        elicitation_callback: ElicitationCallback | None = None,
+    ) -> None:
+        """MCP 서버 연결"""
+        pass
+
+    @abstractmethod
+    async def disconnect(self, endpoint_id: str) -> None:
+        """MCP 서버 연결 해제"""
+        pass
+
+    @abstractmethod
+    async def list_resources(self, endpoint_id: str) -> list[Resource]:
+        """리소스 목록 조회"""
+        pass
+
+    @abstractmethod
+    async def read_resource(self, endpoint_id: str, uri: str) -> ResourceContent:
+        """리소스 내용 읽기"""
+        pass
+
+    @abstractmethod
+    async def list_prompts(self, endpoint_id: str) -> list[PromptTemplate]:
+        """프롬프트 목록 조회"""
+        pass
+
+    @abstractmethod
+    async def get_prompt(
+        self,
+        endpoint_id: str,
+        name: str,
+        arguments: dict[str, str] | None = None,
+    ) -> str:
+        """프롬프트 내용 조회"""
+        pass
+```
+
+### HitlNotificationPort
+
+HITL 알림 인터페이스:
+
+```python
+class HitlNotificationPort(ABC):
+    @abstractmethod
+    async def notify_sampling_request(self, request: SamplingRequest) -> None:
+        """Sampling 요청 알림"""
+        pass
+
+    @abstractmethod
+    async def notify_elicitation_request(self, request: ElicitationRequest) -> None:
+        """Elicitation 요청 알림"""
+        pass
+```
+
 ### OAuthPort
 
 OAuth 인증 인터페이스:
@@ -230,6 +320,21 @@ class UsagePort(ABC):
         pass
 ```
 
+### EventBroadcastPort
+
+이벤트 브로드캐스팅 인터페이스 (SSE 추상화):
+
+```python
+class EventBroadcastPort(Protocol):
+    async def broadcast(self, event_type: str, data: dict[str, Any]) -> None:
+        """이벤트를 모든 구독자에게 브로드캐스트"""
+        ...
+
+    async def subscribe(self) -> AsyncIterator[dict[str, Any]]:
+        """이벤트 스트림 구독"""
+        ...
+```
+
 ### Outbound Port 목록
 
 | Port | 설명 | 파일 |
@@ -238,6 +343,9 @@ class UsagePort(ABC):
 | **StoragePort** | 데이터 저장 | `storage_port.py` |
 | **ToolsetPort** | 도구 관리 | `toolset_port.py` |
 | **A2APort** | A2A 클라이언트 | `a2a_port.py` |
+| **McpClientPort** | MCP SDK 클라이언트 | `mcp_client_port.py` |
+| **HitlNotificationPort** | HITL 알림 | `hitl_notification_port.py` |
+| **EventBroadcastPort** | 이벤트 브로드캐스팅 | `event_broadcast_port.py` |
 | **OAuthPort** | OAuth 인증 | `oauth_port.py` |
 | **UsagePort** | 사용량 저장 | `usage_port.py` |
 
@@ -311,6 +419,9 @@ src/domain/ports/
     ├── storage_port.py
     ├── toolset_port.py
     ├── a2a_port.py
+    ├── mcp_client_port.py
+    ├── hitl_notification_port.py
+    ├── event_broadcast_port.py
     ├── oauth_port.py
     └── usage_port.py
 ```

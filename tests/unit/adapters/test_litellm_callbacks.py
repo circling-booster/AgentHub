@@ -17,7 +17,6 @@ def mock_logger(monkeypatch):
     return mock_log
 
 
-@pytest.mark.asyncio
 async def test_log_success_event_logs_model_and_tokens(mock_logger):
     """LLM 호출 성공 시 모델명, 토큰 수, 지연시간 로깅"""
     from src.adapters.outbound.adk.litellm_callbacks import AgentHubLogger
@@ -44,7 +43,6 @@ async def test_log_success_event_logs_model_and_tokens(mock_logger):
     assert "250" in log_message or "ms" in log_message
 
 
-@pytest.mark.asyncio
 async def test_log_success_event_handles_missing_usage(mock_logger):
     """LLM 응답에 usage 정보가 없는 경우 처리"""
     from src.adapters.outbound.adk.litellm_callbacks import AgentHubLogger

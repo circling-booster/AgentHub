@@ -23,7 +23,6 @@ class TestLiteLLMCostTracking:
         """AgentHubLogger 픽스처"""
         return AgentHubLogger(cost_service=cost_service_mock)
 
-    @pytest.mark.asyncio
     async def test_log_success_records_usage(self, logger, cost_service_mock):
         """성공 시 사용량 기록"""
         # Given
@@ -49,7 +48,6 @@ class TestLiteLLMCostTracking:
         assert usage.total_tokens == 150
         assert usage.cost_usd == 0.01
 
-    @pytest.mark.asyncio
     async def test_log_success_without_cost(self, logger, cost_service_mock):
         """비용 정보 없이도 기록 (비용 0으로 처리)"""
         # Given

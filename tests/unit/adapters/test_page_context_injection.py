@@ -25,7 +25,6 @@ def orchestrator(dynamic_toolset):
     )
 
 
-@pytest.mark.asyncio
 @pytest.mark.llm
 async def test_process_message_with_page_context_injects_context(orchestrator):
     """
@@ -57,7 +56,6 @@ async def test_process_message_with_page_context_injects_context(orchestrator):
     assert len(chunks) > 0  # Should produce some output
 
 
-@pytest.mark.asyncio
 @pytest.mark.llm
 async def test_process_message_without_page_context_unchanged(orchestrator):
     """
@@ -80,7 +78,6 @@ async def test_process_message_without_page_context_unchanged(orchestrator):
     assert len(chunks) > 0  # Should work as before
 
 
-@pytest.mark.asyncio
 @pytest.mark.llm
 async def test_page_context_truncated_at_limit(orchestrator):
     """
@@ -112,7 +109,6 @@ async def test_page_context_truncated_at_limit(orchestrator):
     assert len(chunks) > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.llm
 async def test_page_context_format_includes_url_title_selected(orchestrator):
     """

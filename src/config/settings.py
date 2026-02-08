@@ -50,6 +50,10 @@ class McpSettings(BaseModel):
     cache_ttl_seconds: int = 300
     max_retries: int = 2
     retry_backoff_seconds: float = 1.0
+    # Phase 5: Dual-Track (ADK + SDK) 활성화 여부
+    # False: ADK Track만 사용 (안전, anyio cancel scope 충돌 방지)
+    # True: SDK Track 추가 연결 (Resources/Prompts/HITL, 세션 충돌 위험)
+    enable_dual_track: bool = False
 
 
 class ObservabilitySettings(BaseModel):

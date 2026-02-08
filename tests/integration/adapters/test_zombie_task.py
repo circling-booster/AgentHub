@@ -17,7 +17,6 @@ logger = logging.getLogger("src.adapters.inbound.http.routes.chat")
 class TestZombieTaskCancellation:
     """Zombie Task 취소 테스트"""
 
-    @pytest.mark.asyncio
     async def test_cancelled_error_propagates_and_logged(self, caplog):
         """
         Given: SSE 생성기 실행 중
@@ -61,7 +60,6 @@ class TestZombieTaskCancellation:
         # 로그 확인
         assert any("Stream cancelled" in record.message for record in caplog.records)
 
-    @pytest.mark.asyncio
     async def test_disconnect_detection_stops_stream(self, caplog):
         """
         Given: SSE 스트리밍 진행 중

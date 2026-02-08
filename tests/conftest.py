@@ -102,6 +102,64 @@ def pytest_sessionfinish(session, exitstatus):  # noqa: ARG001 - pytest hook sig
 
 
 # ============================================================
+# Test History Logging (Phase Gate Protocol)
+# ============================================================
+
+
+def pytest_runtest_makereport(item, call):
+    """
+    Record test execution history to JSONL for AI feedback.
+
+    Enables Phase Gate Protocol:
+    1. AI reads tests/logs/phase_history.jsonl before each Phase/Step
+    2. Identifies past failures to avoid regressions
+    3. Provides context for current vs past issues
+
+    JSONL Format (one JSON object per line):
+    {
+        "timestamp": "2026-02-08T10:30:45.123",
+        "nodeid": "tests/unit/domain/entities/test_resource.py::TestResource::test_create",
+        "outcome": "passed" | "failed" | "skipped",
+        "duration": 0.123,
+        "phase": "domain_entities",  # From PHASE_CONTEXT env var
+        "error": "AssertionError: ..." (if failed)
+    }
+    """
+    if call.when != "call":  # Only log test call phase (not setup/teardown)
+        return
+
+    import json
+    from datetime import datetime
+
+    # Create logs directory if needed
+    log_dir = Path(__file__).parent / "logs"
+    log_dir.mkdir(exist_ok=True)
+
+    # JSONL file path
+    history_file = log_dir / "phase_history.jsonl"
+
+    # Extract phase context from environment (set by AI/user)
+    phase = os.environ.get("PHASE_CONTEXT", "unknown")
+
+    # Build history record
+    record = {
+        "timestamp": datetime.now().isoformat(timespec="milliseconds"),
+        "nodeid": item.nodeid,
+        "outcome": "passed" if call.excinfo is None else "failed",
+        "duration": round(call.duration, 3),
+        "phase": phase,
+    }
+
+    # Add error info if failed
+    if call.excinfo is not None:
+        record["error"] = str(call.excinfo.value)[:500]  # Truncate to 500 chars
+
+    # Append to JSONL (atomic write)
+    with open(history_file, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
+
+
+# ============================================================
 # Session Fixtures (테스트 세션당 1회)
 # ============================================================
 

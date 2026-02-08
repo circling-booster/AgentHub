@@ -9,6 +9,8 @@ omit =
     */__init__.py
     # main 엔트리포인트 제외 (startup/lifespan 테스트는 integration에서)
     src/main.py
+    # dependency_injector Cython 파일 제외 (coverage report 실패 방지)
+    */dependency_injector/*.pyx
 
 [report]
 precision = 2

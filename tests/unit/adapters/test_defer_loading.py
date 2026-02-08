@@ -28,7 +28,6 @@ class TestDeferLoading:
     def dynamic_toolset(self, settings):
         return DynamicToolset(settings=settings)
 
-    @pytest.mark.asyncio
     async def test_max_active_tools_increased_to_100(self, dynamic_toolset):
         """
         RED: MAX_ACTIVE_TOOLS가 100으로 증가
@@ -68,7 +67,6 @@ class TestDeferLoading:
         finally:
             dynamic_toolset._create_mcp_toolset = original_create
 
-    @pytest.mark.asyncio
     async def test_defer_loading_activates_above_threshold(self, dynamic_toolset):
         """
         RED: defer_loading_threshold 초과 시 Defer Loading 활성화
@@ -110,7 +108,6 @@ class TestDeferLoading:
             # Full tool이 아닌 proxy 확인 (type name check)
             assert type(tool).__name__ == "DeferredToolProxy"
 
-    @pytest.mark.asyncio
     async def test_normal_mode_below_threshold(self, dynamic_toolset):
         """
         RED: defer_loading_threshold 이하 시 Normal Mode
@@ -148,7 +145,6 @@ class TestDeferLoading:
             # Normal mode: BaseTool 또는 MagicMock (not DeferredToolProxy)
             assert type(tool).__name__ != "DeferredToolProxy"
 
-    @pytest.mark.asyncio
     async def test_deferred_tool_lazy_loads_on_execution(self, dynamic_toolset):
         """
         RED: DeferredToolProxy 실행 시 풀 스키마 lazy load

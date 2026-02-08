@@ -30,7 +30,6 @@ class TestSqliteUsageStorage:
         if os.path.exists(db_path):
             os.unlink(db_path)
 
-    @pytest.mark.asyncio
     async def test_save_and_retrieve_usage(self, usage_storage):
         """사용량 저장 및 조회"""
         # Given
@@ -49,7 +48,6 @@ class TestSqliteUsageStorage:
         total = await usage_storage.get_monthly_total(datetime.now().year, datetime.now().month)
         assert total == 0.01
 
-    @pytest.mark.asyncio
     async def test_get_usage_by_model(self, usage_storage):
         """모델별 비용 조회"""
         # Given
@@ -83,7 +81,6 @@ class TestSqliteUsageStorage:
         assert by_model["openai/gpt-4o-mini"] == 10.0
         assert by_model["anthropic/claude-sonnet-4"] == 20.0
 
-    @pytest.mark.asyncio
     async def test_get_usage_summary(self, usage_storage):
         """사용량 요약 조회"""
         # Given: 3개의 사용량 기록

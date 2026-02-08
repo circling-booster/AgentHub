@@ -1,0 +1,111 @@
+# AgentHub Documentation for LLMs
+
+This file follows the llms.txt standard for making documentation accessible to AI assistants.
+Repository: https://github.com/user/agenthub
+
+---
+
+## Core Entry Points
+
+Essential documentation for understanding the project:
+
+- /CLAUDE.md - AI assistant instructions (principles, architecture, workflows)
+- /docs/MAP.md - Documentation hub (central navigation)
+- /tests/README.md - Test strategy and configuration
+- /README.md - Project overview
+
+---
+
+## For Developers
+
+### Quick Start
+- /docs/developers/README.md - Developer hub
+
+### Architecture
+- /docs/developers/architecture/README.md - System architecture overview
+- /docs/developers/architecture/layer/README.md - Hexagonal architecture layers
+
+### Testing
+- /docs/developers/testing/README.md - TDD strategy and Fake Adapter pattern
+- /tests/docs/WritingGuide.md - Test writing guide
+- /tests/docs/STRATEGY.md - Detailed test strategy
+
+### Workflows
+- /docs/developers/workflows/README.md - Git, CI/CD, automation
+
+### Implementation Guides
+- /docs/developers/guides/README.md - Implementation guides hub
+- /docs/developers/guides/implementation/README.md - Code patterns
+- /docs/developers/guides/standards/README.md - MCP/A2A/ADK integration
+
+---
+
+## For Operators
+
+### Deployment
+- /docs/operators/README.md - Operators hub
+- /docs/operators/deployment/README.md - Installation, configuration
+
+### Monitoring
+- /docs/operators/observability/README.md - Logging, LLM tracing
+
+### Security
+- /docs/operators/security/README.md - Authentication, CORS, OAuth
+
+---
+
+## For Project Management
+
+### Planning
+- /docs/project/README.md - Project management hub
+- /docs/project/planning/README.md - Planning structure and principles
+- /docs/project/planning/active/README.md - Current work (Plan 07)
+
+### Decisions
+- /docs/project/decisions/README.md - Architecture Decision Records (ADR)
+
+---
+
+## Source Code Entry Points
+
+Key modules for understanding implementation:
+
+### Domain Layer (Pure Python)
+- /src/domain/entities/ - Core business objects
+- /src/domain/services/ - Business logic
+- /src/domain/ports/ - Interface definitions
+
+### Adapters
+- /src/adapters/inbound/http/ - FastAPI routes
+- /src/adapters/outbound/adk/ - Google ADK integration
+- /src/adapters/outbound/storage/ - SQLite storage
+
+### Configuration
+- /src/config/ - Dependency injection and settings
+
+### Extension
+- /extension/entrypoints/ - Chrome extension components
+- /extension/lib/ - Shared libraries (API client, SSE)
+
+---
+
+## Test Suite
+
+- /tests/unit/ - Domain layer tests (with Fake Adapters)
+- /tests/integration/ - Adapter integration tests
+- /tests/e2e/ - End-to-end tests (Playwright)
+- /tests/unit/fakes/ - Fake adapter implementations
+
+---
+
+## Navigation Tips
+
+1. Start with /docs/MAP.md for overall structure
+2. Use section README.md files as detailed guides
+3. Follow links within documents for related content
+4. Refer to /CLAUDE.md for project principles and constraints
+
+---
+
+Last Updated: 2026-02-07
+Standard: llms.txt (https://llmstxt.org/)

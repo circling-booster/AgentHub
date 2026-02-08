@@ -14,6 +14,9 @@
 | ADR-002 | Chrome Extension Manifest V3 구조 | Accepted | 2025-12 |
 | ADR-003 | SSE 스트리밍 방식 채택 | Accepted | 2025-12 |
 | ADR-004 | Offscreen Document 패턴 | Accepted | 2026-01 |
+| [ADR-A05](./ADR-A05-method-c-callback-centric.md) | Method C — Callback-Centric LLM Placement | Accepted | 2026-02-06 |
+| [ADR-A06](./ADR-A06-hybrid-timeout-strategy.md) | Hybrid Timeout Strategy | Accepted | 2026-02-06 |
+| [ADR-A07](./ADR-A07-dual-track-architecture.md) | Dual-Track Architecture (ADK + SDK) | Accepted | 2026-02-06 |
 
 ---
 

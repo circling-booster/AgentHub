@@ -13,7 +13,6 @@ from tests.unit.fakes.fake_a2a_client import FakeA2aClient
 class TestFakeA2aClientRegister:
     """Agent 등록 테스트"""
 
-    @pytest.mark.asyncio
     async def test_register_agent_returns_agent_card(self):
         """
         Given: FakeA2aClient 인스턴스
@@ -39,7 +38,6 @@ class TestFakeA2aClientRegister:
         assert "version" in agent_card
         assert agent_card["name"] == "Test Agent"
 
-    @pytest.mark.asyncio
     async def test_register_agent_connection_failure(self):
         """
         Given: 특정 URL이 실패하도록 설정된 FakeA2aClient
@@ -66,7 +64,6 @@ class TestFakeA2aClientRegister:
 class TestFakeA2aClientCall:
     """Agent 호출 테스트"""
 
-    @pytest.mark.asyncio
     async def test_call_agent_returns_response_stream(self):
         """
         Given: 등록된 A2A 에이전트
@@ -93,7 +90,6 @@ class TestFakeA2aClientCall:
         assert "Hello World" in response
         assert len(response_chunks) > 1  # 스트리밍 확인
 
-    @pytest.mark.asyncio
     async def test_call_agent_not_found(self):
         """
         Given: FakeA2aClient 인스턴스
@@ -108,7 +104,6 @@ class TestFakeA2aClientCall:
             async for _ in client.call_agent("nonexistent-agent", "test"):
                 pass
 
-    @pytest.mark.asyncio
     async def test_call_agent_connection_failure(self):
         """
         Given: 호출 실패하도록 설정된 에이전트
@@ -135,7 +130,6 @@ class TestFakeA2aClientCall:
 class TestFakeA2aClientQuery:
     """Agent Card 조회 테스트"""
 
-    @pytest.mark.asyncio
     async def test_get_agent_card(self):
         """
         Given: 등록된 A2A 에이전트
@@ -158,7 +152,6 @@ class TestFakeA2aClientQuery:
         # Then
         assert agent_card["name"] == "Query Agent"
 
-    @pytest.mark.asyncio
     async def test_get_agent_card_not_found(self):
         """
         Given: FakeA2aClient 인스턴스
@@ -176,7 +169,6 @@ class TestFakeA2aClientQuery:
 class TestFakeA2aClientUnregister:
     """Agent 등록 해제 테스트"""
 
-    @pytest.mark.asyncio
     async def test_unregister_agent(self):
         """
         Given: 등록된 A2A 에이전트
@@ -202,7 +194,6 @@ class TestFakeA2aClientUnregister:
         with pytest.raises(EndpointNotFoundError):
             await client.get_agent_card("test-agent-4")
 
-    @pytest.mark.asyncio
     async def test_unregister_nonexistent_agent(self):
         """
         Given: FakeA2aClient 인스턴스
@@ -222,7 +213,6 @@ class TestFakeA2aClientUnregister:
 class TestFakeA2aClientHealth:
     """Agent Health Check 테스트"""
 
-    @pytest.mark.asyncio
     async def test_health_check_registered_agent(self):
         """
         Given: 등록된 A2A 에이전트
@@ -245,7 +235,6 @@ class TestFakeA2aClientHealth:
         # Then
         assert is_healthy is True
 
-    @pytest.mark.asyncio
     async def test_health_check_nonexistent_agent(self):
         """
         Given: FakeA2aClient 인스턴스

@@ -13,7 +13,6 @@ from src.domain.exceptions import WorkflowNotFoundError
 class TestWorkflowAgentCreation:
     """Test create_workflow_agent method"""
 
-    @pytest.mark.asyncio
     async def test_create_sequential_workflow_agent(self, fake_orchestrator):
         """
         Given: Sequential workflow with 2 steps
@@ -46,7 +45,6 @@ class TestWorkflowAgentCreation:
         # Verify workflow was stored (implementation-specific check)
         assert workflow.id in fake_orchestrator._workflows
 
-    @pytest.mark.asyncio
     async def test_create_parallel_workflow_agent(self, fake_orchestrator):
         """
         Given: Parallel workflow with 2 agents
@@ -81,7 +79,6 @@ class TestWorkflowAgentCreation:
 class TestWorkflowExecution:
     """Test execute_workflow method"""
 
-    @pytest.mark.asyncio
     async def test_execute_workflow_streams_events(self, fake_orchestrator):
         """
         Given: Created sequential workflow
@@ -127,7 +124,6 @@ class TestWorkflowExecution:
         assert len(complete_events) == 1
         assert complete_events[0].workflow_status == "success"
 
-    @pytest.mark.asyncio
     async def test_execute_workflow_step_events(self, fake_orchestrator):
         """
         Given: Created workflow
@@ -166,7 +162,6 @@ class TestWorkflowExecution:
         assert step_start_events[0].step_number == 1
         assert step_start_events[1].step_number == 2
 
-    @pytest.mark.asyncio
     async def test_workflow_not_found_error(self, fake_orchestrator):
         """
         Given: Workflow not created
@@ -186,7 +181,6 @@ class TestWorkflowExecution:
 class TestWorkflowAgentRemoval:
     """Test workflow agent lifecycle"""
 
-    @pytest.mark.asyncio
     async def test_remove_workflow_agent(self, fake_orchestrator):
         """
         Given: Created workflow
@@ -209,7 +203,6 @@ class TestWorkflowAgentRemoval:
         # Then
         assert workflow.id not in fake_orchestrator._workflows
 
-    @pytest.mark.asyncio
     async def test_remove_nonexistent_workflow_no_error(self, fake_orchestrator):
         """
         Given: Workflow not created

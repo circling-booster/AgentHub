@@ -5,6 +5,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
+from typing import Any
 
 from src.domain.entities.stream_chunk import StreamChunk
 from src.domain.entities.workflow import Workflow
@@ -122,6 +123,31 @@ class OrchestratorPort(ABC):
 
         Args:
             workflow_id: Workflow ID
+        """
+        pass
+
+    @abstractmethod
+    async def generate_response(
+        self,
+        messages: list[dict[str, Any]],
+        model: str | None = None,
+        system_prompt: str | None = None,
+        max_tokens: int = 1024,
+    ) -> dict[str, Any]:
+        """단일 LLM 응답 생성 (Sampling 콜백용)
+
+        기존 process_message()와 별도:
+        - process_message: ADK Runner 기반 스트리밍 (Tool Call Loop 자동)
+        - generate_response: 단일 LLM 호출 (Sampling HITL 승인 시 사용)
+
+        Args:
+            messages: LLM 메시지 목록 [{"role": "user", "content": "..."}]
+            model: 모델 이름 (None이면 기본 모델)
+            system_prompt: 시스템 프롬프트 (선택)
+            max_tokens: 최대 토큰 수
+
+        Returns:
+            {"role": "assistant", "content": "...", "model": "..."}
         """
         pass
 

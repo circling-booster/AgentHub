@@ -27,7 +27,6 @@ class TestRegistryService:
     def service(self, storage, toolset):
         return RegistryService(storage=storage, toolset=toolset)
 
-    @pytest.mark.asyncio
     async def test_register_mcp_endpoint(self, service, toolset):
         """MCP 엔드포인트 등록"""
         # When
@@ -42,7 +41,6 @@ class TestRegistryService:
         assert endpoint.url == "https://mcp.example.com/server"
         assert endpoint.id in toolset.added_servers
 
-    @pytest.mark.asyncio
     async def test_register_endpoint_auto_detects_name(self, service):
         """이름 없이 등록 시 URL에서 추출"""
         # When
@@ -51,7 +49,6 @@ class TestRegistryService:
         # Then
         assert endpoint.name == "weather-api.example.com"
 
-    @pytest.mark.asyncio
     async def test_register_endpoint_returns_tools(self, service, toolset):
         """등록 시 도구 목록이 엔드포인트에 포함됨"""
         # Given
@@ -67,7 +64,6 @@ class TestRegistryService:
         assert len(endpoint.tools) == 2
         assert endpoint.tools[0].name == "tool1"
 
-    @pytest.mark.asyncio
     async def test_register_endpoint_connection_failure(self, storage):
         """연결 실패 시 에러"""
         # Given
@@ -78,7 +74,6 @@ class TestRegistryService:
         with pytest.raises(EndpointConnectionError):
             await service.register_endpoint(url="https://bad-server.com/mcp")
 
-    @pytest.mark.asyncio
     async def test_unregister_endpoint(self, service, storage, toolset):
         """엔드포인트 등록 해제"""
         # Given
@@ -92,7 +87,6 @@ class TestRegistryService:
         assert endpoint.id not in storage.endpoints
         assert endpoint.id not in toolset.added_servers
 
-    @pytest.mark.asyncio
     async def test_unregister_nonexistent_endpoint(self, service):
         """존재하지 않는 엔드포인트 해제"""
         # When
@@ -101,7 +95,6 @@ class TestRegistryService:
         # Then
         assert result is False
 
-    @pytest.mark.asyncio
     async def test_list_endpoints(self, service, storage):
         """엔드포인트 목록 조회"""
         # Given
@@ -114,7 +107,6 @@ class TestRegistryService:
         # Then
         assert len(endpoints) == 2
 
-    @pytest.mark.asyncio
     async def test_list_endpoints_with_type_filter(self, service, storage):
         """타입 필터링으로 엔드포인트 조회"""
         # Given
@@ -131,7 +123,6 @@ class TestRegistryService:
         assert len(mcp_endpoints) == 1
         assert mcp_endpoints[0].type == EndpointType.MCP
 
-    @pytest.mark.asyncio
     async def test_get_endpoint(self, service, storage):
         """엔드포인트 조회"""
         # Given
@@ -143,14 +134,12 @@ class TestRegistryService:
         # Then
         assert result.id == endpoint.id
 
-    @pytest.mark.asyncio
     async def test_get_endpoint_not_found(self, service):
         """존재하지 않는 엔드포인트 조회"""
         # When / Then
         with pytest.raises(EndpointNotFoundError):
             await service.get_endpoint("nonexistent")
 
-    @pytest.mark.asyncio
     async def test_get_endpoint_tools(self, service, toolset):
         """엔드포인트 도구 조회"""
         # Given
@@ -166,7 +155,6 @@ class TestRegistryService:
         # Then
         assert len(tools) == 2
 
-    @pytest.mark.asyncio
     async def test_check_endpoint_health(self, service, toolset):
         """엔드포인트 상태 확인"""
         # Given
@@ -178,14 +166,12 @@ class TestRegistryService:
         # Then
         assert is_healthy is True
 
-    @pytest.mark.asyncio
     async def test_check_endpoint_health_not_found(self, service):
         """존재하지 않는 엔드포인트 상태 확인"""
         # When / Then
         with pytest.raises(EndpointNotFoundError):
             await service.check_endpoint_health("nonexistent")
 
-    @pytest.mark.asyncio
     async def test_enable_endpoint(self, service, storage):
         """엔드포인트 활성화"""
         # Given
@@ -199,7 +185,6 @@ class TestRegistryService:
         assert result is True
         assert storage.endpoints[endpoint.id].enabled is True
 
-    @pytest.mark.asyncio
     async def test_disable_endpoint(self, service, storage):
         """엔드포인트 비활성화"""
         # Given
@@ -232,7 +217,6 @@ class TestRegistryServiceA2A:
     def service(self, storage, toolset, a2a_client):
         return RegistryService(storage=storage, toolset=toolset, a2a_client=a2a_client)
 
-    @pytest.mark.asyncio
     async def test_register_a2a_endpoint(self, service, a2a_client):
         """
         Given: A2A 클라이언트가 설정된 RegistryService
@@ -253,7 +237,6 @@ class TestRegistryServiceA2A:
         assert "name" in endpoint.agent_card
         assert endpoint.id in a2a_client._agents
 
-    @pytest.mark.asyncio
     async def test_list_endpoints_a2a_filter(self, service):
         """
         Given: MCP와 A2A 엔드포인트가 등록된 상태
@@ -274,7 +257,6 @@ class TestRegistryServiceA2A:
         assert len(endpoints) == 1
         assert endpoints[0].type == EndpointType.A2A
 
-    @pytest.mark.asyncio
     async def test_unregister_a2a_endpoint(self, service, a2a_client):
         """
         Given: 등록된 A2A 엔드포인트
@@ -294,7 +276,6 @@ class TestRegistryServiceA2A:
         assert result is True
         assert endpoint.id not in a2a_client._agents
 
-    @pytest.mark.asyncio
     async def test_register_a2a_without_client_raises_error(self, storage, toolset):
         """
         Given: A2A 클라이언트 없는 RegistryService
@@ -311,7 +292,6 @@ class TestRegistryServiceA2A:
                 endpoint_type=EndpointType.A2A,
             )
 
-    @pytest.mark.asyncio
     async def test_register_a2a_calls_orchestrator_add_agent(self, storage, toolset, a2a_client):
         """
         Given: orchestrator가 주입된 RegistryService
@@ -337,7 +317,6 @@ class TestRegistryServiceA2A:
         assert len(orchestrator.added_a2a_agents) == 1
         assert orchestrator.added_a2a_agents[0] == (endpoint.id, "http://localhost:9001")
 
-    @pytest.mark.asyncio
     async def test_unregister_a2a_calls_orchestrator_remove_agent(
         self, storage, toolset, a2a_client
     ):
@@ -366,7 +345,6 @@ class TestRegistryServiceA2A:
         assert len(orchestrator.removed_a2a_agents) == 1
         assert orchestrator.removed_a2a_agents[0] == endpoint.id
 
-    @pytest.mark.asyncio
     async def test_register_a2a_without_orchestrator_graceful(self, storage, toolset, a2a_client):
         """
         Given: orchestrator=None인 RegistryService
@@ -391,7 +369,6 @@ class TestRegistryServiceA2A:
         assert endpoint.type == EndpointType.A2A
         assert endpoint.agent_card is not None
 
-    @pytest.mark.asyncio
     async def test_register_mcp_ignores_orchestrator(self, storage, toolset, a2a_client):
         """
         Given: orchestrator가 주입된 RegistryService
@@ -445,7 +422,6 @@ class TestRegistryServiceRestore:
             orchestrator=orchestrator,
         )
 
-    @pytest.mark.asyncio
     async def test_restore_mcp_endpoints_reconnects(self, service, storage, toolset):
         """
         Given: 저장소에 MCP 엔드포인트 존재
@@ -468,7 +444,6 @@ class TestRegistryServiceRestore:
         assert len(result["failed"]) == 0
         assert mcp_endpoint.id in toolset.added_servers
 
-    @pytest.mark.asyncio
     async def test_restore_a2a_endpoints_rewires(self, service, storage, a2a_client, orchestrator):
         """
         Given: 저장소에 A2A 엔드포인트 존재
@@ -496,7 +471,6 @@ class TestRegistryServiceRestore:
             "http://localhost:9001",
         )
 
-    @pytest.mark.asyncio
     async def test_restore_failed_endpoint_skipped(self, storage, a2a_client, orchestrator):
         """
         Given: 연결 실패하는 MCP 엔드포인트
@@ -525,7 +499,6 @@ class TestRegistryServiceRestore:
         assert mcp_endpoint.url in result["failed"]
         assert len(result["restored"]) == 0
 
-    @pytest.mark.asyncio
     async def test_restore_empty_storage(self, service):
         """
         Given: 저장소가 비어있음
@@ -538,3 +511,204 @@ class TestRegistryServiceRestore:
         # Then: 빈 결과
         assert len(result["restored"]) == 0
         assert len(result["failed"]) == 0
+
+
+class TestRegistryServiceWithMcpClient:
+    """SDK Track 통합 테스트 (Method C)"""
+
+    @pytest.fixture
+    def storage(self):
+        return FakeEndpointStorage()
+
+    @pytest.fixture
+    def toolset(self):
+        return FakeToolset()
+
+    @pytest.fixture
+    def mcp_client(self):
+        from tests.unit.fakes.fake_mcp_client import FakeMcpClient
+
+        return FakeMcpClient()
+
+    @pytest.fixture
+    def sampling_service(self):
+        from src.domain.services.sampling_service import SamplingService
+
+        return SamplingService(ttl_seconds=600)
+
+    @pytest.fixture
+    def elicitation_service(self):
+        from src.domain.services.elicitation_service import ElicitationService
+
+        return ElicitationService(ttl_seconds=600)
+
+    @pytest.fixture
+    def hitl_notification(self):
+        from tests.unit.fakes.fake_hitl_notification import FakeHitlNotification
+
+        return FakeHitlNotification()
+
+    @pytest.fixture
+    def service(self, storage, toolset, mcp_client, sampling_service, elicitation_service):
+        return RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=sampling_service,
+            elicitation_service=elicitation_service,
+        )
+
+    async def test_register_mcp_connects_sdk_track(self, service, mcp_client):
+        """
+        Given: MCP Client가 설정된 RegistryService
+        When: MCP 엔드포인트 등록 시
+        Then: SDK Track도 연결되고 콜백이 설정됨
+        """
+        # When
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+
+        # Then: SDK Track 연결 확인
+        assert mcp_client.is_connected(endpoint.id)
+        # 콜백이 설정되었는지 확인
+        assert mcp_client.get_sampling_callback(endpoint.id) is not None
+        assert mcp_client.get_elicitation_callback(endpoint.id) is not None
+
+    async def test_unregister_disconnects_sdk_track(self, service, mcp_client):
+        """
+        Given: SDK Track이 연결된 MCP 엔드포인트
+        When: 엔드포인트 해제 시
+        Then: SDK Track도 연결 해제됨
+        """
+        # Given
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+        assert mcp_client.is_connected(endpoint.id)
+
+        # When
+        await service.unregister_endpoint(endpoint.id)
+
+        # Then
+        assert not mcp_client.is_connected(endpoint.id)
+
+    async def test_sampling_callback_waits_for_approval(
+        self, storage, toolset, mcp_client, sampling_service
+    ):
+        """
+        Given: SDK Track이 연결된 상태
+        When: Sampling 콜백 호출 시
+        Then: SamplingService에 요청이 생성되고 approve 대기 후 결과 반환
+        """
+        # Given
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=sampling_service,
+        )
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+
+        # 콜백 가져오기
+        callback = mcp_client.get_sampling_callback(endpoint.id)
+        assert callback is not None
+
+        # 백그라운드에서 approve 실행 (0.1초 후)
+        import asyncio
+
+        async def delayed_approve():
+            await asyncio.sleep(0.1)
+            await sampling_service.approve("test-req-1", {"content": "LLM response"})
+
+        asyncio.create_task(delayed_approve())
+
+        # When: 콜백 실행
+        result = await callback(
+            request_id="test-req-1",
+            endpoint_id=endpoint.id,
+            messages=[{"role": "user", "content": "test"}],
+            model_preferences=None,
+            system_prompt=None,
+            max_tokens=1024,
+        )
+
+        # Then: LLM 결과 반환됨
+        assert result == {"content": "LLM response"}
+        # SamplingService에 요청이 생성되었는지 확인
+        request = sampling_service.get_request("test-req-1")
+        assert request is not None
+        assert request.id == "test-req-1"
+
+    async def test_sampling_callback_timeout_notifies_sse(
+        self, storage, toolset, mcp_client, sampling_service, hitl_notification
+    ):
+        """
+        Given: SDK Track + HITL Notification이 설정된 상태
+        When: Short timeout 초과 시
+        Then: SSE 알림 전송됨
+        """
+        from src.domain.exceptions import HitlTimeoutError
+
+        # Given: short_timeout=0.05초로 설정하여 빠른 테스트
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=sampling_service,
+            hitl_notification=hitl_notification,
+            short_timeout=0.05,
+            long_timeout=0.1,
+        )
+        endpoint = await service.register_endpoint("http://localhost:8080/mcp")
+
+        callback = mcp_client.get_sampling_callback(endpoint.id)
+
+        # When: Long timeout까지 대기 (approve 없음)
+        with pytest.raises(HitlTimeoutError):
+            await callback(
+                request_id="test-req-timeout",
+                endpoint_id=endpoint.id,
+                messages=[{"role": "user", "content": "timeout test"}],
+                model_preferences=None,
+                system_prompt=None,
+                max_tokens=1024,
+            )
+
+        # Then: SSE 알림 검증
+        assert len(hitl_notification.sampling_notifications) > 0
+        notified_request = hitl_notification.sampling_notifications[0]
+        assert notified_request.id == "test-req-timeout"
+
+    async def test_restore_endpoints_connects_sdk_track(self, storage, toolset, mcp_client):
+        """
+        Given: 저장소에 MCP 엔드포인트 존재
+        When: restore_endpoints() 호출
+        Then: SDK Track도 재연결됨 (M1 수정)
+        """
+        from src.domain.services.elicitation_service import ElicitationService
+        from src.domain.services.sampling_service import SamplingService
+
+        # Given: 저장소에 MCP 엔드포인트 저장
+        mcp_endpoint = Endpoint(
+            url="https://mcp.example.com/server",
+            type=EndpointType.MCP,
+            name="Test MCP",
+        )
+        await storage.save_endpoint(mcp_endpoint)
+
+        # SDK Track 의존성 포함된 서비스
+        service = RegistryService(
+            storage=storage,
+            toolset=toolset,
+            mcp_client=mcp_client,
+            sampling_service=SamplingService(),
+            elicitation_service=ElicitationService(),
+        )
+
+        # When: 복원
+        result = await service.restore_endpoints()
+
+        # Then: 재연결 성공
+        assert mcp_endpoint.url in result["restored"]
+        assert len(result["failed"]) == 0
+        # SDK Track 연결 확인
+        assert mcp_client.is_connected(mcp_endpoint.id)
+        assert mcp_client.get_sampling_callback(mcp_endpoint.id) is not None
+        assert mcp_client.get_elicitation_callback(mcp_endpoint.id) is not None

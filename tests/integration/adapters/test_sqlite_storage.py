@@ -28,7 +28,6 @@ class TestSqliteConversationStorage:
         yield storage
         await storage.close()
 
-    @pytest.mark.asyncio
     async def test_wal_mode_enabled(self, storage, temp_database):
         """WAL 모드가 활성화되었는지 확인"""
         # WAL 모드가 활성화되면 -wal 파일이 생성됨
@@ -50,7 +49,6 @@ class TestSqliteConversationStorage:
         if wal_exists:
             assert os.path.exists(wal_file), "WAL file should exist before checkpoint"
 
-    @pytest.mark.asyncio
     async def test_save_and_get_conversation(self, storage):
         """대화 저장 및 조회"""
         # Given
@@ -65,7 +63,6 @@ class TestSqliteConversationStorage:
         assert result.id == "conv-123"
         assert result.title == "Test Conversation"
 
-    @pytest.mark.asyncio
     async def test_list_conversations_ordered_by_updated_at(self, storage):
         """대화 목록은 updated_at 내림차순"""
         # Given - 명시적 타임스탬프 사용
@@ -99,7 +96,6 @@ class TestSqliteConversationStorage:
         assert result[1].id == "conv-2"
         assert result[2].id == "conv-1"  # 가장 오래됨
 
-    @pytest.mark.asyncio
     async def test_delete_conversation(self, storage):
         """대화 삭제"""
         # Given
@@ -113,7 +109,6 @@ class TestSqliteConversationStorage:
         assert result is True
         assert await storage.get_conversation("conv-del") is None
 
-    @pytest.mark.asyncio
     async def test_save_and_get_messages(self, storage):
         """메시지 저장 및 조회"""
         # Given
@@ -135,7 +130,6 @@ class TestSqliteConversationStorage:
         assert messages[1].role == MessageRole.ASSISTANT
         assert messages[1].content == "Hi there!"
 
-    @pytest.mark.asyncio
     async def test_get_messages_with_limit(self, storage):
         """메시지 조회 시 limit 적용"""
         # Given
@@ -153,7 +147,6 @@ class TestSqliteConversationStorage:
         assert len(messages) == 5
         assert messages[-1].content == "Message 9"  # 최근 5개
 
-    @pytest.mark.asyncio
     async def test_concurrent_writes(self, storage):
         """동시 쓰기 처리 (WAL 모드 + Lock)"""
         # Given
@@ -171,7 +164,6 @@ class TestSqliteConversationStorage:
         messages = await storage.get_messages("conv-concurrent")
         assert len(messages) == 10
 
-    @pytest.mark.asyncio
     async def test_update_conversation(self, storage):
         """대화 업데이트"""
         # Given
@@ -186,7 +178,6 @@ class TestSqliteConversationStorage:
         result = await storage.get_conversation("conv-update")
         assert result.title == "Updated"
 
-    @pytest.mark.asyncio
     async def test_get_nonexistent_conversation(self, storage):
         """존재하지 않는 대화 조회"""
         # When
@@ -195,7 +186,6 @@ class TestSqliteConversationStorage:
         # Then
         assert result is None
 
-    @pytest.mark.asyncio
     async def test_delete_nonexistent_conversation(self, storage):
         """존재하지 않는 대화 삭제"""
         # When
@@ -204,7 +194,6 @@ class TestSqliteConversationStorage:
         # Then
         assert result is False
 
-    @pytest.mark.asyncio
     async def test_cascade_delete_messages(self, storage):
         """대화 삭제 시 메시지도 삭제"""
         # Given

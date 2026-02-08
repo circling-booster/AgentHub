@@ -42,7 +42,6 @@ class TestHealthMonitorService:
             check_interval_seconds=1,
         )
 
-    @pytest.mark.asyncio
     async def test_check_all_endpoints(self, service, storage, toolset):
         """모든 엔드포인트 상태 확인"""
         # Given
@@ -59,7 +58,6 @@ class TestHealthMonitorService:
         assert results["ep-1"] is True
         assert results["ep-2"] is False
 
-    @pytest.mark.asyncio
     async def test_check_all_endpoints_updates_status(self, service, storage, toolset):
         """상태 확인 후 엔드포인트 상태 갱신"""
         # Given
@@ -78,7 +76,6 @@ class TestHealthMonitorService:
         # Then
         assert storage.endpoints["ep-1"].status == EndpointStatus.CONNECTED
 
-    @pytest.mark.asyncio
     async def test_check_all_endpoints_marks_error(self, service, storage, toolset):
         """실패한 엔드포인트는 ERROR 상태로"""
         # Given
@@ -97,7 +94,6 @@ class TestHealthMonitorService:
         # Then
         assert storage.endpoints["ep-1"].status == EndpointStatus.ERROR
 
-    @pytest.mark.asyncio
     async def test_check_single_endpoint(self, service, storage, toolset):
         """단일 엔드포인트 상태 확인"""
         # Given
@@ -111,7 +107,6 @@ class TestHealthMonitorService:
         # Then
         assert result is True
 
-    @pytest.mark.asyncio
     async def test_check_nonexistent_endpoint(self, service):
         """존재하지 않는 엔드포인트 확인"""
         # When
@@ -120,7 +115,6 @@ class TestHealthMonitorService:
         # Then
         assert result is False
 
-    @pytest.mark.asyncio
     async def test_start_and_stop(self, service):
         """모니터 시작 및 중지"""
         # When
@@ -135,7 +129,6 @@ class TestHealthMonitorService:
         # Then
         assert service.is_running is False
 
-    @pytest.mark.asyncio
     async def test_start_runs_initial_check(self, service, storage, toolset):
         """시작 시 초기 상태 확인 실행"""
         # Given
@@ -156,7 +149,6 @@ class TestHealthMonitorService:
         # Then
         assert storage.endpoints["ep-1"].status == EndpointStatus.CONNECTED
 
-    @pytest.mark.asyncio
     async def test_only_checks_enabled_endpoints(self, service, storage, toolset):
         """활성화된 엔드포인트만 확인"""
         # Given
@@ -208,7 +200,6 @@ class TestHealthMonitorServiceA2aSupport:
             check_interval_seconds=1,
         )
 
-    @pytest.mark.asyncio
     async def test_check_a2a_agent_healthy(self, service_with_a2a, storage, a2a_client):
         """
         RED: A2A 에이전트 health check - 정상
@@ -235,7 +226,6 @@ class TestHealthMonitorServiceA2aSupport:
         assert result is True
         assert storage.endpoints["a2a-1"].status == EndpointStatus.CONNECTED
 
-    @pytest.mark.asyncio
     async def test_check_a2a_agent_unhealthy(self, service_with_a2a, storage, a2a_client):
         """
         RED: A2A 에이전트 health check - 비정상
@@ -261,7 +251,6 @@ class TestHealthMonitorServiceA2aSupport:
         assert result is False
         assert storage.endpoints["a2a-1"].status == EndpointStatus.ERROR
 
-    @pytest.mark.asyncio
     async def test_check_all_endpoints_with_mixed_types(
         self, service_with_a2a, storage, toolset, a2a_client
     ):

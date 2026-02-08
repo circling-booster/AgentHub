@@ -34,7 +34,6 @@ class TestHttpxOAuthAdapter:
             oauth2_refresh_token="current-refresh-token",
         )
 
-    @pytest.mark.asyncio
     async def test_exchange_code_for_token_success(self, oauth_adapter, auth_config):
         """
         Authorization Code → Access Token 교환 성공
@@ -82,7 +81,6 @@ class TestHttpxOAuthAdapter:
         assert call_args[1]["data"]["client_secret"] == "test-client-secret"
         assert call_args[1]["data"]["redirect_uri"] == redirect_uri
 
-    @pytest.mark.asyncio
     async def test_exchange_code_for_token_failure(self, oauth_adapter, auth_config):
         """
         Authorization Code 교환 실패 (401 Unauthorized)
@@ -109,7 +107,6 @@ class TestHttpxOAuthAdapter:
                     redirect_uri=redirect_uri,
                 )
 
-    @pytest.mark.asyncio
     async def test_refresh_access_token_success(self, oauth_adapter, auth_config):
         """
         Refresh Token으로 Access Token 갱신 성공
@@ -148,7 +145,6 @@ class TestHttpxOAuthAdapter:
         assert call_args[1]["data"]["refresh_token"] == "current-refresh-token"
         assert call_args[1]["data"]["client_id"] == "test-client-id"
 
-    @pytest.mark.asyncio
     async def test_refresh_access_token_failure(self, oauth_adapter, auth_config):
         """
         Refresh Token 갱신 실패 (400 Bad Request)

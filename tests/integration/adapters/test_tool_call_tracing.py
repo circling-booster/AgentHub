@@ -13,7 +13,6 @@ from src.domain.entities.message import Message, MessageRole
 from src.domain.entities.tool_call import ToolCall
 
 
-@pytest.mark.asyncio
 async def test_sqlite_saves_and_retrieves_tool_calls(temp_database):
     """SQLite에 ToolCall을 저장하고 조회할 수 있어야 함"""
     storage = SqliteConversationStorage(db_path=temp_database)
@@ -62,7 +61,6 @@ async def test_sqlite_saves_and_retrieves_tool_calls(temp_database):
     await storage.close()
 
 
-@pytest.mark.asyncio
 async def test_tool_calls_linked_to_conversation(temp_database):
     """ToolCall이 대화에 종속되어야 함 (FK 제약)"""
     storage = SqliteConversationStorage(db_path=temp_database)
@@ -82,7 +80,6 @@ async def test_tool_calls_linked_to_conversation(temp_database):
     await storage.close()
 
 
-@pytest.mark.asyncio
 async def test_get_tool_calls_empty_list_for_new_conversation(temp_database):
     """새 대화는 빈 tool_calls 리스트를 반환해야 함"""
     storage = SqliteConversationStorage(db_path=temp_database)

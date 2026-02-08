@@ -17,10 +17,9 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 
 import pytest
-import pytest_asyncio
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def chaotic_mcp_server() -> AsyncIterator[tuple[str, subprocess.Popen]]:
     """
     랜덤 타이밍에 종료되는 MCP 서버
@@ -94,7 +93,7 @@ async def chaotic_mcp_server() -> AsyncIterator[tuple[str, subprocess.Popen]]:
                 proc.wait()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 def chaos_retry_config() -> dict:
     """
     Chaos 테스트용 재시도 설정
@@ -121,7 +120,7 @@ def temp_data_dir() -> Path:
         yield Path(tmpdir)
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def container(temp_data_dir: Path):
     """
     Chaos 테스트용 DI Container

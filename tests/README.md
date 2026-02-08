@@ -8,12 +8,12 @@ TDD \+ 헥사고날 아키텍처 기반 테스트 전략을 위한 가이드 문
 | :---- | :---- |
 | **pytest 설정** | pyproject.toml \[tool.pytest.ini\_options\] |
 | **Coverage 설정** | .coveragerc (pyproject.toml보다 우선) |
-| **asyncio 모드** | auto (@pytest.mark.asyncio 불필요) |
+| **anyio 모드** | auto (@pytest.mark.asyncio 불필요, anyio plugin 사용) |
 | **기본 제외 마커** | llm, e2e\_playwright, local\_mcp, local\_a2a, chaos |
 | **Import 표준** | from src.domain... (src. 접두사 사용) |
 | **Import 검증** | pytest tests/integration/test\_app\_startup.py::TestImportValidation |
 | **Fake Adapter 위치** | tests/unit/fakes/ |
-| **최소 커버리지** | 80% (CI 강제, 현재: 89.90%) |
+| **최소 커버리지** | 80% (CI 강제, 현재: 86.84%) |
 | **테스트 수 확인** | pytest \--co \-q |
 | **Playground (JS) 테스트** | cd tests/manual/playground && npm test |
 
