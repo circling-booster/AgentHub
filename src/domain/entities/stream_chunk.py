@@ -117,3 +117,49 @@ class StreamChunk:
             workflow_status=status,
             total_steps=total_steps,
         )
+
+    @staticmethod
+    def sampling_request(
+        request_id: str,
+        endpoint_id: str,
+        messages: list[dict[str, Any]],
+    ) -> "StreamChunk":
+        """Sampling 요청 알림 청크 생성
+
+        Args:
+            request_id: 요청 ID
+            endpoint_id: MCP 서버 엔드포인트 ID
+            messages: 메시지 목록
+
+        Returns:
+            StreamChunk (type="sampling_request")
+        """
+        return StreamChunk(
+            type="sampling_request",
+            content=request_id,
+            agent_name=endpoint_id,
+            tool_arguments={"messages": messages},
+        )
+
+    @staticmethod
+    def elicitation_request(
+        request_id: str,
+        message: str,
+        requested_schema: dict[str, Any],
+    ) -> "StreamChunk":
+        """Elicitation 요청 알림 청크 생성
+
+        Args:
+            request_id: 요청 ID
+            message: Elicitation 메시지
+            requested_schema: 요청 스키마
+
+        Returns:
+            StreamChunk (type="elicitation_request")
+        """
+        return StreamChunk(
+            type="elicitation_request",
+            content=request_id,
+            result=message,
+            tool_arguments={"schema": requested_schema},
+        )

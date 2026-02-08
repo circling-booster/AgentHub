@@ -71,8 +71,8 @@ cd tests/manual/playground && npm test
 | **Phase 3** | Domain Services (Method C) | - | ✅ | [03_domain_services.md](03_domain_services.md) |
 | **Phase 4** | Adapter Implementation + Synapse Tests | - | ✅ | [04_adapter_implementation.md](04_adapter_implementation.md) |
 | **Phase 5** | Integration (Method C Callback) | - | ✅ | [05_integration.md](05_integration.md) |
-| **Phase 6** | HTTP Routes + Playground UI | ✅ | 🔄 | [06_http_routes.md](06_http_routes.md) |
-| **Phase 7** | SSE Events + Playground | ✅ | ⏸️ | [07_sse_events_playground.md](07_sse_events_playground.md) |
+| **Phase 6** | HTTP Routes + Playground UI | ✅ | ✅ | [06_http_routes.md](06_http_routes.md) |
+| **Phase 7** | SSE Events + Playground | ✅ | ✅ | [07_sse_events_playground.md](07_sse_events_playground.md) |
 
 **Playground Column:**
 - ✅ - Playground UI/테스트를 백엔드와 함께 구현
@@ -90,6 +90,8 @@ cd tests/manual/playground && npm test
 **제외 (Extension → Production Preparation Phase):**
 - extension/lib/types.ts, api.ts (Sampling/Elicitation 타입/API)
 - HitlModal 컴포넌트, SSE 이벤트 핸들러
+- **현재 상태**: Phase 6-7 완료, Playground로 모든 기능 검증 완료
+- **연기 항목**: Extension UI 컴포넌트만 Production Phase로 연기 (Backend + Playground는 완료)
 
 **순서대로 구현 가능:** Phase 2에서 Fake를 함께 작성하여 Phase 3 테스트에서 사용
 
@@ -220,10 +222,24 @@ async def callback(...):
 
 ### Extension UI: Production Phase로 연기
 
-- **전체 화면 모달** (Extension UI)
-- Sampling: 메시지 내용 + 승인/거부 버튼
-- Elicitation: 동적 폼 (requested_schema 기반) + accept/decline/cancel
-- **연기 이유**: Playground로 충분히 검증 가능, Extension UI는 Production 단계에서 더 나은 UX 설계 가능
+**Phase 6-7 완료 상태:**
+- ✅ Backend API (Resources, Prompts, Sampling, Elicitation)
+- ✅ HITL SSE Events (sampling_request, elicitation_request)
+- ✅ Playground UI (모든 탭 + SSE Log Panel)
+- ✅ E2E Tests (Playwright)
+
+**Production Phase 연기 항목:**
+- ⏸️ **전체 화면 모달** (Extension UI)
+  - Sampling: 메시지 내용 + 승인/거부 버튼
+  - Elicitation: 동적 폼 (requested_schema 기반) + accept/decline/cancel
+- ⏸️ **Extension SSE 이벤트 핸들러**
+  - extension/entrypoints/sidepanel/hooks/useStreamEvents.ts
+  - HitlModal 컴포넌트 통합
+
+**연기 이유:**
+- Playground로 충분히 검증 가능 (Backend + SSE 모두 작동 확인)
+- Extension UI는 Production 단계에서 더 나은 UX 설계 가능
+- 중복 작업 방지 (Playground 기본 UI → Extension 고급 Modal)
 
 ### Domain 콜백 추상화
 
@@ -325,6 +341,7 @@ async def callback(...):
 
 ---
 
-*Last Updated: 2026-02-06*
+*Last Updated: 2026-02-08*
 *Revision: Method C (Callback-Centric), Synapse Integration, Playground-First Testing*
 *Reviewed: TDD, Hexagonal Architecture, MCP SDK Spec Compliance*
+*Status: Phase 6-7 완료 (Backend + Playground), Extension UI는 Production Phase로 연기*

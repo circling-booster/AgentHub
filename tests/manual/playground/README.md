@@ -194,6 +194,166 @@ eventSource.addEventListener('sampling_request', (event) => {
 
 ---
 
+## 📡 SSE Event Handlers
+
+Playground는 **HITL SSE Events**를 실시간으로 수신하여 UI를 업데이트합니다.
+
+**Phase 7**에서 StreamChunk 기반 이벤트 구조로 확장되었습니다.
+
+### Event Types (Phase 7 - StreamChunk)
+
+| Event Type | Trigger | UI Update |
+|------------|---------|-----------|
+| **sampling_request** | MCP Sampling 요청 30초 timeout | Sampling 탭 자동 새로고침 + SSE 로그 |
+| **elicitation_request** | MCP Elicitation 요청 30초 timeout | Elicitation 탭 자동 새로고침 + SSE 로그 |
+
+### StreamChunk Structure
+
+Phase 7부터 모든 SSE 이벤트는 **StreamChunk** 구조를 따릅니다:
+
+```javascript
+// sampling_request event
+{
+  "type": "sampling_request",
+  "content": "req-abc123",        // request_id
+  "agent_name": "test-endpoint",  // endpoint_id
+  "tool_arguments": {
+    "messages": [...]              // MCP Sampling messages
+  },
+  "result": "",
+  "tool_name": "",
+  "error_code": "",
+  "workflow_id": "",
+  "workflow_type": "",
+  "workflow_status": "",
+  "step_number": 0,
+  "total_steps": 0
+}
+
+// elicitation_request event
+{
+  "type": "elicitation_request",
+  "content": "elicit-xyz789",     // request_id
+  "result": "Enter API key",      // message
+  "tool_arguments": {
+    "schema": {...}                // JSON Schema
+  },
+  "agent_name": "",
+  "tool_name": "",
+  ...
+}
+```
+
+### Implementation (js/main.js)
+
+```javascript
+// SSE Connection Initialization
+function initHitlSseConnection() {
+    const eventSource = new EventSource(`${API_BASE}/api/hitl/events`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    // Sampling Request Handler
+    eventSource.addEventListener('sampling_request', (event) => {
+        const data = JSON.parse(event.data);
+
+        // Log to SSE panel
+        appendSseLog('SAMPLING REQUEST', {
+            request_id: data.content,
+            endpoint_id: data.agent_name,
+            messages: data.tool_arguments?.messages
+        });
+
+        // Auto-refresh Sampling tab if active
+        if (currentTab === 'sampling') {
+            refreshSamplingList();
+        }
+    });
+
+    // Elicitation Request Handler
+    eventSource.addEventListener('elicitation_request', (event) => {
+        const data = JSON.parse(event.data);
+
+        // Log to SSE panel
+        appendSseLog('ELICITATION REQUEST', {
+            request_id: data.content,
+            message: data.result,
+            schema: data.tool_arguments?.schema
+        });
+
+        // Auto-refresh Elicitation tab if active
+        if (currentTab === 'elicitation') {
+            refreshElicitationList();
+        }
+    });
+}
+```
+
+### Auto-Refresh Behavior
+
+**Sampling Tab:**
+1. SSE `sampling_request` 이벤트 수신
+2. Sampling 탭이 활성화되어 있으면 `refreshSamplingList()` 호출
+3. 요청 목록 재로드 → 신규 요청 표시
+
+**Elicitation Tab:**
+1. SSE `elicitation_request` 이벤트 수신
+2. Elicitation 탭이 활성화되어 있으면 `refreshElicitationList()` 호출
+3. 요청 목록 재로드 → 신규 요청 표시
+
+### SSE Log Panel
+
+모든 SSE 이벤트는 **SSE Log Panel**에 실시간으로 기록됩니다.
+
+**UI Component:**
+```html
+<div class="sse-log-panel">
+    <h3>SSE Events Log</h3>
+    <pre data-testid="sse-log" style="height: 200px; overflow-y: auto;"></pre>
+</div>
+```
+
+**Log Format:**
+```
+[2026-02-08T10:30:45.123Z] SAMPLING REQUEST: {
+  "request_id": "req-abc123",
+  "endpoint_id": "test-endpoint",
+  "messages": [...]
+}
+
+[2026-02-08T10:31:12.456Z] ELICITATION REQUEST: {
+  "request_id": "elicit-xyz789",
+  "message": "Enter API key",
+  "schema": {...}
+}
+```
+
+### Error Handling
+
+**Connection Errors:**
+```javascript
+eventSource.onerror = (error) => {
+    console.error('SSE Connection Error:', error);
+
+    // Exponential backoff reconnection
+    setTimeout(() => {
+        initHitlSseConnection();  // Retry
+    }, reconnectDelay);
+};
+```
+
+**Timeout Handling:**
+- SSE 연결 실패 시 자동 재연결 (EventSource 기본 동작)
+- Backend timeout (30초) 후에만 이벤트 전송 (조기 사용자 응답 시 이벤트 없음)
+
+### Related Documentation
+
+- [SSE Event Flow](../../../docs/developers/guides/implementation/sse-event-flow.md) - HITL SSE 플로우 다이어그램
+- [HITL SSE API](../../../docs/developers/architecture/api/hitl-sse.md) - API 명세 및 이벤트 스키마
+- [StreamChunk Entity](../../../docs/developers/architecture/domain/entities.md#streamchunk) - Domain 엔티티 설계
+
+---
+
 ## 📝 Playground UI Components
 
 ### Tab Structure

@@ -21,7 +21,7 @@ class TestHitlNotificationAdapter:
         return HitlNotificationAdapter(sse_broker=fake_sse_broker)
 
     async def test_notify_sampling_request_broadcasts(self, adapter, fake_sse_broker):
-        """notify_sampling_request() - SSE 브로드캐스트"""
+        """notify_sampling_request() - SSE 브로드캐스트 (StreamChunk 기반)"""
         request = SamplingRequest(
             id="req-1",
             endpoint_id="ep-1",
@@ -36,16 +36,16 @@ class TestHitlNotificationAdapter:
         # FakeSseBroker의 브로드캐스트 호출 확인
         assert len(fake_sse_broker.broadcasted_events) == 1
         event = fake_sse_broker.broadcasted_events[0]
+
+        # StreamChunk 기반 검증
         assert event["type"] == "sampling_request"
-        assert event["data"]["request_id"] == "req-1"
-        assert event["data"]["endpoint_id"] == "ep-1"
-        assert event["data"]["messages"] == [{"role": "user", "content": "test"}]
-        assert event["data"]["model_preferences"] == {"hints": ["fast"]}
-        assert event["data"]["system_prompt"] == "You are helpful"
-        assert event["data"]["max_tokens"] == 100
+        assert event["data"]["type"] == "sampling_request"
+        assert event["data"]["content"] == "req-1"  # request_id
+        assert event["data"]["agent_name"] == "ep-1"  # endpoint_id
+        assert event["data"]["tool_arguments"]["messages"] == [{"role": "user", "content": "test"}]
 
     async def test_notify_elicitation_request_broadcasts(self, adapter, fake_sse_broker):
-        """notify_elicitation_request() - SSE 브로드캐스트"""
+        """notify_elicitation_request() - SSE 브로드캐스트 (StreamChunk 기반)"""
         request = ElicitationRequest(
             id="req-2",
             endpoint_id="ep-2",
@@ -58,11 +58,13 @@ class TestHitlNotificationAdapter:
         # FakeSseBroker의 브로드캐스트 호출 확인
         assert len(fake_sse_broker.broadcasted_events) == 1
         event = fake_sse_broker.broadcasted_events[0]
+
+        # StreamChunk 기반 검증
         assert event["type"] == "elicitation_request"
-        assert event["data"]["request_id"] == "req-2"
-        assert event["data"]["endpoint_id"] == "ep-2"
-        assert event["data"]["message"] == "Please confirm"
-        assert event["data"]["requested_schema"] == {
+        assert event["data"]["type"] == "elicitation_request"
+        assert event["data"]["content"] == "req-2"  # request_id
+        assert event["data"]["result"] == "Please confirm"  # message
+        assert event["data"]["tool_arguments"]["schema"] == {
             "type": "object",
             "properties": {"confirmed": {"type": "boolean"}},
         }

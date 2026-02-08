@@ -2,7 +2,7 @@
 
 HITL (Human-In-The-Loop) 요청을 SSE (Server-Sent Events) 스트림으로 실시간 수신합니다.
 
-**Plan 07 Phase 6**에서 구현되었습니다.
+**Plan 07 Phase 6**에서 구현되었으며, **Phase 7**에서 StreamChunk 기반으로 확장되었습니다.
 
 ---
 
@@ -61,37 +61,41 @@ LLM Sampling 요청이 발생했을 때 전송됩니다.
 
 **Event Name:** `sampling_request`
 
-**Data Schema:**
+**Data Schema (Phase 7 - StreamChunk 기반):**
 ```json
 {
-  "request_id": "req-abc123",
-  "endpoint_id": "test-endpoint",
-  "messages": [
-    {
-      "role": "user",
-      "content": {
-        "type": "text",
-        "text": "Hello"
+  "type": "sampling_request",
+  "content": "req-abc123",
+  "agent_name": "test-endpoint",
+  "tool_arguments": {
+    "messages": [
+      {
+        "role": "user",
+        "content": {
+          "type": "text",
+          "text": "Hello"
+        }
       }
-    }
-  ],
-  "model_preferences": {
-    "hints": [
-      { "name": "claude-3-5-sonnet-20241022" }
     ]
   },
-  "system_prompt": "You are a helpful assistant",
-  "max_tokens": 100
+  "result": "",
+  "tool_name": "",
+  "error_code": "",
+  "workflow_id": "",
+  "workflow_type": "",
+  "workflow_status": "",
+  "step_number": 0,
+  "total_steps": 0
 }
 ```
 
-**Fields:**
-- `request_id` (string): Sampling request unique ID
-- `endpoint_id` (string): MCP Server endpoint ID
-- `messages` (array): MCP Sampling 메시지 배열
-- `model_preferences` (object): 모델 선호도 (hints)
-- `system_prompt` (string, optional): 시스템 프롬프트
-- `max_tokens` (number): 최대 토큰 수
+**Key Fields (StreamChunk):**
+- `type` (string): Event type = `"sampling_request"`
+- `content` (string): Sampling request ID (예: `"req-abc123"`)
+- `agent_name` (string): MCP Server endpoint ID (예: `"test-endpoint"`)
+- `tool_arguments` (object): 추가 데이터
+  - `messages` (array): MCP Sampling 메시지 배열
+- `result`, `tool_name`, `error_code`, `workflow_*`: 미사용 필드 (빈 값)
 
 **Action Required:**
 사용자는 `/api/sampling/requests/{request_id}/approve` 또는 `/api/sampling/requests/{request_id}/reject` 엔드포인트로 응답해야 합니다.
@@ -104,31 +108,102 @@ LLM Sampling 요청이 발생했을 때 전송됩니다.
 
 **Event Name:** `elicitation_request`
 
-**Data Schema:**
+**Data Schema (Phase 7 - StreamChunk 기반):**
 ```json
 {
-  "request_id": "elicit-xyz789",
-  "endpoint_id": "test-endpoint",
-  "message": "Please provide code review parameters",
-  "requested_schema": {
-    "type": "object",
-    "properties": {
-      "language": { "type": "string" },
-      "style_guide": { "type": "string" }
-    },
-    "required": ["language"]
-  }
+  "type": "elicitation_request",
+  "content": "elicit-xyz789",
+  "result": "Please provide code review parameters",
+  "tool_arguments": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "language": { "type": "string" },
+        "style_guide": { "type": "string" }
+      },
+      "required": ["language"]
+    }
+  },
+  "agent_name": "",
+  "tool_name": "",
+  "error_code": "",
+  "workflow_id": "",
+  "workflow_type": "",
+  "workflow_status": "",
+  "step_number": 0,
+  "total_steps": 0
 }
 ```
 
-**Fields:**
-- `request_id` (string): Elicitation request unique ID
-- `endpoint_id` (string): MCP Server endpoint ID
-- `message` (string): 사용자에게 표시할 메시지
-- `requested_schema` (object, optional): JSON Schema 형식의 입력 스키마
+**Key Fields (StreamChunk):**
+- `type` (string): Event type = `"elicitation_request"`
+- `content` (string): Elicitation request ID (예: `"elicit-xyz789"`)
+- `result` (string): 사용자에게 표시할 메시지
+- `tool_arguments` (object): 추가 데이터
+  - `schema` (object): JSON Schema 형식의 입력 스키마
+- `agent_name`, `tool_name`, `error_code`, `workflow_*`: 미사용 필드 (빈 값)
 
 **Action Required:**
 사용자는 `/api/elicitation/requests/{request_id}/respond` 엔드포인트로 응답해야 합니다.
+
+---
+
+## Implementation Pattern (Phase 7)
+
+### StreamChunk Factory Methods
+
+Phase 7에서 HitlNotificationAdapter는 **StreamChunk 팩토리 메서드**를 사용하여 SSE 이벤트를 생성합니다.
+
+**Code Example:**
+```python
+# src/adapters/outbound/sse/hitl_notification_adapter.py
+from dataclasses import asdict
+from src.domain.entities.stream_chunk import StreamChunk
+
+async def notify_sampling_request(self, request: SamplingRequest) -> None:
+    """Sampling 요청 알림 (SSE 브로드캐스트)"""
+    # 1. StreamChunk 팩토리 메서드로 청크 생성
+    chunk = StreamChunk.sampling_request(
+        request_id=request.id,
+        endpoint_id=request.endpoint_id,
+        messages=request.messages,
+    )
+
+    # 2. asdict()로 dict 변환하여 브로드캐스트
+    await self._broker.broadcast(
+        event_type=chunk.type,  # "sampling_request"
+        data=asdict(chunk),      # StreamChunk 전체 필드
+    )
+
+async def notify_elicitation_request(self, request: ElicitationRequest) -> None:
+    """Elicitation 요청 알림 (SSE 브로드캐스트)"""
+    chunk = StreamChunk.elicitation_request(
+        request_id=request.id,
+        message=request.message,
+        requested_schema=request.requested_schema,
+    )
+
+    await self._broker.broadcast(
+        event_type=chunk.type,  # "elicitation_request"
+        data=asdict(chunk),
+    )
+```
+
+**Benefits:**
+- ✅ **일관성**: Chat SSE와 동일한 StreamChunk 구조 사용
+- ✅ **타입 안전성**: 팩토리 메서드로 올바른 필드 보장
+- ✅ **확장성**: 새로운 이벤트 타입 추가 용이
+- ✅ **테스트 용이성**: StreamChunk 단위 테스트 가능
+
+### StreamChunk Field Mapping
+
+| StreamChunk Field | Sampling Request | Elicitation Request |
+|-------------------|------------------|---------------------|
+| `type` | `"sampling_request"` | `"elicitation_request"` |
+| `content` | request_id | request_id |
+| `agent_name` | endpoint_id | (empty) |
+| `result` | (empty) | message |
+| `tool_arguments` | `{"messages": [...]}` | `{"schema": {...}}` |
 
 ---
 
@@ -306,12 +381,15 @@ function connectSSE() {
 - 구독자별 독립 큐 (maxsize=100)
 - Thread-safe (asyncio.Lock)
 
-**Event Flow:**
-1. Domain Service → `notify_sampling_request()`
-2. HitlNotificationAdapter → `broadcast("sampling_request", {...})`
-3. SseBroker → 모든 구독자 큐에 이벤트 전송
-4. HTTP Route → `subscribe()` → SSE 스트림 생성
-5. Client → EventSource → 이벤트 수신
+**Event Flow (Phase 7 - StreamChunk 기반):**
+1. Domain Service → `notify_sampling_request(request)`
+2. HitlNotificationAdapter:
+   - `StreamChunk.sampling_request(...)` 팩토리 메서드로 청크 생성
+   - `asdict(chunk)`로 dict 변환
+   - `broadcast(event_type=chunk.type, data=asdict(chunk))`
+3. SseBroker → 모든 구독자 큐에 이벤트 전송 (`{"type": "sampling_request", "data": {...}}`)
+4. HTTP Route → `subscribe()` → SSE 스트림 생성 (`event: sampling_request\ndata: {...}\n\n`)
+5. Client → EventSource → 이벤트 수신 → `event.data` JSON 파싱
 
 ---
 
@@ -396,5 +474,21 @@ SSE 엔드포인트는 Token 인증을 요구합니다:
 
 ---
 
-*Last Updated: 2026-02-07*
-*Phase: Plan 07 Phase 6*
+## Changelog
+
+### Phase 7 (2026-02-08)
+- ✅ StreamChunk 기반 이벤트 구조로 전환
+- ✅ `StreamChunk.sampling_request()` 팩토리 메서드 추가
+- ✅ `StreamChunk.elicitation_request()` 팩토리 메서드 추가
+- ✅ HitlNotificationAdapter 리팩토링 (StreamChunk 사용)
+- ✅ Event Data Schema 업데이트 (StreamChunk 필드 포함)
+
+### Phase 6 (2026-02-07)
+- Initial implementation (HITL SSE Events API)
+- EventSource-based client connection
+- SseBroker pub/sub pattern
+
+---
+
+*Last Updated: 2026-02-08*
+*Phase: Plan 07 Phase 7*

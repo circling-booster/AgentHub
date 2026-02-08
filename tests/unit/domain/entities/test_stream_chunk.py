@@ -274,3 +274,110 @@ class TestWorkflowEventFactories:
         assert chunk.type == "workflow_complete"
         assert chunk.workflow_status == "error"
         assert chunk.total_steps == 5
+
+
+class TestHitlEventFactories:
+    """HITL (Human-in-the-Loop) 관련 StreamChunk 이벤트 팩토리 테스트"""
+
+    def test_sampling_request_chunk_creation(self):
+        """
+        Given: Sampling 요청 정보 (request_id, endpoint_id, messages)
+        When: StreamChunk.sampling_request() 호출
+        Then: type="sampling_request" 청크 반환
+        """
+        # Given
+        request_id = "req-123"
+        endpoint_id = "mcp-server-1"
+        messages = [{"role": "user", "content": "test"}]
+
+        # When
+        chunk = StreamChunk.sampling_request(
+            request_id=request_id,
+            endpoint_id=endpoint_id,
+            messages=messages,
+        )
+
+        # Then
+        assert chunk.type == "sampling_request"
+        assert chunk.content == "req-123"
+        assert chunk.agent_name == "mcp-server-1"
+        assert "messages" in chunk.tool_arguments
+        assert chunk.tool_arguments["messages"] == messages
+
+    def test_elicitation_request_chunk_creation(self):
+        """
+        Given: Elicitation 요청 정보 (request_id, message, schema)
+        When: StreamChunk.elicitation_request() 호출
+        Then: type="elicitation_request" 청크 반환
+        """
+        # Given
+        request_id = "req-456"
+        message = "Enter API key"
+        requested_schema = {"type": "object", "properties": {"api_key": {"type": "string"}}}
+
+        # When
+        chunk = StreamChunk.elicitation_request(
+            request_id=request_id,
+            message=message,
+            requested_schema=requested_schema,
+        )
+
+        # Then
+        assert chunk.type == "elicitation_request"
+        assert chunk.content == "req-456"
+        assert chunk.result == "Enter API key"
+        assert "schema" in chunk.tool_arguments
+        assert chunk.tool_arguments["schema"] == requested_schema
+
+    def test_sampling_request_with_multiple_messages(self):
+        """
+        Given: 여러 메시지를 포함한 Sampling 요청
+        When: StreamChunk.sampling_request() 호출
+        Then: 모든 메시지가 tool_arguments에 포함
+        """
+        # Given
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi! How can I help?"},
+            {"role": "user", "content": "Tell me a joke"},
+        ]
+
+        # When
+        chunk = StreamChunk.sampling_request(
+            request_id="req-multi",
+            endpoint_id="test-ep",
+            messages=messages,
+        )
+
+        # Then
+        assert chunk.tool_arguments["messages"] == messages
+        assert len(chunk.tool_arguments["messages"]) == 4
+
+    def test_elicitation_request_with_complex_schema(self):
+        """
+        Given: 복잡한 JSON 스키마를 포함한 Elicitation 요청
+        When: StreamChunk.elicitation_request() 호출
+        Then: 전체 스키마가 tool_arguments에 포함
+        """
+        # Given
+        complex_schema = {
+            "type": "object",
+            "properties": {
+                "username": {"type": "string", "minLength": 3},
+                "password": {"type": "string", "minLength": 8},
+                "age": {"type": "integer", "minimum": 0},
+            },
+            "required": ["username", "password"],
+        }
+
+        # When
+        chunk = StreamChunk.elicitation_request(
+            request_id="req-complex",
+            message="Please provide credentials",
+            requested_schema=complex_schema,
+        )
+
+        # Then
+        assert chunk.tool_arguments["schema"] == complex_schema
+        assert chunk.tool_arguments["schema"]["required"] == ["username", "password"]
