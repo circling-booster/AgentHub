@@ -2,7 +2,7 @@
 
 > **상태:** 📋 Draft
 > **선행 조건:** Plan 07 Complete (MCP SDK 통합)
-> **목표:** stdio 프로토콜 지원 (subprocess 통신), Cross-platform subprocess 관리
+> **목표:** stdio 프로토콜 지원 (subprocess 통신), Cross-platform subprocess 관리.
 
 ---
 
