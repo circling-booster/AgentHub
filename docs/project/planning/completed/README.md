@@ -18,6 +18,7 @@
 | 4D | Reliability | 도구 실행 재시도, A2A Health Check | 2026-02 |
 | 5 | Enterprise Features | OAuth 2.0, Multi-MCP, Defer Loading | 2026-02 |
 | 8 | Playground Implementation | 백엔드 API 수동 테스트 도구 (DEV_MODE) | 2026-02 |
+| 7 | Hybrid-Dual Architecture | SDK Track (Resources/Prompts/Sampling/Elicitation) + Playground Testing | 2026-02 |
 
 ---
 
@@ -54,6 +55,14 @@
 - SSE 스트리밍 디버깅 (Chat, Workflow)
 - E2E 테스트 (Playwright) 26개 통과
 - JavaScript 단위 테스트 (Jest) 32개 통과
+
+### Plan 7: Hybrid-Dual Architecture
+- SDK Track 기능 구현 (Resources, Prompts, Sampling, Elicitation)
+- Playground-First Testing 원칙 확립
+- HTTP API와 Playground UI 동시 구현
+- Playwright E2E 테스트 27개 (10초 이내)
+- Domain Entities (4), Services (1), Adapters (4)
+- SSE Events (resource_listed, prompt_listed, sampling_requested, elicitation_requested)
 
 ---
 

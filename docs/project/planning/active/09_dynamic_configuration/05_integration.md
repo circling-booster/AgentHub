@@ -182,16 +182,17 @@ class Container(containers.DeclarativeContainer):
     )
 
     # Environment API Keys (공통 Provider - DRY 원칙)
-    # NOTE: providers.Callable로 dict 생성 (H5: 빈 값 필터링 포함)
+    # NOTE: providers.Callable로 dict 생성 (빈 값 필터링 포함)
+    # C2 수정: API 키는 Settings 루트 레벨에 위치 (s.llm이 아님)
     env_api_keys = providers.Callable(
         lambda s: {
             provider: key
             for provider, key in [
-                (LlmProvider.OPENAI, getattr(s.llm, 'openai_api_key', "") if hasattr(s, 'llm') else ""),
-                (LlmProvider.ANTHROPIC, getattr(s.llm, 'anthropic_api_key', "") if hasattr(s, 'llm') else ""),
-                (LlmProvider.GOOGLE, getattr(s.llm, 'google_api_key', "") if hasattr(s, 'llm') else ""),
+                (LlmProvider.OPENAI, s.openai_api_key),
+                (LlmProvider.ANTHROPIC, s.anthropic_api_key),
+                (LlmProvider.GOOGLE, s.google_api_key),
             ]
-            if key and key.strip()  # H5: 빈 문자열 및 whitespace 필터링
+            if key and key.strip()  # 빈 문자열 및 whitespace 필터링
         },
         settings,
     )

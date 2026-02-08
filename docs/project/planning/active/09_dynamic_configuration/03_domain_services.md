@@ -313,6 +313,10 @@ class ConfigurationService:
 
         Returns:
             key_hint (예: "sk-...cdef")
+
+        Note:
+            이 메서드는 Phase 4 ConfigurationMigrator._generate_key_hint()와 동일한 로직입니다.
+            DRY 원칙 개선: src/domain/utils/key_hint.py로 유틸리티 함수 추출 권장 (B1 Issue)
         """
         if len(api_key) <= 10:
             return "***"

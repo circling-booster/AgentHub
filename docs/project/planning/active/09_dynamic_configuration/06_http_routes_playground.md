@@ -252,7 +252,7 @@ class TestApiKeyRoutes:
         assert len(data["api_keys"]) >= 2
         # 모든 키는 마스킹됨
         for key in data["api_keys"]:
-            assert "***" in key["masked_key"]
+            assert "..." in key["masked_key"]
 
     async def test_get_api_key_by_id(self, client):
         """API Key 단일 조회"""
@@ -1027,7 +1027,7 @@ function renderModelsList(models) {
     <div class="model-card" data-id="${model.id}">
       <div class="model-header">
         <span class="provider-badge">${model.provider}</span>
-        <strong>${model.display_name}</strong>
+        <strong>${model.name}</strong>
         ${model.is_default ? '<span class="default-badge">Default</span>' : ''}
       </div>
       <p class="model-id">${model.model_id}</p>
@@ -1304,7 +1304,7 @@ class TestPlaygroundSettings:
 
         # 마스킹된 키 확인
         masked_key = await page.locator('.masked-key').first.text_content()
-        assert '***' in masked_key
+        assert '...' in masked_key
 
     async def test_api_key_shows_masked_key(self, page):
         """API Key 목록에서 마스킹된 키만 표시"""
@@ -1318,7 +1318,7 @@ class TestPlaygroundSettings:
         cards = await page.locator('.api-key-card').all()
         for card in cards:
             masked_key = await card.locator('.masked-key').text_content()
-            assert '***' in masked_key
+            assert '...' in masked_key
             assert 'sk-test-playground' not in masked_key
 
     async def test_deactivate_api_key(self, page):

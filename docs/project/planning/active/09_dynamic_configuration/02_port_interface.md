@@ -276,6 +276,7 @@ class TestFakeConfigurationStorage:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted-data",
+            key_hint="sk-...data",
         )
 
         await storage.create_api_key(config)
@@ -295,12 +296,14 @@ class TestFakeConfigurationStorage:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="old-key",
+            key_hint="sk-...old1",
             is_active=True,
         )
         config2 = ApiKeyConfig(
             id="key-2",
             provider=LlmProvider.OPENAI,
             encrypted_key="new-key",
+            key_hint="sk-...new2",
             is_active=True,
         )
 
@@ -316,6 +319,7 @@ class TestFakeConfigurationStorage:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="old",
+            key_hint="sk-...old0",
             name="Old Name",
         )
         await storage.create_api_key(config)
@@ -324,6 +328,7 @@ class TestFakeConfigurationStorage:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="new",
+            key_hint="sk-...new0",
             name="New Name",
         )
         await storage.update_api_key(updated)
@@ -337,6 +342,7 @@ class TestFakeConfigurationStorage:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="data",
+            key_hint="sk-...data",
         )
         await storage.create_api_key(config)
 
@@ -348,10 +354,10 @@ class TestFakeConfigurationStorage:
     async def test_list_api_keys_returns_all(self, storage):
         """모든 API Key 조회"""
         config1 = ApiKeyConfig(
-            id="key-1", provider=LlmProvider.OPENAI, encrypted_key="data1"
+            id="key-1", provider=LlmProvider.OPENAI, encrypted_key="data1", key_hint="sk-...ata1"
         )
         config2 = ApiKeyConfig(
-            id="key-2", provider=LlmProvider.ANTHROPIC, encrypted_key="data2"
+            id="key-2", provider=LlmProvider.ANTHROPIC, encrypted_key="data2", key_hint="sk-...ata2"
         )
 
         await storage.create_api_key(config1)
@@ -363,10 +369,10 @@ class TestFakeConfigurationStorage:
     async def test_list_api_keys_filters_by_provider(self, storage):
         """Provider 필터로 API Key 조회"""
         config1 = ApiKeyConfig(
-            id="key-1", provider=LlmProvider.OPENAI, encrypted_key="data1"
+            id="key-1", provider=LlmProvider.OPENAI, encrypted_key="data1", key_hint="sk-...ata1"
         )
         config2 = ApiKeyConfig(
-            id="key-2", provider=LlmProvider.ANTHROPIC, encrypted_key="data2"
+            id="key-2", provider=LlmProvider.ANTHROPIC, encrypted_key="data2", key_hint="sk-...ata2"
         )
 
         await storage.create_api_key(config1)

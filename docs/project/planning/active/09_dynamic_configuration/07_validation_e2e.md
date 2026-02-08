@@ -88,7 +88,7 @@ class TestPlaygroundSettingsAdvanced:
 
         # 마스킹 유지 확인
         masked_key = await page.locator('.masked-key').first.text_content()
-        assert '***' in masked_key
+        assert '...' in masked_key
         assert 'sk-original-key' not in masked_key
 
     async def test_model_selection_updates_current_model_indicator(self, page):
@@ -107,9 +107,9 @@ class TestPlaygroundSettingsAdvanced:
         await page.locator('.model-card').first.locator('button:has-text("Select")').click()
 
         # 현재 모델 표시 확인 (구현 시 current-model-indicator 추가)
-        # await page.wait_for_selector('[data-testid="current-model-indicator"]')
-        # current_model = await page.locator('[data-testid="current-model-indicator"]').text_content()
-        # assert 'GPT-4o Test' in current_model
+        await page.wait_for_selector('[data-testid="current-model-indicator"]')
+        current_model = await page.locator('[data-testid="current-model-indicator"]').text_content()
+        assert 'GPT-4o Test' in current_model
 
     async def test_delete_default_model_clears_default(self, page):
         """기본 모델 삭제 시 다른 모델이 기본으로 설정되지 않음"""
@@ -142,7 +142,7 @@ class TestPlaygroundSettingsAdvanced:
         # assert not default_badge  # 또는 assert default_badge (자동 설정 시)
 
     async def test_api_key_list_pagination_if_many_keys(self, page):
-        """API Key가 많을 때 페이지네이션 (Optional - 구현에 따라)"""
+        """API Key가 많을 때 페이지네이션 (구현에 따라)"""
         # Skip if pagination not implemented
         pytest.skip("Pagination not implemented in Phase 6")
 ```
@@ -363,10 +363,10 @@ class TestModelSwitchingE2E:
         response2 = await page.locator('[data-testid="message-assistant"]').last.text_content()
         assert 'Paris' in response2
 
-        # 7. SSE 로그에서 모델 변경 확인 (Optional - SSE 로그에 모델명 포함 시)
-        # log_content = await page.locator('[data-testid="sse-log"]').text_content()
-        # assert 'gpt-4o-mini' in log_content  # 첫 번째 대화
-        # assert 'claude-haiku' in log_content  # 두 번째 대화
+        # 7. SSE 로그에서 모델 변경 확인 (SSE 로그에 모델명 포함 시)
+        log_content = await page.locator('[data-testid="sse-log"]').text_content()
+        assert 'gpt-4o-mini' in log_content  # 첫 번째 대화
+        assert 'claude-haiku' in log_content  # 두 번째 대화
 
     async def test_model_switch_persists_across_conversations(self, page, setup_models):
         """모델 전환이 여러 대화에서 유지되는지 확인"""

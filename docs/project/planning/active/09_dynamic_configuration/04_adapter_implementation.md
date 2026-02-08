@@ -442,6 +442,7 @@ class SqliteConfigurationStorage(ConfigurationStoragePort):
                 id TEXT PRIMARY KEY,
                 provider TEXT NOT NULL,
                 encrypted_key TEXT NOT NULL,
+                key_hint TEXT DEFAULT '',
                 name TEXT DEFAULT '',
                 is_active INTEGER DEFAULT 1,
                 created_at TEXT NOT NULL,
@@ -490,13 +491,14 @@ class SqliteConfigurationStorage(ConfigurationStoragePort):
         async with self._write_lock:
             await self._conn.execute(
                 """
-                INSERT INTO api_keys (id, provider, encrypted_key, name, is_active, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO api_keys (id, provider, encrypted_key, key_hint, name, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     config.id,
                     config.provider.value,
                     config.encrypted_key,
+                    config.key_hint,
                     config.name,
                     1 if config.is_active else 0,
                     config.created_at.isoformat(),
@@ -542,12 +544,13 @@ class SqliteConfigurationStorage(ConfigurationStoragePort):
             result = await self._conn.execute(
                 """
                 UPDATE api_keys
-                SET provider = ?, encrypted_key = ?, name = ?, is_active = ?, updated_at = ?
+                SET provider = ?, encrypted_key = ?, key_hint = ?, name = ?, is_active = ?, updated_at = ?
                 WHERE id = ?
                 """,
                 (
                     config.provider.value,
                     config.encrypted_key,
+                    config.key_hint,
                     config.name,
                     1 if config.is_active else 0,
                     config.updated_at.isoformat(),
@@ -753,6 +756,7 @@ class SqliteConfigurationStorage(ConfigurationStoragePort):
             id=row["id"],
             provider=LlmProvider(row["provider"]),
             encrypted_key=row["encrypted_key"],
+            key_hint=row["key_hint"],
             name=row["name"],
             is_active=bool(row["is_active"]),
             created_at=datetime.fromisoformat(row["created_at"]),
@@ -1285,6 +1289,10 @@ class ConfigurationMigrator:
 
         Returns:
             key_hint (예: "sk-...cdef")
+
+        Note:
+            이 메서드는 Phase 3 ConfigurationService._generate_key_hint()와 동일한 로직입니다.
+            DRY 원칙 개선: src/domain/utils/key_hint.py로 유틸리티 함수 추출 권장 (B1 Issue)
         """
         if len(api_key) <= 10:
             return "***"
