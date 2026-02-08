@@ -114,8 +114,11 @@ async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]
     # 테스트용 토큰 주입
     token_provider.reset(TEST_TOKEN)
 
-    # Phase 6+: Dual-Track 활성화 (환경변수로 설정 - Container 생성 전)
-    os.environ["MCP__ENABLE_DUAL_TRACK"] = "true"
+    # Phase 6+: Dual-Track 활성화 (로컬 환경만)
+    # CI 환경에서는 비활성화 (실제 MCP 서버 없음)
+    is_ci = os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
+    if not is_ci:
+        os.environ["MCP__ENABLE_DUAL_TRACK"] = "true"
 
     # FastAPI 앱 생성
     app = create_app()
@@ -171,8 +174,9 @@ async def authenticated_client(temp_data_dir: Path) -> AsyncIterator[TestClient]
     container.reset_singletons()
     container.unwire()
 
-    # Phase 6+: Dual-Track 환경변수 cleanup
-    os.environ.pop("MCP__ENABLE_DUAL_TRACK", None)
+    # Phase 6+: Dual-Track 환경변수 cleanup (로컬만)
+    if not is_ci:
+        os.environ.pop("MCP__ENABLE_DUAL_TRACK", None)
 
 
 @pytest.fixture
