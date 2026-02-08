@@ -83,12 +83,15 @@ class TestContainerConfiguration:
     @pytest.fixture
     def container(self, tmp_path):
         """임시 DB를 사용하는 Container"""
+        from src.config.settings import Settings
+
         container = Container()
-        # Settings 오버라이드
-        container.config.from_dict({
-            "encryption_key": FernetEncryptionAdapter.generate_key(),
-            "config_db_path": str(tmp_path / "test_config.db"),
-        })
+        # Settings 오버라이드 (settings.provided 패턴)
+        test_settings = Settings(
+            encryption_key=FernetEncryptionAdapter.generate_key(),
+            config_db_path=str(tmp_path / "test_config.db"),
+        )
+        container.settings.override(providers.Object(test_settings))
         return container
 
     async def test_configuration_storage_provider(self, container):
@@ -137,7 +140,7 @@ class TestContainerConfiguration:
         monkeypatch.setenv("ENCRYPTION_KEY", test_key)
 
         container = Container()
-        settings = container.config()
+        settings = container.settings()
 
         assert settings.encryption_key == test_key
 ```
@@ -169,21 +172,29 @@ class Container(containers.DeclarativeContainer):
     # Configuration Storage (Singleton)
     configuration_storage = providers.Singleton(
         SqliteConfigurationStorage,
-        db_path=config.config_db_path,
+        db_path=settings.provided.config_db_path,
     )
 
     # Encryption Adapter (Singleton)
     encryption_adapter = providers.Singleton(
         FernetEncryptionAdapter,
-        encryption_key=config.encryption_key,
+        encryption_key=settings.provided.encryption_key,
     )
 
     # Environment API Keys (공통 Provider - DRY 원칙)
-    env_api_keys = providers.Dict({
-        LlmProvider.OPENAI: config.openai_api_key,
-        LlmProvider.ANTHROPIC: config.anthropic_api_key,
-        LlmProvider.GOOGLE: config.google_api_key,
-    })
+    # NOTE: providers.Callable로 dict 생성 (H5: 빈 값 필터링 포함)
+    env_api_keys = providers.Callable(
+        lambda s: {
+            provider: key
+            for provider, key in [
+                (LlmProvider.OPENAI, getattr(s.llm, 'openai_api_key', "") if hasattr(s, 'llm') else ""),
+                (LlmProvider.ANTHROPIC, getattr(s.llm, 'anthropic_api_key', "") if hasattr(s, 'llm') else ""),
+                (LlmProvider.GOOGLE, getattr(s.llm, 'google_api_key', "") if hasattr(s, 'llm') else ""),
+            ]
+            if key and key.strip()  # H5: 빈 문자열 및 whitespace 필터링
+        },
+        settings,
+    )
 
     # Configuration Service (Factory - 요청마다 생성)
     configuration_service = providers.Factory(
@@ -207,8 +218,9 @@ class Container(containers.DeclarativeContainer):
 - `encryption_adapter`는 **Singleton** (Fernet 인스턴스 재사용)
 - `configuration_service`는 **Factory** (요청마다 새 인스턴스 생성, stateless)
 - `configuration_migrator`는 **Singleton** (Migration은 startup 시 1회만)
-- `env_api_keys`는 **공통 Provider** (DRY 원칙, 중복 제거)
-- `config.encryption_key`는 Settings에서 자동 로드 (`settings.provided` 패턴)
+- `env_api_keys`는 **Callable Provider** (`providers.Dict`는 enum 키 지원 불명확하므로 Callable 사용)
+- **CRITICAL (C3 이슈 해결):** `settings.provided.xxx` 패턴 사용 (기존 Container 패턴과 일치)
+- **HIGH (H5 이슈 해결):** 빈 API Key 필터링 (`if key and key.strip()`) - Settings 기본값 `""` 제외
 
 **Provider 스코프 선택 기준:**
 | Provider | 스코프 | 이유 |
@@ -233,6 +245,7 @@ class Container(containers.DeclarativeContainer):
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import logging
+from dependency_injector import providers  # M6: providers.Object 사용
 
 logger = logging.getLogger(__name__)
 
@@ -249,23 +262,25 @@ async def lifespan(app: FastAPI):
     )
 
     # 1. Encryption Key 검증 (환경변수 필수)
-    settings = Container.config()
+    settings = Container.settings()  # M6: Container.settings() 사용
     if not settings.encryption_key:
         # 자동 생성 + 경고
         generated_key = FernetEncryptionAdapter.generate_key()
-        logger.warning(
-            f"ENCRYPTION_KEY not set. Auto-generated key: {generated_key}"
-        )
-        logger.warning(
-            "⚠️  CRITICAL: Add this key to .env file immediately!"
-        )
-        logger.warning(
-            "⚠️  Without this key, encrypted data will be unrecoverable on restart."
-        )
-        # Settings 오버라이드 (메모리에서만, .env에는 저장 안 됨)
-        Container.config.override(
-            settings.model_copy(update={"encryption_key": generated_key})
-        )
+
+        # M3 이슈: 키를 로그에 출력하지 않음 (보안 위험)
+        logger.warning("ENCRYPTION_KEY not set. Auto-generating temporary key...")
+        logger.warning("⚠️  CRITICAL: Add ENCRYPTION_KEY to .env file immediately!")
+        logger.warning("⚠️  Without this key, encrypted data will be unrecoverable on restart.")
+
+        # stdout으로만 키 출력 (로그 수집 시스템에 기록되지 않도록)
+        print(f"\n{'='*60}")
+        print("GENERATED ENCRYPTION KEY (save to .env):")
+        print(f"ENCRYPTION_KEY={generated_key}")
+        print(f"{'='*60}\n")
+
+        # M6: Settings 오버라이드 (providers.Singleton(Settings) 패턴)
+        updated_settings = settings.model_copy(update={"encryption_key": generated_key})
+        Container.settings.override(providers.Object(updated_settings))
 
     # 2. Configuration Storage 초기화
     configuration_storage = Container.configuration_storage()
@@ -327,6 +342,14 @@ app = FastAPI(lifespan=lifespan)
 
 **파일:** `src/adapters/outbound/adk/orchestrator_adapter.py` (기존 파일 확장)
 **테스트:** `tests/integration/adapters/outbound/adk/test_orchestrator_adapter.py` (확장)
+
+**CRITICAL (C4 이슈):** 구현 **전에** 반드시 검증 필요!
+1. `AdkOrchestratorAdapter.generate_response()` 코드를 읽고 `_model_name` 참조 방식 확인
+2. ADK Runner가 Agent 생성 시 model을 고정하는지, 런타임 변경 가능한지 검증
+3. 검증 결과에 따라 구현 방식 결정:
+   - `_model_name` 직접 사용 → 현재 구현 유지
+   - Runner.agent.model 고정 → `_rebuild_agent()` 호출 필요
+   - LiteLLM 직접 호출 → 새 경로 추가
 
 ### TDD Required
 
@@ -418,10 +441,14 @@ class AdkOrchestratorAdapter(OrchestratorPort):
 - `_model_name` 필드만 업데이트
 - `_rebuild_agent()`는 호출하지 않음 (A2A sub-agent 변경 시만 재빌드)
 
-**주의사항:**
-- Model 변경은 다음 `generate_response()` 호출부터 반영됨
-- `process_message()`는 ADK Runner를 사용하므로 모델 변경이 즉시 반영됨
+**주의사항 (C4 이슈 관련):**
+- **구현 전 필수 검증:** `generate_response()` 코드 확인하여 `_model_name` 참조 방식 확인
+- Model 변경이 다음 `generate_response()` 호출부터 반영되려면:
+  - 옵션 A: `generate_response()`가 `_model_name`을 직접 사용 (현재 가정)
+  - 옵션 B: ADK Runner 재생성 필요 (`_rebuild_agent()` 호출)
+  - 옵션 C: LiteLLM 직접 호출 경로 추가
 - A2A sub-agent 재구성은 `_rebuild_agent()`로 별도 처리
+- **검증 후 구현 방식 결정** (가정이 틀리면 구현 수정 필요)
 
 ---
 

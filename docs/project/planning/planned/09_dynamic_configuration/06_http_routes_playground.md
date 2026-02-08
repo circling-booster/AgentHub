@@ -41,7 +41,7 @@ class ApiKeySchema(BaseModel):
 
     id: str
     provider: str  # LlmProvider enum value
-    masked_key: str  # "sk-***1234" 형태
+    masked_key: str  # key_hint (예: "sk-...cdef", 원본 키 기반 힌트)
     name: str
     is_active: bool
     created_at: datetime
@@ -203,7 +203,7 @@ class TestApiKeyRoutes:
     """API Key CRUD Routes 테스트 (~8 tests)"""
 
     async def test_create_api_key_returns_masked_key(self, client):
-        """API Key 생성 - 마스킹된 키 반환"""
+        """API Key 생성 - key_hint 반환 (원본 키 기반 힌트)"""
         response = await client.post("/api/config/api-keys", json={
             "provider": "openai",
             "api_key": "sk-test1234567890abcdef",
@@ -213,8 +213,9 @@ class TestApiKeyRoutes:
         assert response.status_code == 201
         data = response.json()
         assert data["provider"] == "openai"
-        assert data["masked_key"].startswith("sk-***")
-        assert "test1234567890abcdef" not in data["masked_key"]  # 원문 노출 안 됨
+        assert data["masked_key"].startswith("sk-")
+        assert "..." in data["masked_key"]  # key_hint format: "sk-...cdef"
+        assert "test1234567890" not in data["masked_key"]  # 중간 부분 노출 안 됨
         assert data["name"] == "Test OpenAI Key"
         assert data["is_active"] is True
 
@@ -374,8 +375,14 @@ async def create_api_key(
 ):
     """API Key 생성"""
     try:
+        # CRITICAL (C5 이슈): str → LlmProvider enum 변환
+        try:
+            provider = LlmProvider(request_body.provider)
+        except ValueError:
+            raise InvalidProviderError(f"Invalid provider: {request_body.provider}")
+
         api_key = await config_service.create_api_key(
-            provider=request_body.provider,
+            provider=provider,  # LlmProvider enum
             api_key=request_body.api_key,
             name=request_body.name,
         )
@@ -603,7 +610,7 @@ from src.adapters.inbound.http.schemas.config import (
     ModelConfigUpdateRequest,
     ModelConfigListResponse,
 )
-from src.domain.ports.outbound.orchestrator_port import OrchestratorPort
+from src.adapters.outbound.adk.orchestrator_adapter import AdkOrchestratorAdapter  # H2: 직접 주입 (임시)
 
 
 # ============================================================
@@ -619,8 +626,14 @@ async def create_model(
 ):
     """Model Config 생성"""
     try:
+        # CRITICAL (C5 이슈): str → LlmProvider enum 변환
+        try:
+            provider = LlmProvider(request_body.provider)
+        except ValueError:
+            raise InvalidProviderError(f"Invalid provider: {request_body.provider}")
+
         model = await config_service.create_model(
-            provider=request_body.provider,
+            provider=provider,  # LlmProvider enum
             model_id=request_body.model_id,
             name=request_body.name,
             parameters=request_body.parameters,
@@ -695,9 +708,13 @@ async def set_default_model(
 async def select_model(
     model_id: str,
     config_service: ConfigurationService = Depends(Provide[Container.configuration_service]),
-    orchestrator: OrchestratorPort = Depends(Provide[Container.orchestrator_adapter]),
+    orchestrator: AdkOrchestratorAdapter = Depends(Provide[Container.orchestrator_adapter]),
 ):
     """모델 선택 (OrchestratorAdapter.set_model 호출)
+
+    CRITICAL (H2 이슈): OrchestratorPort에 set_model() 메서드 추가 필요
+    - 현재: AdkOrchestratorAdapter 직접 주입 (임시)
+    - 개선: OrchestratorPort에 set_model(model_name: str) -> None 추가 후 Port 사용
 
     1. ConfigurationService에서 Model Config 조회
     2. OrchestratorAdapter.set_model()로 모델 전환
@@ -848,8 +865,8 @@ app.add_exception_handler(
       <label>API Key:</label>
       <input type="password" data-testid="settings-api-key-input" placeholder="sk-...">
 
-      <label>Description:</label>
-      <input type="text" data-testid="settings-api-key-description" placeholder="My API Key">
+      <label>Name:</label>
+      <input type="text" data-testid="settings-api-key-name" placeholder="My API Key">
 
       <button data-testid="settings-api-key-create">Add API Key</button>
       <button data-testid="settings-api-key-test">Test Connection</button>
@@ -916,7 +933,7 @@ function renderApiKeysList(apiKeys) {
         <span class="masked-key">${key.masked_key}</span>
         ${key.is_active ? '<span class="active-badge">Active</span>' : '<span class="inactive-badge">Inactive</span>'}
       </div>
-      <p class="description">${key.description || '(No description)'}</p>
+      <p class="name">${key.name || '(No name)'}</p>
       <div class="actions">
         <button onclick="toggleApiKeyStatus('${key.id}', ${!key.is_active})">
           ${key.is_active ? 'Deactivate' : 'Activate'}
@@ -930,12 +947,12 @@ function renderApiKeysList(apiKeys) {
 async function createApiKey() {
   const provider = document.querySelector('[data-testid="settings-api-key-provider"]').value;
   const apiKey = document.querySelector('[data-testid="settings-api-key-input"]').value;
-  const description = document.querySelector('[data-testid="settings-api-key-description"]').value;
+  const name = document.querySelector('[data-testid="settings-api-key-name"]').value;  // H3: description → name
 
   const response = await fetch(`${API_BASE}/api/config/api-keys`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider, api_key: apiKey, description }),
+    body: JSON.stringify({ provider, api_key: apiKey, name }),  // H3: name 필드 사용
   });
 
   if (response.ok) {
@@ -943,7 +960,7 @@ async function createApiKey() {
     loadApiKeys();
     // 입력 필드 초기화
     document.querySelector('[data-testid="settings-api-key-input"]').value = '';
-    document.querySelector('[data-testid="settings-api-key-description"]').value = '';
+    document.querySelector('[data-testid="settings-api-key-name"]').value = '';  // H3: testid 변경
   } else {
     const error = await response.json();
     showNotification(`Error: ${error.detail}`, 'error');
@@ -1150,10 +1167,11 @@ class TestApiKeyConnectionTest:
             "api_key": "sk-invalid-key",
         })
 
-        # LiteLLM은 401/403 에러를 발생시킴 → 500 또는 400
-        assert response.status_code in [400, 500]
+        # M1 이슈: 구현은 예외 시 200 + {"status": "failed"} 반환
+        assert response.status_code == 200
         data = response.json()
         assert data["status"] == "failed"
+        assert "message" in data  # 에러 메시지 포함
 ```
 
 ### API 구현

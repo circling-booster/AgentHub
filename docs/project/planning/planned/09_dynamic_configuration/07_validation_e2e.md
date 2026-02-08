@@ -756,89 +756,22 @@ git add docs/project/planning/planned/09_dynamic_configuration/ \
         tests/e2e/test_playground_settings.py \
         tests/e2e/test_model_switching.py
 
-# 3. 커밋
+# 3. 커밋 (M5: 간결하게 수정)
 git commit -m "$(cat <<'EOF'
 docs: complete Phase 7 - Validation & E2E Testing (Plan 09)
 
+Phase 7 Deliverables:
 - Add ADR documents (C01-C05): DB-First Configuration rationale
-- Add E2E tests for Playground Settings UI integration
-- Add E2E tests for Model Switching workflow
+- Add E2E tests for Playground Settings UI (~10 tests)
+- Add E2E tests for Model Switching workflow (~3 tests)
+- Add API Key Connection Test integration tests (~6 tests, llm marker)
 - Verify end-to-end Configuration System functionality
+- Coverage: 94% (target: 80%, ~115 total tests)
 
-Note: Phase 1-6 were already committed individually. This commit covers
-Phase 7 deliverables only (E2E tests + ADRs + Plan documentation).
-- Extend LlmProvider enum (OPENAI, ANTHROPIC, GOOGLE)
-- Add ConfigurationError exceptions (NotFoundError, InvalidProviderError, EncryptionError)
+Note: Phase 1-6 were already committed individually.
+This commit covers Phase 7 deliverables only (E2E tests + ADRs + Plan docs).
 
-## Phase 2: Port Interface + Fake
-- Add ConfigurationStoragePort (12 methods: CRUD for API Keys & Models)
-- Add EncryptionPort (encrypt/decrypt only)
-- Implement FakeConfigurationStorage (in-memory dict)
-- Implement FakeEncryptionAdapter (base64 roundtrip)
-
-## Phase 3: Domain Services (TDD)
-- Implement ConfigurationService (API Key CRUD, Model CRUD, resolution logic)
-- DB > .env priority resolution (get_api_key_for_provider)
-- Set default model logic (clear others when setting new default)
-
-## Phase 4: Adapter Implementation
-- Add cryptography>=42.0.0,<48.0.0 dependency
-- Implement SqliteConfigurationStorage (WAL mode, busy_timeout=5000ms)
-- Implement FernetEncryptionAdapter (Fernet.generate_key static method)
-- Implement ConfigurationMigrator (Rollback on failure, idempotent)
-
-## Phase 5: Integration
-- Extend Settings (encryption_key, config_db_path, LLM API keys)
-- Add Container providers (ConfigurationStorage, EncryptionAdapter, ConfigurationService, Migrator)
-- Modify Lifespan (DB init, migration, ENCRYPTION_KEY validation + auto-generate)
-- Add OrchestratorAdapter.set_model() (model switching without rebuild)
-
-## Phase 6: HTTP Routes + Playground UI
-- Add Pydantic schemas (ApiKeySchema, ModelConfigSchema, ConnectionTestRequest/Response)
-- Add Config Routes (API Key CRUD: create, list, get, update, delete)
-- Add Config Routes (Model CRUD: create, list, get, update, delete, set-default, select)
-- Add Connection Test API (litellm.acompletion minimal call, max_tokens=1)
-- Add Exception Handlers (ConfigurationNotFoundError → 404, InvalidProviderError → 400)
-- Add Playground Settings Tab (API Key/Model management UI)
-
-## Phase 7: Validation & E2E
-- Add Playground E2E tests (~10 tests for Settings Tab)
-- Add API Key Connection Test (~6 integration tests, llm marker)
-- Add Model Switching E2E (~3 tests, real conversation verification)
-- Verify Coverage >= 80% (actual: 94%)
-- Write ADRs (C01-C05: DB-First, Fernet, Route-Level Coordination, Fallback, Rollback)
-
-## Test Coverage
-- Unit Tests: ~43 tests (Entities, Services, Fakes)
-- Integration Tests: ~59 tests (Adapters, Container, Routes, Connection)
-- E2E Tests: ~13 tests (Playground Settings, Model Switching)
-- Total: ~115 tests
-- Coverage: 94% (target: 80%)
-
-## Design Decisions (ADRs)
-- ADR-C01: DB-First Configuration (SQLite as single source of truth)
-- ADR-C02: Fernet Encryption (AES-128-CBC + HMAC)
-- ADR-C03: Route-Level Model Coordination (OrchestratorAdapter.set_model)
-- ADR-C04: LiteLLM Model List Fallback (Static JSON)
-- ADR-C05: Migration Rollback Strategy (Transaction + startup block)
-
-## Security
-- API Key encrypted with Fernet (AES-128-CBC + HMAC)
-- Masked responses (sk-***1234)
-- ENCRYPTION_KEY environment variable (auto-generate with warning)
-- Connection Test: API Key temporarily set to env var, removed after test
-- No plaintext keys in logs or API responses
-
-## Performance
-- SQLite WAL mode: 11,641 update QPS, 462,251 select QPS
-- Connection Test minimal cost: max_tokens=1
-- DB indexes on provider, is_active, is_default
-
-## Production Readiness
-- Migration idempotency (migration_versions table)
-- Migration rollback on failure + startup block
-- ENCRYPTION_KEY auto-generation with critical warning
-- .env Fallback for backward compatibility
+For full Plan 09 summary, see PR description or docs/project/planning/planned/09_dynamic_configuration/README.md
 - Playground-First Testing (Backend + UI + E2E together)
 
 ## Deferred to Production Phase

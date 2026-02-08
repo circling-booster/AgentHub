@@ -79,7 +79,7 @@ __all__ = [
 ### TDD Required
 
 ```python
-# tests/integration/adapters/test_sqlite_configuration_storage.py
+# tests/integration/adapters/outbound/storage/test_sqlite_configuration_storage.py  # M4: 경로 통일
 
 import pytest
 import aiosqlite
@@ -1221,28 +1221,46 @@ class ConfigurationMigrator:
         self._env_api_keys = env_api_keys or {}
 
     async def migrate_env(self) -> None:
-        """.env → DB 마이그레이션 (멱등성)
+        """.env → DB 마이그레이션 (멱등성, 트랜잭션 보장)
 
         OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY를 DB로 이전합니다.
         이미 마이그레이션된 경우 스킵합니다.
 
+        모든 작업을 단일 트랜잭션 내에서 수행하여 부분 마이그레이션을 방지합니다.
+
         Raises:
-            MigrationError: 마이그레이션 실패 시 (Rollback 수행)
+            MigrationError: 마이그레이션 실패 시 (전체 Rollback 수행)
         """
         # 이미 마이그레이션된 경우 스킵
         if await self.is_migration_applied(self.MIGRATION_ID_ENV_TO_DB):
             return
 
+        # CRITICAL: 단일 트랜잭션 내에서 모든 작업 수행
+        # Storage에 transaction context manager 필요 (또는 direct DB access)
         try:
             # 주입받은 env_api_keys 사용
             # DB에 저장 (암호화)
+            # NOTE: SqliteConfigurationStorage에 begin_transaction() 추가 필요
+            # 또는 이 메서드 내에서 직접 DB connection 사용
+
+            # 트랜잭션 시작 (Storage Port에 추가 필요)
+            # async with self._storage.transaction():
+            #     for provider, plaintext_key in self._env_api_keys.items():
+            #         ...
+            #     await self.mark_migration_applied(self.MIGRATION_ID_ENV_TO_DB)
+
+            # 임시 구현: 개별 호출 (C2 이슈 - Rollback 불가)
+            # TODO Phase 4.5: SqliteConfigurationStorage.transaction() 추가
             for provider, plaintext_key in self._env_api_keys.items():
+                # key_hint 생성 (원본 키의 앞 3-6자 + "..." + 뒤 4자)
+                key_hint = self._generate_key_hint(plaintext_key)
                 encrypted_key = await self._encryption.encrypt(plaintext_key)
 
                 config = ApiKeyConfig(
                     id=str(uuid4()),
                     provider=provider,
                     encrypted_key=encrypted_key,
+                    key_hint=key_hint,
                     name=f"[Migrated] {provider.value.upper()}_API_KEY",
                     is_active=True,
                     created_at=datetime.now(timezone.utc),
@@ -1251,13 +1269,38 @@ class ConfigurationMigrator:
 
                 await self._storage.create_api_key(config)
 
-            # 마이그레이션 완료 기록
+            # 마이그레이션 완료 기록 (같은 트랜잭션 내에서)
             await self.mark_migration_applied(self.MIGRATION_ID_ENV_TO_DB)
 
         except Exception as e:
-            # Rollback은 SQLite transaction으로 자동 처리됨
-            # (Storage가 WAL 모드이므로 transaction 중 실패 시 rollback)
+            # CRITICAL: 현재 구현에서는 부분 마이그레이션 가능 (C2 이슈)
+            # 해결: SqliteConfigurationStorage에 transaction() 추가
             raise MigrationError(f"Migration failed: {e}")
+
+    def _generate_key_hint(self, api_key: str) -> str:
+        """원본 API Key에서 힌트 생성
+
+        Args:
+            api_key: 평문 API Key (예: "sk-test1234567890abcdef")
+
+        Returns:
+            key_hint (예: "sk-...cdef")
+        """
+        if len(api_key) <= 10:
+            return "***"
+
+        # Provider별 prefix 길이 고려
+        if api_key.startswith("sk-ant-"):
+            prefix = api_key[:7]  # "sk-ant-"
+        elif api_key.startswith("sk-"):
+            prefix = api_key[:3]  # "sk-"
+        elif api_key.startswith("AIza"):
+            prefix = api_key[:4]  # "AIza"
+        else:
+            prefix = api_key[:3]  # 기타
+
+        suffix = api_key[-4:]
+        return f"{prefix}...{suffix}"
 
     async def is_migration_applied(self, migration_id: str) -> bool:
         """마이그레이션 적용 여부 확인
@@ -1281,8 +1324,12 @@ class ConfigurationMigrator:
 
 **Note:**
 - `migration_versions` 테이블을 사용하여 중복 마이그레이션 방지
-- 실패 시 SQLite transaction rollback으로 자동 복구
-- `_db_path` 직접 접근은 임시 해결책 (실제로는 Storage Port 확장 권장)
+- **CRITICAL (C2 이슈):** 현재 구현에서는 각 `create_api_key()` 호출이 독립적으로 COMMIT되므로 부분 마이그레이션 가능
+- **해결 방안:** `SqliteConfigurationStorage`에 `transaction()` context manager 추가 필요
+  - 모든 마이그레이션 작업을 단일 트랜잭션 내에서 수행
+  - 실패 시 전체 Rollback 보장
+- **임시 구현:** Phase 4.5에서는 기본 구현 제공, Phase 5에서 트랜잭션 추가 검토
+- `key_hint` 생성: 원본 키의 prefix(3-7자) + "..." + suffix(4자)
 
 ---
 
@@ -1292,10 +1339,10 @@ class ConfigurationMigrator:
 # Phase 1-3 Unit Tests (복습)
 pytest tests/unit/ -q --tb=line -x
 
-# Phase 4 Integration Tests (SQLite + cryptography)
-pytest tests/integration/adapters/test_sqlite_configuration_storage.py -v
-pytest tests/integration/adapters/test_fernet_encryption_adapter.py -v
-pytest tests/integration/adapters/test_configuration_migrator.py -v
+# Phase 4 Integration Tests (SQLite + cryptography)  # M4: 경로 통일
+pytest tests/integration/adapters/outbound/storage/test_sqlite_configuration_storage.py -v
+pytest tests/integration/adapters/outbound/encryption/test_fernet_encryption_adapter.py -v
+pytest tests/integration/adapters/outbound/storage/test_configuration_migrator.py -v
 
 # Phase 4 모든 Integration 테스트
 pytest tests/integration/adapters/ -v
@@ -1346,10 +1393,10 @@ pytest --cov=src --cov-fail-under=80 -q
 
 2. **Phase 완료 후 전체 테스트 실행**
    ```bash
-   # Phase 4 Integration Tests
-   pytest tests/integration/adapters/test_sqlite_configuration_storage.py -v
-   pytest tests/integration/adapters/test_fernet_encryption_adapter.py -v
-   pytest tests/integration/adapters/test_configuration_migrator.py -v
+   # Phase 4 Integration Tests  # M4: 경로 통일
+   pytest tests/integration/adapters/outbound/storage/test_sqlite_configuration_storage.py -v
+   pytest tests/integration/adapters/outbound/encryption/test_fernet_encryption_adapter.py -v
+   pytest tests/integration/adapters/outbound/storage/test_configuration_migrator.py -v
 
    # 전체 회귀 테스트
    pytest -q --tb=line -x
@@ -1367,15 +1414,15 @@ pytest --cov=src --cov-fail-under=80 -q
            src/adapters/outbound/encryption/fernet_encryption_adapter.py \
            src/adapters/outbound/storage/sqlite_configuration_storage.py \
            src/adapters/outbound/storage/configuration_migrator.py \
-           tests/integration/adapters/test_sqlite_configuration_storage.py \
-           tests/integration/adapters/test_fernet_encryption_adapter.py \
-           tests/integration/adapters/test_configuration_migrator.py \
+           tests/integration/adapters/outbound/storage/test_sqlite_configuration_storage.py \
+           tests/integration/adapters/outbound/encryption/test_fernet_encryption_adapter.py \
+           tests/integration/adapters/outbound/storage/test_configuration_migrator.py \
            src/adapters/outbound/encryption/README.md \
            src/adapters/outbound/storage/README.md \
            docs/developers/architecture/layer/adapters/README.md \
            docs/developers/guides/implementation/migration-strategy.md \
            tests/docs/STRATEGY.md \
-           tests/docs/CONFIGURATION.md
+           tests/docs/CONFIGURATION.md  # M4: 경로 통일
 
    git commit -m "$(cat <<'EOF'
    feat: implement Phase 4 - Adapter Implementation for Configuration

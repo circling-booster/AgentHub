@@ -85,10 +85,12 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted-data-here",
+            key_hint="sk-...cdef",
         )
         assert config.id == "key-1"
         assert config.provider == LlmProvider.OPENAI
         assert config.encrypted_key == "encrypted-data-here"
+        assert config.key_hint == "sk-...cdef"
         assert config.name == ""
         assert config.is_active is True
 
@@ -99,11 +101,13 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.ANTHROPIC,
             encrypted_key="encrypted-data",
+            key_hint="sk-...xyz1",
             name="My Anthropic Key",
             is_active=True,
             created_at=now,
             updated_at=now,
         )
+        assert config.key_hint == "sk-...xyz1"
         assert config.name == "My Anthropic Key"
         assert config.is_active is True
         assert config.created_at == now
@@ -114,6 +118,7 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted",
+            key_hint="sk-...test",
         )
         assert config.created_at.tzinfo is not None
         assert config.updated_at.tzinfo is not None
@@ -124,6 +129,7 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.GOOGLE,
             encrypted_key="encrypted",
+            key_hint="AIza...1234",
         )
         assert config.is_active is True
 
@@ -133,6 +139,7 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted",
+            key_hint="sk-...test",
         )
         assert isinstance(config.provider, LlmProvider)
 
@@ -142,6 +149,7 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="some-encrypted-data",
+            key_hint="sk-...test",
         )
         assert len(config.encrypted_key) > 0
 
@@ -151,6 +159,7 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted",
+            key_hint="sk-...test",
         )
         assert config.name == ""
 
@@ -160,6 +169,7 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted",
+            key_hint="sk-...test",
         )
         # Tolerance: 1 second
         delta = (config.updated_at - config.created_at).total_seconds()
@@ -171,11 +181,13 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted-1",
+            key_hint="sk-...aaa1",
         )
         anthropic_config = ApiKeyConfig(
             id="key-2",
             provider=LlmProvider.ANTHROPIC,
             encrypted_key="encrypted-2",
+            key_hint="sk-ant...bbb2",
         )
         assert openai_config.provider != anthropic_config.provider
 
@@ -185,32 +197,35 @@ class TestApiKeyConfig:
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="encrypted",
+            key_hint="sk-...test",
             is_active=False,
         )
         assert config.is_active is False
 
-    def test_get_masked_key_returns_masked_string(self):
-        """get_masked_key()가 마스킹된 키 반환"""
+    def test_get_masked_key_returns_key_hint(self):
+        """get_masked_key()가 key_hint 반환 (원본 키 기반 힌트)"""
         config = ApiKeyConfig(
             id="key-1",
             provider=LlmProvider.OPENAI,
             encrypted_key="gAAAAABl1234567890abcdefghij",
+            key_hint="sk-...cdef",
         )
         masked = config.get_masked_key()
-        assert masked.startswith("gAA")
-        assert "***" in masked
-        assert masked.endswith("ghij")
-        assert "1234567890abcdef" not in masked
+        assert masked == "sk-...cdef"
+        assert masked.startswith("sk-")
+        assert "..." in masked
 
-    def test_get_masked_key_handles_short_keys(self):
-        """짧은 키도 마스킹 처리"""
+    def test_get_masked_key_anthropic_format(self):
+        """Anthropic 키 힌트도 정상 반환"""
         config = ApiKeyConfig(
             id="key-1",
-            provider=LlmProvider.OPENAI,
-            encrypted_key="short",
+            provider=LlmProvider.ANTHROPIC,
+            encrypted_key="encrypted-data",
+            key_hint="sk-ant...xyz1",
         )
         masked = config.get_masked_key()
-        assert masked == "***"
+        assert masked == "sk-ant...xyz1"
+        assert masked.startswith("sk-ant")
 ```
 
 ### 구현
@@ -240,34 +255,37 @@ class ApiKeyConfig:
         id: 설정 ID (UUID)
         provider: LLM Provider (openai, anthropic, google)
         encrypted_key: 암호화된 API Key (Fernet)
+        key_hint: 원본 키 힌트 (예: "sk-...cdef", 복호화 없이 UI 표시용)
         name: API Key 이름 (선택, 사용자 지정)
         is_active: 활성 상태 (기본: True)
         created_at: 생성 시각 (UTC, timezone-aware)
         updated_at: 수정 시각 (UTC, timezone-aware)
+
+    Note:
+        key_hint는 원본 API Key의 앞 3-6자와 뒤 4자를 포함한 힌트입니다.
+        예: "sk-test1234567890abcdef" → "sk-...cdef"
+        복호화 없이 사용자가 어떤 키인지 식별할 수 있도록 합니다.
     """
 
     id: str
     provider: LlmProvider
     encrypted_key: str
+    key_hint: str
     name: str = ""
     is_active: bool = True
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def get_masked_key(self) -> str:
-        """암호화된 키를 마스킹하여 반환 (보안)
+        """원본 키 힌트 반환 (보안, 복호화 불필요)
 
-        암호화된 키를 base64 디코딩한 후 중간 부분을 ***로 마스킹합니다.
-        예: "gAAAAABl..." → "gAA***..."
+        key_hint를 그대로 반환합니다. 이는 원본 API Key를 복호화하지 않고도
+        사용자가 어떤 키인지 식별할 수 있도록 합니다.
 
         Returns:
-            마스킹된 키 문자열
+            key_hint (예: "sk-...cdef")
         """
-        if len(self.encrypted_key) <= 10:
-            return "***"
-
-        # 앞 3글자 + *** + 뒤 4글자
-        return f"{self.encrypted_key[:3]}***{self.encrypted_key[-4:]}"
+        return self.key_hint
 ```
 
 ---

@@ -272,16 +272,19 @@ class ConfigurationService:
         api_key: str,
         name: str = "",
     ) -> ApiKeyConfig:
-        """API Key 생성
+        """API Key 생성 (C1 이슈: key_hint 생성 추가)
 
         Args:
-            provider: LLM Provider
+            provider: LLM Provider (enum)
             api_key: 평문 API Key
             name: API Key 이름 (선택)
 
         Returns:
             생성된 ApiKeyConfig
         """
+        # key_hint 생성 (원본 키 기반)
+        key_hint = self._generate_key_hint(api_key)
+
         # 암호화
         encrypted_key = await self._encryption.encrypt(api_key)
 
@@ -290,6 +293,7 @@ class ConfigurationService:
             id=str(uuid4()),
             provider=provider,
             encrypted_key=encrypted_key,
+            key_hint=key_hint,
             name=name,
             is_active=True,
             created_at=datetime.now(timezone.utc),
@@ -300,6 +304,31 @@ class ConfigurationService:
         await self._storage.create_api_key(config)
 
         return config
+
+    def _generate_key_hint(self, api_key: str) -> str:
+        """원본 API Key에서 힌트 생성 (C1 이슈)
+
+        Args:
+            api_key: 평문 API Key
+
+        Returns:
+            key_hint (예: "sk-...cdef")
+        """
+        if len(api_key) <= 10:
+            return "***"
+
+        # Provider별 prefix 길이 고려
+        if api_key.startswith("sk-ant-"):
+            prefix = api_key[:7]  # "sk-ant-"
+        elif api_key.startswith("sk-"):
+            prefix = api_key[:3]  # "sk-"
+        elif api_key.startswith("AIza"):
+            prefix = api_key[:4]  # "AIza"
+        else:
+            prefix = api_key[:3]  # 기타
+
+        suffix = api_key[-4:]
+        return f"{prefix}...{suffix}"
 
     async def get_api_key(self, key_id: str) -> ApiKeyConfig:
         """API Key 조회
@@ -322,7 +351,7 @@ class ConfigurationService:
         name: str | None = None,
         is_active: bool | None = None,
     ) -> ApiKeyConfig:
-        """API Key 수정
+        """API Key 수정 (C1 이슈: key_hint 업데이트 추가)
 
         Args:
             key_id: API Key ID
@@ -341,8 +370,10 @@ class ConfigurationService:
 
         # 변경사항 적용
         encrypted_key = existing.encrypted_key
+        key_hint = existing.key_hint
         if api_key is not None:
             encrypted_key = await self._encryption.encrypt(api_key)
+            key_hint = self._generate_key_hint(api_key)  # C1: key_hint 업데이트
 
         updated_name = name if name is not None else existing.name
         updated_is_active = is_active if is_active is not None else existing.is_active
@@ -352,6 +383,7 @@ class ConfigurationService:
             id=existing.id,
             provider=existing.provider,
             encrypted_key=encrypted_key,
+            key_hint=key_hint,
             name=updated_name,
             is_active=updated_is_active,
             created_at=existing.created_at,
@@ -638,13 +670,15 @@ class ConfigurationService:
         model_id: str,
         name: str | None = None,
         parameters: dict | None = None,
+        is_default: bool | None = None,
     ) -> ModelConfig:
-        """Model 수정
+        """Model 수정 (H1 이슈: is_default 파라미터 추가)
 
         Args:
             model_id: Model ID
             name: 새 이름 (None이면 변경 안 함)
             parameters: 새 파라미터 (None이면 변경 안 함)
+            is_default: 기본 모델 여부 (None이면 변경 안 함)
 
         Returns:
             수정된 ModelConfig
@@ -656,13 +690,14 @@ class ConfigurationService:
 
         updated_name = name if name is not None else existing.name
         updated_params = parameters if parameters is not None else existing.parameters
+        updated_is_default = is_default if is_default is not None else existing.is_default
 
         updated = ModelConfig(
             id=existing.id,
             provider=existing.provider,
             model_id=existing.model_id,
             name=updated_name,
-            is_default=existing.is_default,
+            is_default=updated_is_default,
             parameters=updated_params,
             created_at=existing.created_at,
             updated_at=datetime.now(timezone.utc),
