@@ -9,10 +9,10 @@ Google ADK-based MCP + A2A Integrated Agent System
 | Item | Details |
 |------|---------|
 | **Purpose** | Integrate MCP/A2A tools via Chrome Extension in local environment |
-| **Architecture** | Hexagonal (Ports and Adapters) |
+| **Architecture** | Hexagonal (Ports and Adapters) + Dual-Track (ADK + SDK) |
 | **Agent Framework** | Google ADK 1.23.0+ with LiteLLM |
+| **MCP SDK** | v1.25+ (Resources/Prompts/Sampling/Elicitation) |
 | **Default Model** | `openai/gpt-4o-mini` |
-| **Coverage** | 80% minimum (CI enforced, current: 89.90%) |
 
 **Core Flow:**
 ```
@@ -95,6 +95,12 @@ pytest --cov=src --cov-fail-under=80 -q   # Coverage verification
 6. **Playground-First Testing (Phase 6+)**
    - HTTP API/SSE: Implement Playground UI + E2E tests together, defer Extension UI to Production Phase
 
+7. **Session Persistence and Autonomy**
+   - Context window is automatically compacted when approaching limits
+   - DO NOT stop tasks early due to token budget concerns
+   - Save current progress/state to memory files before context refresh
+   - IMPORTANT: Be persistent and autonomous - complete tasks fully regardless of budget
+
 ---
 
 ## 🚫 Critical Don'ts
@@ -151,6 +157,23 @@ Plan > Phase > Step
 - Red-Green-Refactor cycle: Write failing test → Minimal implementation → Refactor
 - Test Domain with Fake Adapters (no mocking)
 - Pytest optimization: `-q --tb=line -x` (95% token reduction)
+
+**Phase Gate Protocol (Mandatory):**
+- Before Phase/Step start: Read `tests/logs/phase_history.jsonl` (last 50 lines) to check baseline
+- Before test execution: Set `PHASE_CONTEXT=<phase_name>` env var (e.g., `domain_entities`)
+- After failure: Check history to distinguish new vs regression issues
+- Baseline verification: Always run `pytest -q --tb=line -x` before implementation
+
+**Current Test Status** (auto-updated on commit):
+
+| Category | Count | Coverage | Last Updated |
+|----------|-------|----------|--------------|
+| Unit Tests | 429 | N/A | 2026-02-08 13:12 |
+| Integration Tests | 192 | N/A | 2026-02-08 13:12 |
+| E2E Tests (Playwright) | 27 | N/A | 2026-02-08 13:12 |
+| **Total** | **648** | **N/A** | 2026-02-08 13:12 |
+
+> **Note:** This table is automatically updated by pre-commit hook. DO NOT edit manually.
 
 **Full Details:** [@tests/README.md](tests/README.md) (structure, strategy, markers, options, resources)
 
