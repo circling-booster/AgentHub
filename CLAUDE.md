@@ -168,10 +168,10 @@ Plan > Phase > Step
 
 | Category | Count | Last Updated |
 |----------|-------|--------------|
-| Unit Tests | 433 | 2026-02-08 16:40 |
-| Integration Tests | 192 | 2026-02-08 16:40 |
-| E2E Tests (Playwright) | 27 | 2026-02-08 16:40 |
-| **Total** | **652 (85.0%)** | 2026-02-08 16:40 |
+| Unit Tests | 433 | 2026-02-08 16:46 |
+| Integration Tests | 192 | 2026-02-08 16:46 |
+| E2E Tests (Playwright) | 27 | 2026-02-08 16:46 |
+| **Total** | **652 (85.0%)** | 2026-02-08 16:46 |
 
 > **Note:** Auto-updated by pre-commit hook. Coverage shows total across all tests. History: `tests/logs/phase_history.jsonl` | Logs: `tests/logs/pytest_execution.log`
 
