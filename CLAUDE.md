@@ -166,14 +166,14 @@ Plan > Phase > Step
 
 **Current Test Status** (auto-updated on commit):
 
-| Category | Count | Coverage | Last Updated |
-|----------|-------|----------|--------------|
-| Unit Tests | 429 | N/A | 2026-02-08 14:02 |
-| Integration Tests | 192 | N/A | 2026-02-08 14:02 |
-| E2E Tests (Playwright) | 27 | N/A | 2026-02-08 14:02 |
-| **Total** | **648** | **85.4%** | 2026-02-08 14:02 |
+| Category | Count | Last Updated |
+|----------|-------|--------------|
+| Unit Tests | 429 | 2026-02-08 14:17 |
+| Integration Tests | 0 | 2026-02-08 14:17 |
+| E2E Tests (Playwright) | 0 | 2026-02-08 14:17 |
+| **Total** | **429 (85.4%)** | 2026-02-08 14:17 |
 
-> **Note:** Auto-updated by pre-commit hook. History: `tests/logs/phase_history.jsonl` | Logs: `tests/logs/pytest_execution.log`
+> **Note:** Auto-updated by pre-commit hook. Coverage shows total across all tests. History: `tests/logs/phase_history.jsonl` | Logs: `tests/logs/pytest_execution.log`
 
 **Full Details:** [@tests/README.md](tests/README.md) (structure, strategy, markers, options, resources)
 
